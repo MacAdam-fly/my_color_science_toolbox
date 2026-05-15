@@ -71,6 +71,14 @@ _registry.get(category, name, **kwargs)
 | `list_categories()` | 列出已注册类别 |
 | `search(keyword)` | 在名称和描述中搜索数据集 |
 
+类别名和数据集名称支持 canonical 匹配：大小写、空格、下划线、连字符、斜杠和括号等分隔符不会影响查找，数值中的小数点会规范化为 `p`。例如下面几种写法会访问同一个数据集：
+
+```python
+get("standard_observers.cmfs", "cie1931_xyz_1nm")
+get("Standard Observers CMFS", "CIE 1931 XYZ 1 nm")
+get("standard-observers/cmfs", "cie-1931-xyz-1nm")
+```
+
 ### 类别入口
 
 | 类别 | 加载函数 | 列表函数 |
@@ -337,6 +345,7 @@ register(DatasetEntry(
 
 - `get()` 返回只读数组；需要修改时请先 `.copy()`。
 - 文件和计算数据都按调用参数缓存，包括 Excel 的 `sheet`；需要重读时可调用 `clear_cache()`。
+- 注册时会检查 canonical 名称冲突；例如 `my-data` 和 `My Data` 不能在同一规范类别下同时注册。
 - 测试和示例中的自定义文件使用临时目录创建，不应把测试专用 CSV 常驻在 `color/data/` 中。
 - 读取行为只放在 `DatasetEntry.read_options`；描述性信息只放在 `DatasetEntry.metadata`。
 
@@ -351,7 +360,7 @@ register(DatasetEntry(
 当前测试结果：
 
 ```text
-144 passed
+153 passed
 ```
 
 如果系统临时目录权限受限，保留 `--basetemp .pytest_tmp` 可以让 pytest 在工作区内创建临时目录。

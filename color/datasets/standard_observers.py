@@ -33,6 +33,7 @@ from typing import Any, Dict, List, Optional, Tuple
 import numpy as np
 
 from ._registry import DatasetEntry, register, SpectralDict
+from ._registry import canonicalize_name
 from ._utils import data_dir
 
 # ---------------------------------------------------------------------------
@@ -298,18 +299,22 @@ _CATEGORY_ALIASES: dict[str, str] = {
     "pigment": "photopigments",
     "pigments": "photopigments",
 }
+_CATEGORY_ALIASES = {
+    canonicalize_name(alias): category
+    for alias, category in _CATEGORY_ALIASES.items()
+}
 
 
 def _resolve_category(category: str) -> str:
     """Resolve a category alias to its canonical name."""
-    cat = category.lower().strip()
+    cat = canonicalize_name(category)
     canonical = _CATEGORY_ALIASES.get(cat)
     if canonical is not None:
         return canonical
     # Zero-config: accept any folder that was auto-discovered
-    candidate = _OBSERVER_ROOT / cat
-    if candidate.is_dir():
-        return cat
+    for candidate in _OBSERVER_ROOT.iterdir():
+        if candidate.is_dir() and canonicalize_name(candidate.name) == cat:
+            return candidate.name
     raise KeyError(
         f"Unknown standard observer category: {category!r}. "
         f"Valid categories: {list(_CATEGORY_NAMES.keys())}"
@@ -351,9 +356,9 @@ def _process_custom_entries() -> None:
             _DESCRIPTION_OVERRIDES[f"{cat}/{stem}"] = entry["description"]
 
         # Category aliases — always register the canonical name itself
-        _CATEGORY_ALIASES[cat.lower()] = cat
+        _CATEGORY_ALIASES[canonicalize_name(cat)] = cat
         for alias in entry.get("aliases", []):
-            _CATEGORY_ALIASES[alias.lower()] = cat
+            _CATEGORY_ALIASES[canonicalize_name(alias)] = cat
 
 
 _process_custom_entries()

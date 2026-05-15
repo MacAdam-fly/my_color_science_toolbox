@@ -27,7 +27,7 @@ def main() -> None:
 
 
     # --- 2. CIE 1931 2° XYZ CMFs ---
-    xyz31 = get_standard_observer("cmfs", "cie1931_xyz_1nm")
+    xyz31 = get_standard_observer("cmfs", "cie1931 xyz_1nm")
     xyz_1008_v2 = get_standard_observer("cmfs", "cie2012_xyz2_1nm")
     wl = xyz31["wavelength"]
     wl2 = xyz_1008_v2["wavelength"]
