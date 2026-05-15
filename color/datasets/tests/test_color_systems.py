@@ -5,6 +5,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
+from color.datasets import describe
 from color.datasets.color_systems import get_color_system, list_color_systems
 
 
@@ -31,3 +32,11 @@ class TestMunsellSRGB:
         data = get_color_system("munsell_srgb")
         first_col = list(data.keys())[0]
         assert len(data[first_col]) > 1600
+
+    def test_metadata(self):
+        entry = describe("color_systems", "munsell_srgb")
+        assert entry.metadata["quantity"] == "color_notation_table"
+        assert entry.metadata["notation_system"] == "Munsell"
+        assert entry.metadata["sample_count"] == 1625
+        assert entry.metadata["observer_angle_deg"] == 2
+        assert "sRGB" in entry.metadata["color_spaces"]

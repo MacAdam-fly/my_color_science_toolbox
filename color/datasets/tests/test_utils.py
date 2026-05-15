@@ -145,11 +145,6 @@ class TestReadXlsx:
         result = read_xlsx(str(path), sheet=0, header=False, skiprows=1)
         assert len(result) > 1
 
-    def test_blackbody_xlsx(self, data_root):
-        path = data_root / "illuminants" / "reference" / "blackbody.xlsx"
-        result = read_xlsx(str(path), sheet="Sheet1", header=5)
-        assert "wavelength" in result
-
     def test_by_sheet_index(self, data_root):
         path = data_root / "color_cards" / "PMC.xlsx"
         result = read_xlsx(str(path), sheet=0, header=False, skiprows=1)

@@ -122,6 +122,14 @@ register(DatasetEntry(
     compute_fn=_read_pointer_calculations,
     metadata={
         "sheets": ("Data", "Calculations", "IllumDat", "SpecLoc"),
+        "quantity": "real_surface_gamut_boundary",
+        "color_space": "CIELAB",
+        "illuminant": "C",
+        "observer_angle_deg": 2,
+        "reference_white": "Illuminant C, 2 degree observer",
+        "hue_angle_unit": "deg",
+        "lightness_levels": tuple(_LSTAR_OFFSETS.keys()),
+        "hue_count_per_lightness": _N_HUE_ROWS,
     },
 ))
 
@@ -131,10 +139,16 @@ register(DatasetEntry(
     description="Pointer's gamut — raw multi-sheet XLS (pass sheet= to select)",
     source="Pointer (1980)",
     file_path=f"{_GAMUT_DIR}/PointerData.xls",
-    metadata={
+    read_options={
         "sheet": "Data",
         "header": 8,
+        "coerce_numeric": True,
+    },
+    metadata={
         "sheets": ("Data", "Calculations", "IllumDat", "SpecLoc"),
+        "quantity": "raw_pointer_gamut_workbook",
+        "color_space": "mixed",
+        "coerces_non_numeric_to_nan": True,
     },
 ))
 

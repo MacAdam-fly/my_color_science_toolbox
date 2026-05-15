@@ -5,6 +5,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
+from color.datasets import describe
 from color.datasets.standard_observers import (
     describe_standard_observer,
     get_standard_observer,
@@ -170,6 +171,37 @@ class TestDescribeObserver:
     def test_unknown_category_raises(self):
         with pytest.raises(KeyError):
             describe_standard_observer("unknown")
+
+
+class TestObserverMetadata:
+    """Tests for registered standard-observer metadata."""
+
+    def test_cmf_metadata(self):
+        entry = describe("standard_observers.cmfs", "cie1931_xyz_1nm")
+        assert entry.read_options["header"] is True
+        assert "header" not in entry.metadata
+        assert entry.metadata["quantity"] == "colour_matching_function"
+        assert entry.metadata["color_space"] == "XYZ"
+        assert entry.metadata["wavelength_unit"] == "nm"
+        assert entry.metadata["value_unit"] == "relative"
+        assert entry.metadata["sampling_interval_nm"] == 1.0
+        assert entry.metadata["observer_angle_deg"] == 2
+
+    def test_cone_fundamental_metadata(self):
+        entry = describe(
+            "standard_observers.cone_fundamentals",
+            "cie2006_lms10_logE_5nm",
+        )
+        assert entry.metadata["quantity"] == "cone_fundamental"
+        assert entry.metadata["energy_basis"] == "energy"
+        assert entry.metadata["scale"] == "logarithmic"
+        assert entry.metadata["observer_angle_deg"] == 10
+
+    def test_luminous_efficiency_metadata(self):
+        entry = describe("standard_observers.luminous_efficiency", "scotopic_v_1nm")
+        assert entry.metadata["quantity"] == "luminous_efficiency"
+        assert entry.metadata["vision_regime"] == "scotopic"
+        assert entry.metadata["sampling_interval_nm"] == 1.0
 
 
 class TestCategoryAliases:

@@ -79,10 +79,12 @@ def _df_to_dict(
     df: pd.DataFrame,
     names: Optional[Sequence[str]] = None,
     usecols: Optional[Sequence[int]] = None,
+    coerce_numeric: bool = False,
 ) -> Dict[str, np.ndarray]:
     """Convert a DataFrame to ``Dict[str, np.ndarray]``.
 
     Applies *names* override, *usecols* filtering, and default name fallback.
+    If *coerce_numeric* is true, non-numeric cells are converted to NaN.
     """
     # usecols filtering (by index)
     if usecols is not None:
@@ -102,7 +104,17 @@ def _df_to_dict(
             df.columns = list(_default_names(len(df.columns)))
 
     # Convert to dict of numpy arrays
-    return {str(col): df[col].to_numpy(dtype=float, na_value=float("nan")) for col in df.columns}
+    result: Dict[str, np.ndarray] = {}
+    for col in df.columns:
+        series = df[col]
+        if coerce_numeric:
+            result[str(col)] = pd.to_numeric(series, errors="coerce").to_numpy(
+                dtype=float,
+                na_value=float("nan"),
+            )
+        else:
+            result[str(col)] = series.to_numpy(dtype=float, na_value=float("nan"))
+    return result
 
 
 def _header_params(
@@ -151,6 +163,7 @@ def read_csv(
     skiprows: int = 0,
     usecols: Optional[Sequence[int]] = None,
     names: Optional[Sequence[str]] = None,
+    coerce_numeric: bool = False,
 ) -> Dict[str, np.ndarray]:
     """Read a CSV file into a dict of numpy arrays.
 
@@ -168,6 +181,8 @@ def read_csv(
         Column indices to read.  ``None`` reads all columns.
     names : sequence of str, optional
         Column names.  Overrides header-detected names.
+    coerce_numeric : bool
+        If ``True``, convert non-numeric cells to NaN instead of raising.
     """
     if header is True or header == "auto":
         # Read without header to inspect first row
@@ -175,14 +190,16 @@ def read_csv(
                          skipinitialspace=True)
         df, found_header = _auto_detect_header(df)
         # names (from DatasetEntry.columns) always overrides detected header
-        return _df_to_dict(df, names=names, usecols=usecols)
+        return _df_to_dict(
+            df, names=names, usecols=usecols, coerce_numeric=coerce_numeric
+        )
     else:
         kwargs = _header_params(header, skiprows=skiprows)
         kwargs["skipinitialspace"] = True
         if names is not None:
             kwargs["names"] = names
         df = pd.read_csv(str(path), **kwargs)
-    return _df_to_dict(df, names=names, usecols=usecols)
+    return _df_to_dict(df, names=names, usecols=usecols, coerce_numeric=coerce_numeric)
 
 
 # ---------------------------------------------------------------------------
@@ -197,6 +214,7 @@ def read_xlsx(
     skiprows: int = 0,
     usecols: Optional[Sequence[int]] = None,
     names: Optional[Sequence[str]] = None,
+    coerce_numeric: bool = False,
 ) -> Dict[str, np.ndarray]:
     """Read an XLSX file into a dict of numpy arrays.
 
@@ -216,10 +234,12 @@ def read_xlsx(
         Column indices to read.  ``None`` reads all columns.
     names : sequence of str, optional
         Column names.  Overrides header-detected names.
+    coerce_numeric : bool
+        If ``True``, convert non-numeric cells to NaN instead of raising.
     """
     kwargs = _header_params(header, skiprows=skiprows)
     df = pd.read_excel(str(path), sheet_name=sheet, engine="openpyxl", **kwargs)
-    return _df_to_dict(df, names=names, usecols=usecols)
+    return _df_to_dict(df, names=names, usecols=usecols, coerce_numeric=coerce_numeric)
 
 
 # ---------------------------------------------------------------------------
@@ -234,6 +254,7 @@ def read_xls(
     skiprows: int = 0,
     usecols: Optional[Sequence[int]] = None,
     names: Optional[Sequence[str]] = None,
+    coerce_numeric: bool = False,
 ) -> Dict[str, np.ndarray]:
     """Read an XLS file into a dict of numpy arrays.
 
@@ -253,7 +274,9 @@ def read_xls(
         Column indices to read.  ``None`` reads all columns.
     names : sequence of str, optional
         Column names.  Overrides header-detected names.
+    coerce_numeric : bool
+        If ``True``, convert non-numeric cells to NaN instead of raising.
     """
     kwargs = _header_params(header, skiprows=skiprows)
     df = pd.read_excel(str(path), sheet_name=sheet, engine="xlrd", **kwargs)
-    return _df_to_dict(df, names=names, usecols=usecols)
+    return _df_to_dict(df, names=names, usecols=usecols, coerce_numeric=coerce_numeric)

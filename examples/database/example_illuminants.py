@@ -16,7 +16,7 @@ from color.datasets import get_illuminant, list_illuminants
 
 def _get_values(data: dict) -> np.ndarray:
     """Extract the spectral values from an illuminant dict (key varies)."""
-    for key in ("spd", "radiance", "value"):
+    for key in ("spd", "radiance"):
         if key in data:
             return data[key]
     # Fluorescents: return first lamp
@@ -67,8 +67,8 @@ def main() -> None:
 
     # (a) Standard illuminants
     ax = axes[0]
-    ax.plot(d65["wavelength"], d65["value"], label="D65", color="royalblue")
-    ax.plot(ill_a["wavelength"], ill_a["value"], label="A", color="orange")
+    ax.plot(d65["wavelength"], d65["spd"], label="D65", color="royalblue")
+    ax.plot(ill_a["wavelength"], ill_a["spd"], label="A", color="orange")
     ax.set_title("Standard Illuminants")
     ax.set_xlabel("Wavelength (nm)")
     ax.set_ylabel("Relative SPD")

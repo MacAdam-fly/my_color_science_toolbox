@@ -5,6 +5,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
+from color.datasets import describe
 from color.datasets.color_cards import (
     BCRA_TILE_NAMES,
     MACBETH_PATCH_NAMES,
@@ -61,6 +62,17 @@ class TestMacbeth:
         white_mean = np.mean(data["White"])
         assert black_mean < white_mean
 
+    def test_metadata(self):
+        entry = describe("color_cards", "macbeth")
+        assert entry.computed is True
+        assert entry.compute_fn is not None
+        assert "loader" not in entry.metadata
+        assert entry.metadata["quantity"] == "spectral_reflectance"
+        assert entry.metadata["patch_count"] == 24
+        assert entry.metadata["wavelength_unit"] == "nm"
+        assert entry.metadata["wavelength_range_nm"] == (380, 780)
+        assert entry.metadata["sampling_interval_nm"] == 5
+
 
 class TestPMC:
     """Tests for the PMC chart."""
@@ -95,3 +107,12 @@ class TestBCRA:
         data = get_color_card("bcra")
         tile_keys = [k for k in data if k != "wavelength"]
         assert len(tile_keys) == 12
+
+    def test_metadata(self):
+        entry = describe("color_cards", "bcra")
+        assert entry.computed is True
+        assert entry.compute_fn is not None
+        assert "loader" not in entry.metadata
+        assert entry.metadata["quantity"] == "spectral_reflectance"
+        assert entry.metadata["patch_count"] == 12
+        assert entry.metadata["wavelength_range_nm"] == (380, 730)

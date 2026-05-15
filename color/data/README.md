@@ -1,154 +1,142 @@
 # Color Science Data
 
-**Folder:** `color/data/`
-**Purpose:** Static reference datasets for colorimetric calculations, including color matching functions, standard illuminants, color checker spectral data, real surface color gamut, and color difference formulae.
-
-All data files are immutable reference data. Use clear filenames with units when relevant.
-
----
+`color/data/` stores immutable reference datasets used by the color science
+toolbox.  The files are intentionally kept separate from the parsing layer:
+raw data lives here, while public loading APIs live in `color/datasets/`.
 
 ## Directory Structure
 
-```
-data/
-├── standard_observer_data/            # CVRL physiological color science data
-│   ├── cmfs/                   # Colour Matching Functions
-│   ├── cone_fundamentals/      # Cone Spectral Sensitivities
-│   ├── luminous_efficiency/    # Luminous Efficiency Functions
-│   ├── prereceptoral_filters/  # Macular Pigment & Lens Density
+```text
+color/data/
+├── standard_observer_data/
+│   ├── cmfs/
+│   ├── cone_fundamentals/
+│   ├── luminous_efficiency/
+│   ├── prereceptoral_filters/
 │   ├── chromaticity_coordinates/
 │   ├── photopigments/
 │   └── README.md
-│
-├── color_cards/                # Standard color checker spectral data
+├── illuminants/
+│   ├── illuminant_A.csv
+│   ├── illuminant_D65.csv
+│   ├── Fluorescents.xls
+│   ├── reference/
+│   │   ├── blackbody.xlsx
+│   │   └── DaylightSeries.xlsx
+│   └── readme.md
+├── color_cards/
 │   ├── MacbethColorChecker(Sheet1).csv
 │   ├── PMC.xlsx
 │   ├── RepresentativeBCRA.xls
 │   └── readme.md
-│
-├── gamut_data/                 # Real surface color gamut data
+├── gamut_data/
 │   ├── PointerData.xls
 │   └── readme.md
-│
-├── color_systems/              # Color notation system data
+├── color_systems/
 │   ├── real_sRGB.xls
 │   └── readme.md
-│
-├── illuminants/                # Standard illuminant spectral data
-│   ├── illuminant_A.csv        # CIE A (~2856K)
-│   ├── illuminant_D65.csv      # CIE D65 (~6504K)
-│   ├── DaylightSeries.xlsx     # D series (4000–25000K)
-│   ├── Fluorescents.xls        # F1–F12
-│   ├── blackbody.xlsx          # Planck radiation
+├── color_difference/
+│   ├── CIEDE2000.xls
 │   └── readme.md
-│
 └── __init__.py
 ```
 
----
+## Dataset Summary
 
-## Category Overview
+### Standard Observer Data
 
-### 1. Standard Observer Data (`standard_observer_data/`)
-
-CVRL (Colour & Vision Research Laboratory, UCL) physiological color science data. 106 CSV files covering the human visual system fundamentals.
+CVRL human visual-system reference data.  The production subfolders contain
+106 CSV files registered automatically by `color.datasets.standard_observers`.
 
 | Subfolder | Content | Files |
-|-----------|---------|-------|
-| `cmfs/` | CIE 1931/1964/2012 XYZ colour matching functions | 15 |
-| `cone_fundamentals/` | Stockman & Sharpe LMS cone sensitivities | 27 |
-| `luminous_efficiency/` | Photopic/scotopic V(λ) functions | 29 |
-| `prereceptoral_filters/` | Macular pigment & lens density spectra | 11 |
-| `chromaticity_coordinates/` | CIE & MacLeod-Boynton chromaticity coords | 16 |
-| `photopigments/` | Photopigment absorption spectra | 8 |
+| --- | --- | ---: |
+| `cmfs/` | CIE 1931/1964/2012 XYZ and RGB colour matching functions | 15 |
+| `cone_fundamentals/` | LMS cone fundamentals and related sensitivities | 27 |
+| `luminous_efficiency/` | Photopic and scotopic luminous efficiency functions | 29 |
+| `prereceptoral_filters/` | Macular pigment and lens density spectra | 11 |
+| `chromaticity_coordinates/` | CIE and MacLeod-Boynton chromaticity coordinates | 16 |
+| `photopigments/` | Photopigment absorption spectra | 7 |
 
-Source: [CVRL](http://www.cvrl.org/)
+Parser tests create temporary files at runtime instead of storing test-only
+datasets in this directory.
 
-### 2. Color Cards (`color_cards/`)
+### Illuminants
 
-Standard color card spectral reflectance data for calibration, reproduction, and evaluation.
+| File | Description | Notes |
+| --- | --- | --- |
+| `illuminant_A.csv` | CIE Illuminant A | Loaded as `get_illuminant("A")` |
+| `illuminant_D65.csv` | CIE Illuminant D65 | Loaded as `get_illuminant("D65")` |
+| `Fluorescents.xls` | CIE F1-F12 fluorescent lamp SPDs | Loaded as `get_illuminant("fluorescents")` |
+| `reference/DaylightSeries.xlsx` | Tabulated daylight reference data | Reference/validation data |
+| `reference/blackbody.xlsx` | Tabulated blackbody reference data | Reference/validation data |
 
-| File | Patches | Wavelength | Source |
-|------|---------|------------|--------|
-| MacbethColorChecker(Sheet1).csv | 24 | 380–780 nm, 5nm | Ohta (1997) |
-| PMC.xlsx | 31 | 400–700 nm, 10nm | Luo (2024) |
-| RepresentativeBCRA.xls | 12 | 380–730 nm, 10nm | RIT MCSL |
+The public loader also provides computed datasets:
+`get_illuminant("blackbody", temperature=...)` and
+`get_illuminant("daylight", cct=...)`.
 
-### 3. Gamut Data (`gamut_data/`)
+### Color Cards
 
-Color gamut boundaries of real surface colors.
+| File | Dataset name | Patches | Wavelength range |
+| --- | --- | ---: | --- |
+| `MacbethColorChecker(Sheet1).csv` | `macbeth` | 24 | 380-780 nm, 5 nm |
+| `PMC.xlsx` | `pmc` | 31 | 400-700 nm, 10 nm |
+| `RepresentativeBCRA.xls` | `bcra` | 12 | 380-730 nm, 10 nm |
 
-| File | Samples | Source |
-|------|---------|--------|
-| PointerData.xls | 4089 | Pointer (1980) |
+### Gamut Data
 
-### 4. Color Systems (`color_systems/`)
+| File | Dataset name | Description |
+| --- | --- | --- |
+| `PointerData.xls` | `pointer`, `pointer_raw` | Pointer real-surface color gamut data |
 
-Color notation system reference data.
+### Color Systems
 
-| File | Samples | Source |
-|------|---------|--------|
-| real_sRGB.xls | 1625 | RIT Munsell Renotation |
+| File | Dataset name | Samples |
+| --- | --- | ---: |
+| `real_sRGB.xls` | `munsell_srgb` | 1625 |
 
-### 5. Illuminants (`illuminants/`)
+### Color Difference
 
-CIE standard illuminant spectral power distributions.
+| File | Description |
+| --- | --- |
+| `CIEDE2000.xls` | Reference data for CIEDE2000 verification |
 
-| File | Description | Wavelength |
-|------|-------------|------------|
-| illuminant_A.csv | CIE Illuminant A (~2856K) | 360–830 nm, 1nm |
-| illuminant_D65.csv | CIE Illuminant D65 (~6504K) | 360–830 nm, 1nm |
-| DaylightSeries.xlsx | CIE Daylight D series (4000–25000K) | 300–830 nm, 5nm |
-| Fluorescents.xls | CIE F1–F12 fluorescent lamps | 380–780 nm, 5nm |
-| blackbody.xlsx | Planck blackbody radiation | 300–800 nm, 10nm |
+## Accessing Data
 
----
-
-## Quick Start
+Prefer the public dataset loaders instead of reading raw files directly:
 
 ```python
-import numpy as np
+from color.datasets import (
+    get_color_card,
+    get_color_system,
+    get_gamut_data,
+    get_illuminant,
+    get_standard_observer,
+)
 
-# --- CVRL base data ---
-# CIE 1931 2° XYZ CMFs
-data = np.loadtxt('standard_observer_data/cmfs/cie1931_xyz_5nm.csv', delimiter=',')
-wl, x_bar, y_bar, z_bar = data.T
-
-# --- Color cards ---
-# Macbeth ColorChecker
-data = np.loadtxt('color_cards/MachbethColorChecker(Sheet1).csv', delimiter=',', skiprows=3)
-
-# --- Illuminants ---
-import numpy as np
-# CIE A
-data = np.loadtxt('illuminants/illuminant_A.csv', delimiter=',')
-wl, spd_A = data[:, 0], data[:, 1]
-# CIE D65
-data = np.loadtxt('illuminants/illuminant_D65.csv', delimiter=',')
-wl, spd_D65 = data[:, 0], data[:, 1]
-# Daylight series from CCT
-import openpyxl
-wb = openpyxl.load_workbook('illuminants/DaylightSeries.xlsx')
-
-# --- Gamut data ---
-import xlrd
-wb = xlrd.open_workbook('gamut_data/PointerData.xls')
+d65 = get_illuminant("D65")
+xyz = get_standard_observer("cmfs", "cie1931_xyz_1nm")
+macbeth = get_color_card("macbeth")
+pointer = get_gamut_data("pointer", L=50)
+munsell = get_color_system("munsell_srgb")
 ```
 
----
+Direct file access is still useful for source inspection or independent
+validation, but application code should normally go through `color.datasets`.
 
-## Data Sources
+## Data Stewardship
+
+- Treat files in this directory as immutable source data.
+- Add new datasets with clear filenames that include sampling or unit hints
+  where practical, such as `_1nm`, `_5nm`, `_logE`, or `_logQ`.
+- Keep parser-specific behavior in `color/datasets/`, not in this directory.
+- Record source, units, wavelength range, and normalization details in
+  `DatasetEntry.metadata`; keep parser/read behavior in
+  `DatasetEntry.read_options` or `compute_fn`.
+
+## Sources
 
 | Source | URL |
-|--------|-----|
-| CVRL (UCL) | http://www.cvrl.org/ |
+| --- | --- |
+| CVRL, UCL | http://www.cvrl.org/ |
 | RIT Munsell Color Science Lab | https://www.rit.edu/science/munsell-color-science-lab-educational-resources |
 | RIT Munsell Renotation | http://www.rit-mcsl.org/MunsellRenotation/ |
-
----
-
-## Naming Conventions
-
-- Keep data files immutable
-- Use clear filenames with units when relevant (e.g., `_5nm`, `_1nm`, `_logE`)
-- Access via `color_agent.data` or `color_agent.io` loaders

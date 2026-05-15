@@ -38,6 +38,7 @@ class TestGetIlluminantA:
     def test_has_wavelength(self):
         data = get_illuminant("A")
         assert "wavelength" in data
+        assert "spd" in data
         assert isinstance(data["wavelength"], np.ndarray)
 
     def test_wavelength_range(self):
@@ -47,8 +48,7 @@ class TestGetIlluminantA:
 
     def test_values_positive(self):
         data = get_illuminant("A")
-        spd_key = [k for k in data if k != "wavelength"][0]
-        assert np.all(data[spd_key] > 0)
+        assert np.all(data["spd"] > 0)
 
 
 class TestGetIlluminantD65:
@@ -57,11 +57,36 @@ class TestGetIlluminantD65:
     def test_returns_dict_with_wavelength(self):
         data = get_illuminant("D65")
         assert "wavelength" in data
+        assert "spd" in data
 
     def test_wavelength_range(self):
         data = get_illuminant("D65")
         assert data["wavelength"][0] >= 290
         assert data["wavelength"][-1] <= 840
+
+    def test_spd_values_non_negative(self):
+        data = get_illuminant("D65")
+        assert np.all(data["spd"] >= 0)
+
+
+class TestIlluminantFieldNames:
+    """Tests for consistent illuminant field names."""
+
+    def test_relative_spd_datasets_use_spd_key(self):
+        for name in ["A", "D65", "daylight"]:
+            data = (
+                get_illuminant(name, cct=6500)
+                if name == "daylight"
+                else get_illuminant(name)
+            )
+            assert "wavelength" in data
+            assert "spd" in data
+            assert "value" not in data
+
+    def test_blackbody_keeps_radiance_key(self):
+        data = get_illuminant("blackbody", temperature=6500)
+        assert "radiance" in data
+        assert "spd" not in data
 
 
 class TestGetIlluminantFluorescents:
@@ -135,4 +160,3 @@ class TestDaylight:
         data = get_illuminant("daylight", cct=5000)
         assert data["wavelength"][0] == 300
         assert data["wavelength"][-1] == 830
-

@@ -168,6 +168,11 @@ register(DatasetEntry(
     description="CIE Illuminant A — typical incandescent/tungsten (~2856 K)",
     source="CVRL / CIE 15:2004",
     file_path=f"{_ILLUM_DIR}/illuminant_A.csv",
+    columns=("wavelength", "spd"),
+    metadata={
+        "quantity": "relative_spd",
+        "wavelength_unit": "nm",
+    },
 ))
 
 register(DatasetEntry(
@@ -176,6 +181,11 @@ register(DatasetEntry(
     description="CIE Illuminant D65 — average daylight (~6504 K)",
     source="CVRL / CIE 15:2004",
     file_path=f"{_ILLUM_DIR}/illuminant_D65.csv",
+    columns=("wavelength", "spd"),
+    metadata={
+        "quantity": "relative_spd",
+        "wavelength_unit": "nm",
+    },
 ))
 
 register(DatasetEntry(
@@ -186,7 +196,11 @@ register(DatasetEntry(
     file_path=f"{_ILLUM_DIR}/Fluorescents.xls",
     columns=("wavelength", "F1", "F2", "F3", "F4", "F5", "F6",
              "F7", "F8", "F9", "F10", "F11", "F12"),
-    metadata={"header": 1},
+    read_options={"header": 1},
+    metadata={
+        "quantity": "relative_spd",
+        "wavelength_unit": "nm",
+    },
 ))
 
 # ---------------------------------------------------------------------------
@@ -198,7 +212,11 @@ register_computed(
     name="blackbody",
     compute_fn=_blackbody,
     description="Planck blackbody spectral radiance at arbitrary temperature",
-    metadata={"parameters": ["temperature", "wavelength_nm"]},
+    metadata={
+        "parameters": ["temperature", "wavelength_nm"],
+        "quantity": "spectral_radiance",
+        "wavelength_unit": "nm",
+    },
 )
 
 register_computed(
@@ -206,7 +224,11 @@ register_computed(
     name="daylight",
     compute_fn=_daylight,
     description="CIE D-series daylight SPD at arbitrary CCT (4000–25000 K)",
-    metadata={"parameters": ["cct", "wavelength_nm"]},
+    metadata={
+        "parameters": ["cct", "wavelength_nm"],
+        "quantity": "relative_spd",
+        "wavelength_unit": "nm",
+    },
 )
 
 

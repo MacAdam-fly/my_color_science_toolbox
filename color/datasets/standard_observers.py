@@ -1,4 +1,4 @@
-"""CVRL standard observer data — auto-discovered from 112 CSV files.
+"""CVRL standard observer data — auto-discovered from 106 CSV files.
 
 Covers six categories of human visual system fundamentals:
 
@@ -50,10 +50,11 @@ from ._utils import data_dir
 #                 Controls column names.
 #   description — human-readable description (optional, falls back to filename pattern)
 #   aliases     — list of category aliases (optional)
-#   metadata    — dict of read_csv options (optional), e.g.:
+#   read_options — dict of read_csv options (optional), e.g.:
 #                 {"skiprows": 3, "header": 3}
 #                 Supported keys: header, skiprows, usecols.
 #                 "names" is ignored — use "columns" instead.
+#   metadata    — descriptive fields that do not affect reading (optional)
 #
 # Note: by default, header is auto-detected (header=True). If the CSV has a
 # text header row, those names are used. If all-numeric, *columns* (if provided)
@@ -71,13 +72,10 @@ from ._utils import data_dir
 #     # File with metadata rows to skip:
 #     {"category": "my_data", "stem": "with_meta",
 #      "columns": ("wavelength", "value"),
-#      "metadata": {"header": 3}},
+#      "read_options": {"header": 3}},
 
 _CUSTOM_ENTRIES: list[dict[str, Any]] = [
     # Add your custom entries here
-    {'category': 'test_data', 'stem': 'just_for_test_with_header',
-     'columns': ('wavelength', 'l', 'm', 's'), # 这个字段覆盖率文件自带头
-     "metadata": { "header": 'auto'} },
 ]
 
 
@@ -326,6 +324,7 @@ _OBSERVER_ROOT = data_dir("standard_observer_data")
 
 # Built from _CUSTOM_ENTRIES at module load time
 _CUSTOM_COL_OVERRIDES: dict[tuple[str, str], Tuple[str, ...]] = {}
+_CUSTOM_READ_OPTIONS_OVERRIDES: dict[tuple[str, str], dict[str, Any]] = {}
 _CUSTOM_META_OVERRIDES: dict[tuple[str, str], dict[str, Any]] = {}
 
 
@@ -339,7 +338,11 @@ def _process_custom_entries() -> None:
         if "columns" in entry:
             _CUSTOM_COL_OVERRIDES[(cat, stem)] = tuple(entry["columns"])
 
-        # Metadata override (header, skiprows, etc.)
+        # Read-option override (header, skiprows, etc.)
+        if "read_options" in entry:
+            _CUSTOM_READ_OPTIONS_OVERRIDES[(cat, stem)] = entry["read_options"]
+
+        # Descriptive metadata override
         if "metadata" in entry:
             _CUSTOM_META_OVERRIDES[(cat, stem)] = entry["metadata"]
 
@@ -369,6 +372,86 @@ def _count_csv_cols(path: Path) -> int:
     return 0
 
 
+def _infer_sampling_interval_nm(stem: str) -> Optional[float]:
+    """Infer spectral sampling interval from common filename suffixes."""
+    lower = stem.lower()
+    if "0p1nm" in lower or "0p1" in lower:
+        return 0.1
+    if "1nm" in lower:
+        return 1.0
+    if "5nm" in lower:
+        return 5.0
+    return None
+
+
+def _infer_observer_angle(category: str, stem: str) -> Optional[int]:
+    """Infer CIE observer field size when encoded in the filename/category."""
+    lower = stem.lower()
+    if "10" in lower or "1964" in lower or category.endswith("10"):
+        return 10
+    if "2" in lower or "1931" in lower:
+        return 2
+    return None
+
+
+def _metadata_for_standard_observer(category: str, stem: str) -> dict[str, Any]:
+    """Build descriptive metadata for an auto-discovered observer dataset."""
+    meta: dict[str, Any] = {
+        "wavelength_unit": "nm",
+        "domain": "spectral",
+        "source_collection": "CVRL",
+    }
+    sampling = _infer_sampling_interval_nm(stem)
+    if sampling is not None:
+        meta["sampling_interval_nm"] = sampling
+
+    observer_angle = _infer_observer_angle(category, stem)
+    if observer_angle is not None:
+        meta["observer_angle_deg"] = observer_angle
+
+    if category == "cmfs":
+        meta["quantity"] = "colour_matching_function"
+        meta["value_unit"] = "relative"
+        if "xyz" in stem.lower():
+            meta["color_space"] = "XYZ"
+        elif "sbrgb" in stem.lower():
+            meta["color_space"] = "RGB"
+    elif category == "cone_fundamentals":
+        meta["quantity"] = "cone_fundamental"
+        meta["value_unit"] = "relative"
+        if "logq" in stem.lower():
+            meta["energy_basis"] = "quantal"
+            meta["scale"] = "logarithmic"
+        elif "loge" in stem.lower():
+            meta["energy_basis"] = "energy"
+            meta["scale"] = "logarithmic"
+        elif "line" in stem.lower():
+            meta["energy_basis"] = "energy"
+            meta["scale"] = "linear"
+    elif category == "luminous_efficiency":
+        meta["quantity"] = "luminous_efficiency"
+        meta["value_unit"] = "relative"
+        if "scotopic" in stem.lower():
+            meta["vision_regime"] = "scotopic"
+        else:
+            meta["vision_regime"] = "photopic"
+    elif category == "prereceptoral_filters":
+        meta["quantity"] = "optical_density"
+        meta["value_unit"] = "density"
+    elif category == "chromaticity_coordinates":
+        meta["quantity"] = "chromaticity_coordinate"
+        meta["value_unit"] = "dimensionless"
+        if "mb" in stem.lower():
+            meta["chromaticity_system"] = "MacLeod-Boynton"
+        else:
+            meta["chromaticity_system"] = "CIE"
+    elif category == "photopigments":
+        meta["quantity"] = "photopigment_absorption"
+        meta["value_unit"] = "relative"
+
+    return meta
+
+
 def _scan_and_register() -> None:
     """Walk ``standard_observer_data/`` and register every CSV file."""
     if not _OBSERVER_ROOT.exists():
@@ -389,8 +472,14 @@ def _scan_and_register() -> None:
                 _DESCRIPTION_OVERRIDES.get(stem, f"{stem} ({ncols - 1} channels)"),
             )
 
-            # Metadata: auto-detect header, merge custom overrides
-            meta: dict[str, Any] = {"header": True}
+            # Read options: auto-detect header, merge custom overrides
+            read_options: dict[str, Any] = {"header": True}
+            read_options_over = _CUSTOM_READ_OPTIONS_OVERRIDES.get((category, stem))
+            if read_options_over is not None:
+                read_options.update(read_options_over)
+
+            # Metadata: add descriptive fields, merge custom overrides
+            meta = _metadata_for_standard_observer(category, stem)
             meta_over = _CUSTOM_META_OVERRIDES.get((category, stem))
             if meta_over is not None:
                 meta.update(meta_over)
@@ -406,6 +495,7 @@ def _scan_and_register() -> None:
                 columns=cols,
                 source="CVRL (UCL)",
                 file_path=str(csv_file),
+                read_options=read_options,
                 metadata=meta,
             ))
 

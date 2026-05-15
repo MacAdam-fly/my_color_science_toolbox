@@ -5,6 +5,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
+from color.datasets import describe
 from color.datasets.gamut_data import get_gamut_data, list_gamut_data
 
 
@@ -57,6 +58,15 @@ class TestPointer:
         assert hab.min() == 0.0
         assert hab.max() == 360.0
 
+    def test_metadata(self):
+        entry = describe("gamut_data", "pointer")
+        assert entry.metadata["quantity"] == "real_surface_gamut_boundary"
+        assert entry.metadata["color_space"] == "CIELAB"
+        assert entry.metadata["illuminant"] == "C"
+        assert entry.metadata["observer_angle_deg"] == 2
+        assert 50 in entry.metadata["lightness_levels"]
+        assert entry.metadata["hue_count_per_lightness"] == 37
+
 
 class TestPointerRaw:
     """Tests for pointer_raw (generic multi-sheet reader)."""
@@ -70,3 +80,13 @@ class TestPointerRaw:
         data = get_gamut_data("pointer_raw", sheet="SpecLoc")
         assert len(data) > 0
         assert len(data[list(data.keys())[0]]) > 0
+
+    def test_metadata(self):
+        entry = describe("gamut_data", "pointer_raw")
+        assert entry.read_options["sheet"] == "Data"
+        assert entry.read_options["header"] == 8
+        assert entry.read_options["coerce_numeric"] is True
+        assert entry.metadata["quantity"] == "raw_pointer_gamut_workbook"
+        assert "coerce_numeric" not in entry.metadata
+        assert entry.metadata["coerces_non_numeric_to_nan"] is True
+        assert "SpecLoc" in entry.metadata["sheets"]

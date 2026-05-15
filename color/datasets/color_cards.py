@@ -39,7 +39,7 @@ BCRA_TILE_NAMES: tuple[str, ...] = (
 
 
 # ---------------------------------------------------------------------------
-# Special loaders
+# Special parsers
 # ---------------------------------------------------------------------------
 
 def _load_macbeth(path: str, **_: Any) -> SpectralDict:
@@ -88,6 +88,26 @@ def _load_bcra(path: str, **_: Any) -> SpectralDict:
     return result
 
 
+_MACBETH_PATH = f"{_CARDS_DIR}/MacbethColorChecker(Sheet1).csv"
+_PMC_PATH = f"{_CARDS_DIR}/PMC.xlsx"
+_BCRA_PATH = f"{_CARDS_DIR}/RepresentativeBCRA.xls"
+
+
+def _load_macbeth_dataset(**kwargs: Any) -> SpectralDict:
+    """Load Macbeth ColorChecker through the computed-dataset hook."""
+    return _load_macbeth(_MACBETH_PATH, **kwargs)
+
+
+def _load_pmc_dataset(**kwargs: Any) -> SpectralDict:
+    """Load PMC chart through the computed-dataset hook."""
+    return _load_pmc(_PMC_PATH, **kwargs)
+
+
+def _load_bcra_dataset(**kwargs: Any) -> SpectralDict:
+    """Load BCRA tiles through the computed-dataset hook."""
+    return _load_bcra(_BCRA_PATH, **kwargs)
+
+
 # ---------------------------------------------------------------------------
 # Register
 # ---------------------------------------------------------------------------
@@ -97,8 +117,18 @@ register(DatasetEntry(
     name="macbeth",
     description="Macbeth ColorChecker Classic — 24 patches, 380–780 nm, 5 nm",
     source="Ohta (1997)",
-    file_path=f"{_CARDS_DIR}/MacbethColorChecker(Sheet1).csv",
-    metadata={"loader": _load_macbeth, "patches": MACBETH_PATCH_NAMES},
+    computed=True,
+    compute_fn=_load_macbeth_dataset,
+    metadata={
+        "patches": MACBETH_PATCH_NAMES,
+        "patch_count": len(MACBETH_PATCH_NAMES),
+        "quantity": "spectral_reflectance",
+        "value_unit": "reflectance_factor",
+        "wavelength_unit": "nm",
+        "wavelength_range_nm": (380, 780),
+        "sampling_interval_nm": 5,
+        "domain": "spectral",
+    },
 ))
 
 register(DatasetEntry(
@@ -106,8 +136,17 @@ register(DatasetEntry(
     name="pmc",
     description="Preferred Memory Color (PMC) chart — 31 patches, 400–700 nm, 10 nm",
     source="Luo (2024)",
-    file_path=f"{_CARDS_DIR}/PMC.xlsx",
-    metadata={"loader": _load_pmc},
+    computed=True,
+    compute_fn=_load_pmc_dataset,
+    metadata={
+        "patch_count": 31,
+        "quantity": "spectral_reflectance",
+        "value_unit": "reflectance_factor",
+        "wavelength_unit": "nm",
+        "wavelength_range_nm": (400, 700),
+        "sampling_interval_nm": 10,
+        "domain": "spectral",
+    },
 ))
 
 register(DatasetEntry(
@@ -115,8 +154,18 @@ register(DatasetEntry(
     name="bcra",
     description="BCRA CERAM Series II calibration tiles — 12 tiles, 380–730 nm, 10 nm",
     source="RIT Munsell Color Science Lab",
-    file_path=f"{_CARDS_DIR}/RepresentativeBCRA.xls",
-    metadata={"loader": _load_bcra, "patches": BCRA_TILE_NAMES},
+    computed=True,
+    compute_fn=_load_bcra_dataset,
+    metadata={
+        "patches": BCRA_TILE_NAMES,
+        "patch_count": len(BCRA_TILE_NAMES),
+        "quantity": "spectral_reflectance",
+        "value_unit": "reflectance_factor",
+        "wavelength_unit": "nm",
+        "wavelength_range_nm": (380, 730),
+        "sampling_interval_nm": 10,
+        "domain": "spectral",
+    },
 ))
 
 
@@ -137,17 +186,7 @@ def get_color_card(name: str, **kwargs: Any) -> SpectralDict:
     dict[str, ndarray]
         ``{'wavelength': ..., patch_name: reflectance, ...}``
     """
-    from ._registry import get, describe
-
-    entry = describe("color_cards", name)
-    custom_loader = entry.metadata.get("loader")
-    if custom_loader is not None:
-        # Use the specialized loader with caching
-        cache_key = ("color_cards", name)
-        from ._registry import _CACHE
-        if cache_key not in _CACHE:
-            _CACHE[cache_key] = custom_loader(entry.file_path, **kwargs)
-        return _CACHE[cache_key]
+    from ._registry import get
     return get("color_cards", name, **kwargs)
 
 

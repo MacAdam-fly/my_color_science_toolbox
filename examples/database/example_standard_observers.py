@@ -71,12 +71,6 @@ def main() -> None:
     cones = get_standard_observer("pigment", "succones")
     print(f"Suction electrode cones (succones): {len(cones['wavelength'])} points")
 
-    # --- 8. Test extra unregistered data ---
-    # This is a placeholder for testing  data
-    test_data = get_standard_observer("test_data", "just_for_test_with_header")
-    print('test data:', test_data.keys())
-
-
     # --- 8. Plot ---
     fig, axes = plt.subplots(2, 3, figsize=(16, 10))
 

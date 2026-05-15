@@ -87,6 +87,15 @@ register(DatasetEntry(
     source="RIT Munsell Renotation",
     computed=True,
     compute_fn=_read_munsell,
+    metadata={
+        "quantity": "color_notation_table",
+        "notation_system": "Munsell",
+        "sample_count": 1625,
+        "illuminants": ("C", "D65"),
+        "observer_angle_deg": 2,
+        "color_spaces": ("Munsell HVC", "xyY", "XYZ", "sRGB"),
+        "rgb_encoding": "sRGB",
+    },
 ))
 
 

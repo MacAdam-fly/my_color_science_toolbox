@@ -38,6 +38,7 @@ from . import standard_observers  # noqa: F401
 # Re-export the core registry API
 from ._registry import (
     DatasetEntry,
+    clear_cache,
     describe,
     get,
     list_categories,
@@ -64,6 +65,7 @@ __all__ = [
     "DatasetEntry",
     "get",
     "describe",
+    "clear_cache",
     "list_categories",
     "list_datasets",
     "register",
