@@ -38,6 +38,7 @@ from . import standard_observers  # noqa: F401
 # Re-export the core registry API
 from ._registry import (
     DatasetEntry,
+    canonicalize_name,
     clear_cache,
     describe,
     get,
@@ -63,6 +64,7 @@ from .standard_observers import (
 __all__ = [
     # Core registry
     "DatasetEntry",
+    "canonicalize_name",
     "get",
     "describe",
     "clear_cache",

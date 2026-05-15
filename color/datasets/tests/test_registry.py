@@ -9,6 +9,7 @@ from color.datasets._registry import (
     DatasetEntry,
     _CACHE,
     _REGISTRY,
+    canonicalize_name,
     clear_cache,
     describe,
     get,
@@ -98,6 +99,65 @@ class TestRegister:
 
         register(entry)
         assert _REGISTRY[("test_cat", "good_options")].read_options["header"] is True
+
+    def test_register_rejects_canonical_name_collision(self):
+        register(DatasetEntry(category="collision_name", name="my-data", description=""))
+        with pytest.raises(ValueError, match="Canonical dataset name collision"):
+            register(DatasetEntry(category="collision_name", name="my data", description=""))
+
+    def test_register_rejects_canonical_category_collision(self):
+        register(DatasetEntry(category="collision_category", name="one", description=""))
+        with pytest.raises(ValueError, match="Canonical category name collision"):
+            register(DatasetEntry(category="collision category", name="two", description=""))
+
+
+class TestCanonicalNames:
+    """Tests for canonical category and dataset name resolution."""
+
+    def test_canonicalize_name(self):
+        assert canonicalize_name(" CIE 1931 XYZ 1 nm ") == "cie1931xyz1nm"
+        assert canonicalize_name("cie_1931-xyz/1nm") == "cie1931xyz1nm"
+        assert canonicalize_name("0.1 nm") == "0p1nm"
+        assert canonicalize_name("V(λ)") == "vlambda"
+
+    def test_get_with_canonical_names(self):
+        register_computed(
+            "canonical_category",
+            "my_dataset",
+            lambda **kw: {"wavelength": np.array([400.0]), "v": np.array([1.0])},
+        )
+
+        data = get("Canonical Category", "My Dataset")
+
+        np.testing.assert_array_equal(data["v"], [1.0])
+
+    def test_describe_with_canonical_names(self):
+        register(DatasetEntry(
+            category="describe_category",
+            name="sample_dataset",
+            description="Canonical describe test",
+        ))
+
+        entry = describe("Describe Category", "sample dataset")
+
+        assert entry.name == "sample_dataset"
+
+    def test_list_datasets_with_canonical_category(self):
+        register(DatasetEntry(category="list_category", name="one", description=""))
+
+        assert "one" in list_datasets("List Category")
+
+    def test_clear_cache_with_canonical_names(self):
+        register_computed(
+            "clear_canonical",
+            "sample_data",
+            lambda **kw: {"wavelength": np.array([400.0]), "v": np.array([1.0])},
+        )
+        get("Clear Canonical", "Sample Data")
+
+        removed = clear_cache("Clear Canonical", "Sample Data")
+
+        assert removed == 1
 
 
 class TestGet:

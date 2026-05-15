@@ -246,3 +246,11 @@ class TestCategoryAliases:
     def test_case_insensitive(self):
         data = get_standard_observer("Cone", "cie2006_lms2_logE_5nm")
         assert "l" in data
+
+    def test_canonical_category_name(self):
+        data = get_standard_observer("Cone Fundamentals", "cie2006_lms2_logE_5nm")
+        assert "l" in data
+
+    def test_canonical_dataset_name(self):
+        data = get_standard_observer("cmfs", "CIE 1931 XYZ 1 nm")
+        assert "X" in data
