@@ -93,21 +93,6 @@ _PMC_PATH = f"{_CARDS_DIR}/PMC.xlsx"
 _BCRA_PATH = f"{_CARDS_DIR}/RepresentativeBCRA.xls"
 
 
-def _load_macbeth_dataset(**kwargs: Any) -> SpectralDict:
-    """Load Macbeth ColorChecker through the computed-dataset hook."""
-    return _load_macbeth(_MACBETH_PATH, **kwargs)
-
-
-def _load_pmc_dataset(**kwargs: Any) -> SpectralDict:
-    """Load PMC chart through the computed-dataset hook."""
-    return _load_pmc(_PMC_PATH, **kwargs)
-
-
-def _load_bcra_dataset(**kwargs: Any) -> SpectralDict:
-    """Load BCRA tiles through the computed-dataset hook."""
-    return _load_bcra(_BCRA_PATH, **kwargs)
-
-
 # ---------------------------------------------------------------------------
 # Register
 # ---------------------------------------------------------------------------
@@ -117,8 +102,8 @@ register(DatasetEntry(
     name="macbeth",
     description="Macbeth ColorChecker Classic — 24 patches, 380–780 nm, 5 nm",
     source="Ohta (1997)",
-    computed=True,
-    compute_fn=_load_macbeth_dataset,
+    file_path=_MACBETH_PATH,
+    parser_fn=_load_macbeth,
     metadata={
         "patches": MACBETH_PATCH_NAMES,
         "patch_count": len(MACBETH_PATCH_NAMES),
@@ -136,8 +121,8 @@ register(DatasetEntry(
     name="pmc",
     description="Preferred Memory Color (PMC) chart — 31 patches, 400–700 nm, 10 nm",
     source="Luo (2024)",
-    computed=True,
-    compute_fn=_load_pmc_dataset,
+    file_path=_PMC_PATH,
+    parser_fn=_load_pmc,
     metadata={
         "patch_count": 31,
         "quantity": "spectral_reflectance",
@@ -154,8 +139,8 @@ register(DatasetEntry(
     name="bcra",
     description="BCRA CERAM Series II calibration tiles — 12 tiles, 380–730 nm, 10 nm",
     source="RIT Munsell Color Science Lab",
-    computed=True,
-    compute_fn=_load_bcra_dataset,
+    file_path=_BCRA_PATH,
+    parser_fn=_load_bcra,
     metadata={
         "patches": BCRA_TILE_NAMES,
         "patch_count": len(BCRA_TILE_NAMES),

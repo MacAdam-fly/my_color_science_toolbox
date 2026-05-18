@@ -64,8 +64,8 @@ class TestMacbeth:
 
     def test_metadata(self):
         entry = describe("color_cards", "macbeth")
-        assert entry.computed is True
-        assert entry.compute_fn is not None
+        assert entry.file_path is not None
+        assert entry.parser_fn is not None
         assert "loader" not in entry.metadata
         assert entry.metadata["quantity"] == "spectral_reflectance"
         assert entry.metadata["patch_count"] == 24
@@ -110,8 +110,8 @@ class TestBCRA:
 
     def test_metadata(self):
         entry = describe("color_cards", "bcra")
-        assert entry.computed is True
-        assert entry.compute_fn is not None
+        assert entry.file_path is not None
+        assert entry.parser_fn is not None
         assert "loader" not in entry.metadata
         assert entry.metadata["quantity"] == "spectral_reflectance"
         assert entry.metadata["patch_count"] == 12

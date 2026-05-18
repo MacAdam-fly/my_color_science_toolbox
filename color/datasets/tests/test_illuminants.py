@@ -1,9 +1,8 @@
-"""Tests for color.datasets.illuminants — illuminant loaders and computed datasets."""
+"""Tests for color.datasets.illuminants static loaders."""
 
 from __future__ import annotations
 
 import numpy as np
-import pytest
 
 from color.datasets.illuminants import get_illuminant, list_illuminants
 
@@ -19,9 +18,9 @@ class TestListIlluminants:
         result = list_illuminants()
         assert "A" in result
         assert "D65" in result
-        assert "blackbody" in result
-        assert "daylight" in result
         assert "fluorescents" in result
+        assert "blackbody" not in result
+        assert "daylight" not in result
 
     def test_sorted(self):
         result = list_illuminants()
@@ -29,7 +28,7 @@ class TestListIlluminants:
 
 
 class TestGetIlluminantA:
-    """Tests for CIE Illuminant A (file-based)."""
+    """Tests for CIE Illuminant A."""
 
     def test_returns_dict(self):
         data = get_illuminant("A")
@@ -52,7 +51,7 @@ class TestGetIlluminantA:
 
 
 class TestGetIlluminantD65:
-    """Tests for CIE Illuminant D65 (file-based)."""
+    """Tests for CIE Illuminant D65."""
 
     def test_returns_dict_with_wavelength(self):
         data = get_illuminant("D65")
@@ -73,24 +72,15 @@ class TestIlluminantFieldNames:
     """Tests for consistent illuminant field names."""
 
     def test_relative_spd_datasets_use_spd_key(self):
-        for name in ["A", "D65", "daylight"]:
-            data = (
-                get_illuminant(name, cct=6500)
-                if name == "daylight"
-                else get_illuminant(name)
-            )
+        for name in ["A", "D65"]:
+            data = get_illuminant(name)
             assert "wavelength" in data
             assert "spd" in data
             assert "value" not in data
 
-    def test_blackbody_keeps_radiance_key(self):
-        data = get_illuminant("blackbody", temperature=6500)
-        assert "radiance" in data
-        assert "spd" not in data
-
 
 class TestGetIlluminantFluorescents:
-    """Tests for fluorescent lamp data (file-based)."""
+    """Tests for fluorescent lamp data."""
 
     def test_has_f1_to_f12(self):
         data = get_illuminant("fluorescents")
@@ -100,63 +90,3 @@ class TestGetIlluminantFluorescents:
     def test_wavelength_present(self):
         data = get_illuminant("fluorescents")
         assert "wavelength" in data
-
-
-class TestBlackbody:
-    """Tests for computed blackbody radiation (Planck's law)."""
-
-    def test_basic(self):
-        data = get_illuminant("blackbody", temperature=6500)
-        assert "wavelength" in data
-        assert "radiance" in data
-
-    def test_different_temperatures(self):
-        for T in [1000, 3000, 6500, 10000]:
-            data = get_illuminant("blackbody", temperature=T)
-            assert len(data["wavelength"]) > 0
-            assert np.all(data["radiance"] > 0)
-
-    def test_peak_shifts_with_temperature(self):
-        """Wien's displacement law: peak shifts left as T increases."""
-        d3k = get_illuminant("blackbody", temperature=3000)
-        d10k = get_illuminant("blackbody", temperature=10000)
-        peak_3k = d3k["wavelength"][np.argmax(d3k["radiance"])]
-        peak_10k = d10k["wavelength"][np.argmax(d10k["radiance"])]
-        assert peak_10k < peak_3k
-
-    def test_negative_temperature_raises(self):
-        with pytest.raises(AssertionError):
-            get_illuminant("blackbody", temperature=-100)
-
-    def test_custom_wavelength(self):
-        wl = np.arange(400, 701, 10.0)
-        data = get_illuminant("blackbody", temperature=6500, wavelength_nm=wl)
-        np.testing.assert_array_equal(data["wavelength"], wl)
-
-
-class TestDaylight:
-    """Tests for computed CIE D-series daylight."""
-
-    def test_basic(self):
-        data = get_illuminant("daylight", cct=6500)
-        assert "wavelength" in data
-        assert "spd" in data
-
-    def test_different_ccts(self):
-        for cct in [4000, 5000, 6500, 10000, 25000]:
-            data = get_illuminant("daylight", cct=cct)
-            assert len(data["wavelength"]) > 0
-            assert np.all(data["spd"] >= 0)
-
-    def test_cct_out_of_range_raises(self):
-        with pytest.raises(ValueError, match="4000.*25000"):
-            get_illuminant("daylight", cct=3000)
-
-    def test_cct_too_high_raises(self):
-        with pytest.raises(ValueError):
-            get_illuminant("daylight", cct=30000)
-
-    def test_default_wavelength(self):
-        data = get_illuminant("daylight", cct=5000)
-        assert data["wavelength"][0] == 300
-        assert data["wavelength"][-1] == 830

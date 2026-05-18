@@ -19,7 +19,8 @@ if str(_PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(_PROJECT_ROOT))
 
 from color.datasets import list_categories, list_datasets, search
-from color.datasets._registry import DatasetEntry, get, register, register_computed
+from color.datasets._registry import DatasetEntry, get, register
+from color.generators._registry import GeneratorEntry, generate, register as register_generator
 
 
 def write_no_header_csv(path: Path) -> None:
@@ -140,10 +141,48 @@ def demo_xlsx_named_sheet(tmp: Path) -> None:
     print("  rows:", len(data["wavelength"]))
 
 
-def demo_computed_dataset() -> None:
-    """Computed dataset: no file, but registered through the same registry."""
+def demo_custom_parser(tmp: Path) -> None:
+    """Special static file: register a parser function."""
     print("\n" + "=" * 60)
-    print("5. Computed dataset -> register_computed")
+    print("5. Special static file -> parser_fn")
+    print("=" * 60)
+
+    custom_path = tmp / "semicolon_spd.txt"
+    custom_path.write_text(
+        "wl;value\n"
+        "500;0.8\n"
+        "510;0.9\n"
+        "520;0.7\n",
+        encoding="utf-8",
+    )
+
+    def read_semicolon(path: str, **kwargs):
+        rows = Path(path).read_text(encoding="utf-8").strip().splitlines()[1:]
+        wavelength = []
+        spd = []
+        for row in rows:
+            wl, value = row.split(";")
+            wavelength.append(float(wl))
+            spd.append(float(value))
+        return {"wavelength": np.array(wavelength), "spd": np.array(spd)}
+
+    register(DatasetEntry(
+        category="example_spds",
+        name="semicolon_parser",
+        description="Temporary semicolon SPD parsed by parser_fn",
+        file_path=str(custom_path),
+        parser_fn=read_semicolon,
+    ))
+
+    data = get("example_spds", "semicolon_parser")
+    print("  keys:", list(data.keys()))
+    print("  peak:", data["wavelength"][np.argmax(data["spd"])])
+
+
+def demo_generated_data() -> None:
+    """Generated data: register a formula in color.generators."""
+    print("\n" + "=" * 60)
+    print("6. Generated data -> color.generators")
     print("=" * 60)
 
     def gaussian_spd(wavelength_nm=None, center=550.0, width=30.0):
@@ -152,14 +191,15 @@ def demo_computed_dataset() -> None:
         spd = np.exp(-0.5 * ((wavelength_nm - center) / width) ** 2)
         return {"wavelength": wavelength_nm, "spd": spd}
 
-    register_computed(
+    register_generator(GeneratorEntry(
         category="example_spds",
         name="gaussian",
-        compute_fn=gaussian_spd,
         description="Generated Gaussian SPD",
-    )
+        generate_fn=gaussian_spd,
+        parameters=("wavelength_nm", "center", "width"),
+    ))
 
-    data = get("example_spds", "gaussian", center=610, width=25)
+    data = generate("example_spds", "gaussian", center=610, width=25)
     print("  peak:", data["wavelength"][np.argmax(data["spd"])])
 
 
@@ -182,7 +222,8 @@ def main() -> None:
         demo_csv_with_header(tmp)
         demo_csv_header_override(tmp)
         demo_xlsx_named_sheet(tmp)
-        demo_computed_dataset()
+        demo_custom_parser(tmp)
+        demo_generated_data()
         demo_discovery()
 
     print("\nTemporary files were removed. Registered data remains cached for this process.")

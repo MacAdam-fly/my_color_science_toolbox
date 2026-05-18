@@ -9,6 +9,7 @@ color_agent/
 	constants/   # matrices, white points, primaries
 	core/        # shared types and small abstractions
 	data/        # static datasets (CMF, spectra tables)
+	generators/  # formula/procedural data generation
 	icc/         # ICC profile parsing and transforms
 	io/          # file readers/writers for spectra, CMF, ICC
 	math/        # solvers, interpolation, fitting, simulation

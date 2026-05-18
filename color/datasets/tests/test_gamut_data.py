@@ -60,6 +60,8 @@ class TestPointer:
 
     def test_metadata(self):
         entry = describe("gamut_data", "pointer")
+        assert entry.file_path is not None
+        assert entry.parser_fn is not None
         assert entry.metadata["quantity"] == "real_surface_gamut_boundary"
         assert entry.metadata["color_space"] == "CIELAB"
         assert entry.metadata["illuminant"] == "C"

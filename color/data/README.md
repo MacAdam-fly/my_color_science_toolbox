@@ -70,9 +70,8 @@ datasets in this directory.
 | `reference/DaylightSeries.xlsx` | Tabulated daylight reference data | Reference/validation data |
 | `reference/blackbody.xlsx` | Tabulated blackbody reference data | Reference/validation data |
 
-The public loader also provides computed datasets:
-`get_illuminant("blackbody", temperature=...)` and
-`get_illuminant("daylight", cct=...)`.
+Formula-generated blackbody and daylight data are provided by
+`color.generators`, not by `color.datasets`.
 
 ### Color Cards
 
@@ -131,7 +130,7 @@ validation, but application code should normally go through `color.datasets`.
 - Keep parser-specific behavior in `color/datasets/`, not in this directory.
 - Record source, units, wavelength range, and normalization details in
   `DatasetEntry.metadata`; keep parser/read behavior in
-  `DatasetEntry.read_options` or `compute_fn`.
+  `DatasetEntry.read_options` or `parser_fn`.
 
 ## Sources
 

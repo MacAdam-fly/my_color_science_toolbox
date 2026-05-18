@@ -1,12 +1,12 @@
-"""Central registry for all color science datasets.
+"""Central registry for static color science datasets.
 
-Provides lazy-loading, caching, and unified access to file-based and
-computed datasets across all categories (illuminants, observers, etc.).
+Provides lazy-loading, caching, and unified access to static file-backed
+datasets across all categories (illuminants, observers, etc.).
 
 New data files placed in the ``data/`` tree are discovered automatically
-via each category module's ``_register_*()`` function.  Computed datasets
-(e.g. blackbody radiation, CIE D-series) are registered with a callable
-that generates data on demand.
+via each category module's ``_register_*()`` function.  Special static files
+that cannot use the generic CSV/XLS/XLSX readers can provide ``parser_fn``.
+Formula-generated data belongs in :mod:`color.generators`, not here.
 """
 
 from __future__ import annotations
@@ -38,11 +38,9 @@ class DatasetEntry:
     source: str = ""
     """Origin of the data (paper, URL, etc.)."""
     file_path: Optional[str] = None
-    """Absolute path to the backing file.  ``None`` for computed datasets."""
-    computed: bool = False
-    """``True`` if the data is generated or parsed by ``compute_fn``."""
-    compute_fn: Optional[Callable[..., SpectralDict]] = None
-    """Factory/parser that produces the dataset.  Required when *computed* is ``True``."""
+    """Absolute path to the backing static file."""
+    parser_fn: Optional[Callable[..., SpectralDict]] = None
+    """Custom parser for special static files; receives ``file_path`` first."""
     columns: Optional[Tuple[str, ...]] = None
     """Column names for the dataset.  Always takes highest priority, even over file headers."""
     read_options: Dict[str, Any] = field(default_factory=dict)
@@ -140,24 +138,6 @@ def register(entry: DatasetEntry) -> None:
     _CANONICAL_INDEX[canonical_key] = key
 
 
-def register_computed(
-    category: str,
-    name: str,
-    compute_fn: Callable[..., SpectralDict],
-    description: str = "",
-    metadata: Optional[Dict[str, Any]] = None,
-) -> None:
-    """Shorthand for registering a computed (formula-generated) dataset."""
-    register(DatasetEntry(
-        category=category,
-        name=name,
-        description=description,
-        computed=True,
-        compute_fn=compute_fn,
-        metadata=metadata or {},
-    ))
-
-
 # ---------------------------------------------------------------------------
 # Cache helpers
 # ---------------------------------------------------------------------------
@@ -215,9 +195,8 @@ def get(category: str, name: str, **kwargs: Any) -> SpectralDict:
     """Return dataset contents (lazy-loaded and cached).
 
     Results are cached after first read and returned as read-only copies.
-    File-based datasets are cached per call-parameter set (e.g. sheet name).
-    For computed datasets the *kwargs* are forwarded to the compute function
-    and the result is cached under ``(category, name, *sorted(kwargs))``.
+    Datasets are cached per call-parameter set (e.g. sheet name or custom
+    parser options).
     """
     from ._utils import attest
 
@@ -237,15 +216,13 @@ def get(category: str, name: str, **kwargs: Any) -> SpectralDict:
     category, name = key
     cache_key = _make_cache_key(category, name, kwargs)
 
-    if entry.computed:
-        if cache_key not in _CACHE:
-            if entry.compute_fn is None:
-                raise RuntimeError(f"Computed dataset {name!r} has no compute_fn")
-            _CACHE[cache_key] = entry.compute_fn(**kwargs)
-        return _readonly_copy(_CACHE[cache_key])
-
     if cache_key not in _CACHE:
-        _CACHE[cache_key] = _read_file(entry, **kwargs)
+        if entry.parser_fn is not None:
+            if entry.file_path is None:
+                raise RuntimeError(f"Dataset {name!r} has parser_fn but no file_path")
+            _CACHE[cache_key] = entry.parser_fn(entry.file_path, **kwargs)
+        else:
+            _CACHE[cache_key] = _read_file(entry, **kwargs)
     return _readonly_copy(_CACHE[cache_key])
 
 

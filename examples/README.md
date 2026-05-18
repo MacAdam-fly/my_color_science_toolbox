@@ -11,7 +11,7 @@ Minimal examples for the color package.
 
 Usage examples for the `color.datasets` data loading module.
 
-- `example_illuminants.py` — Load CIE illuminants, compute blackbody radiation at arbitrary temperatures, generate CIE D-series daylight at arbitrary CCTs, plot SPDs.
+- `example_illuminants.py` — Load static CIE illuminants, generate blackbody and CIE D-series daylight SPDs, plot SPDs.
 - `example_color_cards.py` — Load Macbeth ColorChecker and BCRA calibration tiles, print reflectance at specific wavelengths, plot spectral reflectance curves.
 - `example_standard_observers.py` — Load CIE XYZ CMFs, CIE 2006 LMS cone fundamentals, CIE 2008 V(λ), prereceptoral filters, chromaticity coordinates, photopigments. Demonstrates category aliases (`"lms"`, `"vl"`, `"filter"`, `"xy"`, `"pigment"`).
 - `example_gamut_data.py` — Load Pointer's real surface colour gamut, inspect chromaticity data.

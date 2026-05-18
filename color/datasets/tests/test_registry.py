@@ -16,7 +16,6 @@ from color.datasets._registry import (
     list_categories,
     list_datasets,
     register,
-    register_computed,
     search,
 )
 
@@ -32,7 +31,7 @@ class TestDatasetEntry:
         )
         assert entry.category == "illuminants"
         assert entry.name == "test"
-        assert entry.computed is False
+        assert entry.parser_fn is None
         assert entry.read_options == {}
         assert entry.metadata == {}
 
@@ -43,7 +42,7 @@ class TestDatasetEntry:
 
 
 class TestRegister:
-    """Tests for register() and register_computed()."""
+    """Tests for register()."""
 
     def test_register_file_based(self):
         entry = DatasetEntry(
@@ -56,14 +55,19 @@ class TestRegister:
         assert ("test_cat", "test_file") in _REGISTRY
         assert _REGISTRY[("test_cat", "test_file")].file_path == "/tmp/test.csv"
 
-    def test_register_computed(self):
-        def _gen(**kw):
+    def test_register_parser(self):
+        def _parse(path, **kw):
             return {"wavelength": np.array([400.0]), "value": np.array([1.0])}
 
-        register_computed("test_cat", "test_computed", _gen, description="computed")
-        entry = _REGISTRY[("test_cat", "test_computed")]
-        assert entry.computed is True
-        assert entry.compute_fn is _gen
+        register(DatasetEntry(
+            category="test_cat",
+            name="test_parser",
+            description="parser",
+            file_path="/tmp/test.csv",
+            parser_fn=_parse,
+        ))
+        entry = _REGISTRY[("test_cat", "test_parser")]
+        assert entry.parser_fn is _parse
 
     def test_register_overwrites(self):
         register(DatasetEntry(category="c", name="n", description="v1"))
@@ -121,11 +125,16 @@ class TestCanonicalNames:
         assert canonicalize_name("V(λ)") == "vlambda"
 
     def test_get_with_canonical_names(self):
-        register_computed(
-            "canonical_category",
-            "my_dataset",
-            lambda **kw: {"wavelength": np.array([400.0]), "v": np.array([1.0])},
-        )
+        register(DatasetEntry(
+            category="canonical_category",
+            name="my_dataset",
+            description="",
+            file_path="/tmp/canonical.csv",
+            parser_fn=lambda path, **kw: {
+                "wavelength": np.array([400.0]),
+                "v": np.array([1.0]),
+            },
+        ))
 
         data = get("Canonical Category", "My Dataset")
 
@@ -148,11 +157,16 @@ class TestCanonicalNames:
         assert "one" in list_datasets("List Category")
 
     def test_clear_cache_with_canonical_names(self):
-        register_computed(
-            "clear_canonical",
-            "sample_data",
-            lambda **kw: {"wavelength": np.array([400.0]), "v": np.array([1.0])},
-        )
+        register(DatasetEntry(
+            category="clear_canonical",
+            name="sample_data",
+            description="",
+            file_path="/tmp/clear.csv",
+            parser_fn=lambda path, **kw: {
+                "wavelength": np.array([400.0]),
+                "v": np.array([1.0]),
+            },
+        ))
         get("Clear Canonical", "Sample Data")
 
         removed = clear_cache("Clear Canonical", "Sample Data")
@@ -233,18 +247,24 @@ class TestGet:
         assert first["spd"].flags.writeable is False
         np.testing.assert_array_equal(second["spd"], [0.1, 0.2])
 
-    def test_computed_result_is_readonly_copy(self):
-        """Mutating a returned computed dataset should not touch cached data."""
+    def test_parser_result_is_readonly_copy(self):
+        """Mutating a returned parser dataset should not touch cached data."""
         calls = 0
 
-        def _gen(**kw):
+        def _parse(path, **kw):
             nonlocal calls
             calls += 1
             return {"wavelength": np.array([400.0]), "value": np.array([1.0])}
 
-        cat = "readonly_computed_test"
-        name = "generated"
-        register_computed(cat, name, _gen)
+        cat = "readonly_parser_test"
+        name = "parsed"
+        register(DatasetEntry(
+            category=cat,
+            name=name,
+            description="",
+            file_path="/tmp/parser.csv",
+            parser_fn=_parse,
+        ))
 
         first = get(cat, name)
         with pytest.raises(ValueError):
@@ -282,16 +302,26 @@ class TestClearCache:
     """Tests for selective cache clearing."""
 
     def test_clear_cache_all(self):
-        register_computed(
-            "clear_all_a",
-            "one",
-            lambda **kw: {"wavelength": np.array([400.0]), "v": np.array([1.0])},
-        )
-        register_computed(
-            "clear_all_b",
-            "two",
-            lambda **kw: {"wavelength": np.array([500.0]), "v": np.array([2.0])},
-        )
+        register(DatasetEntry(
+            category="clear_all_a",
+            name="one",
+            description="",
+            file_path="/tmp/a.csv",
+            parser_fn=lambda path, **kw: {
+                "wavelength": np.array([400.0]),
+                "v": np.array([1.0]),
+            },
+        ))
+        register(DatasetEntry(
+            category="clear_all_b",
+            name="two",
+            description="",
+            file_path="/tmp/b.csv",
+            parser_fn=lambda path, **kw: {
+                "wavelength": np.array([500.0]),
+                "v": np.array([2.0]),
+            },
+        ))
         get("clear_all_a", "one")
         get("clear_all_b", "two")
 
@@ -302,16 +332,26 @@ class TestClearCache:
 
     def test_clear_cache_by_category(self):
         clear_cache()
-        register_computed(
-            "clear_cat_a",
-            "one",
-            lambda **kw: {"wavelength": np.array([400.0]), "v": np.array([1.0])},
-        )
-        register_computed(
-            "clear_cat_b",
-            "two",
-            lambda **kw: {"wavelength": np.array([500.0]), "v": np.array([2.0])},
-        )
+        register(DatasetEntry(
+            category="clear_cat_a",
+            name="one",
+            description="",
+            file_path="/tmp/a.csv",
+            parser_fn=lambda path, **kw: {
+                "wavelength": np.array([400.0]),
+                "v": np.array([1.0]),
+            },
+        ))
+        register(DatasetEntry(
+            category="clear_cat_b",
+            name="two",
+            description="",
+            file_path="/tmp/b.csv",
+            parser_fn=lambda path, **kw: {
+                "wavelength": np.array([500.0]),
+                "v": np.array([2.0]),
+            },
+        ))
         get("clear_cat_a", "one")
         get("clear_cat_b", "two")
 
@@ -323,16 +363,26 @@ class TestClearCache:
 
     def test_clear_cache_by_category_and_name(self):
         clear_cache()
-        register_computed(
-            "clear_name",
-            "one",
-            lambda **kw: {"wavelength": np.array([400.0]), "v": np.array([1.0])},
-        )
-        register_computed(
-            "clear_name",
-            "two",
-            lambda **kw: {"wavelength": np.array([500.0]), "v": np.array([2.0])},
-        )
+        register(DatasetEntry(
+            category="clear_name",
+            name="one",
+            description="",
+            file_path="/tmp/one.csv",
+            parser_fn=lambda path, **kw: {
+                "wavelength": np.array([400.0]),
+                "v": np.array([1.0]),
+            },
+        ))
+        register(DatasetEntry(
+            category="clear_name",
+            name="two",
+            description="",
+            file_path="/tmp/two.csv",
+            parser_fn=lambda path, **kw: {
+                "wavelength": np.array([500.0]),
+                "v": np.array([2.0]),
+            },
+        ))
         get("clear_name", "one")
         get("clear_name", "two")
 
@@ -475,9 +525,9 @@ class TestManualRegistration:
         assert list(data.keys()) == ["wavelength", "spd"]
         np.testing.assert_array_equal(data["wavelength"], [460.0, 560.0, 660.0])
 
-    def test_register_computed_and_load(self):
-        """Register a computed dataset and load it with parameters."""
-        def _sine(wavelength_nm=None, frequency=1.0):
+    def test_register_parser_and_load(self):
+        """Register a custom parser and load it with parameters."""
+        def _sine(path, wavelength_nm=None, frequency=1.0):
             if wavelength_nm is None:
                 wavelength_nm = np.arange(400, 701, 1.0)
             return {
@@ -485,15 +535,16 @@ class TestManualRegistration:
                 "value": np.sin(2 * np.pi * frequency * wavelength_nm / 100.0),
             }
 
-        cat = "my_computed_cat"
+        cat = "my_parser_cat"
         name = "sine_wave"
-        register_computed(
+        register(DatasetEntry(
             category=cat,
             name=name,
-            compute_fn=_sine,
             description="Test sine wave",
+            file_path="/tmp/sine.csv",
+            parser_fn=_sine,
             metadata={"unit": "arbitrary"},
-        )
+        ))
 
         data = get(cat, name, frequency=2.0)
         assert "wavelength" in data
@@ -501,19 +552,25 @@ class TestManualRegistration:
         assert len(data["wavelength"]) == 301  # 400–700
 
         entry = describe(cat, name)
-        assert entry.computed is True
+        assert entry.parser_fn is _sine
         assert entry.metadata["unit"] == "arbitrary"
 
-    def test_register_computed_cached(self):
-        """Computed datasets with same params return cached result."""
+    def test_register_parser_cached(self):
+        """Parser datasets with same params return cached result."""
         call_count = 0
 
-        def _counter(**kw):
+        def _counter(path, **kw):
             nonlocal call_count
             call_count += 1
             return {"wavelength": np.array([400.0]), "v": np.array([1.0])}
 
-        register_computed("cache_test", "ctr", _counter)
+        register(DatasetEntry(
+            category="cache_test",
+            name="ctr",
+            description="",
+            file_path="/tmp/cache.csv",
+            parser_fn=_counter,
+        ))
         get("cache_test", "ctr")
         get("cache_test", "ctr")
         assert call_count == 1
