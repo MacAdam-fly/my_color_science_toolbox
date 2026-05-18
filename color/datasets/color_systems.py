@@ -30,11 +30,10 @@ _MUNSELL_NAMES = (
 )
 
 
-def _read_munsell() -> SpectralDict:
+def _read_munsell(path: str, **_: Any) -> SpectralDict:
     """Read Munsell sRGB XLS, preserving the Hue string column."""
     import xlrd
 
-    path = f"{_DATA_DIR}/real_sRGB.xls"
     wb = xlrd.open_workbook(path)
     ws = wb.sheet_by_name("data")
 
@@ -85,8 +84,8 @@ register(DatasetEntry(
     name="munsell_srgb",
     description="RIT Munsell renotation data — 1625 real/obtainable chips",
     source="RIT Munsell Renotation",
-    computed=True,
-    compute_fn=_read_munsell,
+    file_path=f"{_DATA_DIR}/real_sRGB.xls",
+    parser_fn=_read_munsell,
     metadata={
         "quantity": "color_notation_table",
         "notation_system": "Munsell",

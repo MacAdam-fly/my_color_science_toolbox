@@ -14,3 +14,5 @@ print(f"J: {specification.J}, C: {specification.C}, h: {specification.h}")
 # CAM16正向计算
 specification_cam16 = colour.XYZ_to_CAM16(XYZ, XYZ_w, L_A, Y_b, surround)
 print(f"J: {specification_cam16.J}, C: {specification_cam16.C}, h: {specification_cam16.h}")
+
+print('temp 123')

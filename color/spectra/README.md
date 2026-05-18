@@ -1,0 +1,101 @@
+# spectra - spectral object wrappers
+
+`color.spectra` is the optional object layer above `color.datasets`.
+
+`color.datasets` returns raw parsed arrays:
+
+```python
+dict[str, numpy.ndarray]
+```
+
+`color.spectra` wraps those arrays as immutable spectral objects for
+interpolation, extrapolation, alignment, reshaping, export, and arithmetic. It
+does not replace raw dataset access.
+
+## Quick Start
+
+```python
+from color.spectra import SpectralShape, from_dataset
+
+d65 = from_dataset("illuminants", "D65")
+d65_5nm = d65.reshape(SpectralShape(400, 700, 5))
+d65_visible = d65.trim(SpectralShape(400, 700, 10))
+d65_aligned = d65.align(SpectralShape(360, 830, 5))
+d65_values = d65.sample([450, 550])
+
+cmfs = from_dataset("standard_observers.cmfs", "CIE 1931 XYZ 1 nm")
+y_bar = cmfs.channel("Y")
+```
+
+## Objects
+
+| Object | Purpose |
+| --- | --- |
+| `SpectralShape` | Regular wavelength domain, e.g. 400-700 nm at 5 nm |
+| `SpectralDistribution` | Single-channel spectral signal |
+| `MultiSpectralDistribution` | Multi-channel spectral signal sharing one wavelength domain |
+
+Constructors copy input arrays and expose read-only arrays. Operations return
+new objects and do not mutate the source object.
+
+`domain` and `range` are read-only aliases for `wavelengths` and `values`.
+They are provided for users who prefer the mathematical function vocabulary.
+
+## Operations
+
+| Method | Behavior |
+| --- | --- |
+| `sample(wavelengths, method="auto")` | Return interpolated numeric values |
+| `__call__(wavelengths, method="auto")` | Shortcut for `sample(...)` |
+| `interpolate(wavelengths, method="auto")` | Sample inside the current domain |
+| `reshape(shape, method="auto")` | Sample inside the current domain at a `SpectralShape` |
+| `trim(shape)` | Keep existing source samples inside the shape bounds |
+| `extrapolate(shape, method="fill")` | Sample a shape and extrapolate out-of-domain samples |
+| `align(shape, extrapolator="constant")` | Sample a shape with interpolation and edge extrapolation |
+
+Interpolation methods are `auto`, `nearest`, `linear`, `cubic`, `pchip`, and
+`sprague`. `auto` uses Sprague for uniform data with at least 6 samples, cubic
+for non-uniform data with at least 4 samples, and linear otherwise.
+
+Extrapolation methods are `constant`, `linear`, and `fill`. `constant` matches
+the boundary values, `linear` extends the boundary slope, and `fill` writes
+`fill_value` outside the source domain. `left` and `right` can override the two
+outside regions explicitly.
+
+## Export
+
+Use `to_dict()` for column mappings, `to_numpy()` for a dense array, and
+`to_pandas()` for a DataFrame.
+
+```python
+array = d65.to_numpy()
+frame = cmfs.to_pandas()
+```
+
+## Arithmetic
+
+Spectral objects support scalar arithmetic and same-type object arithmetic:
+
+```python
+scaled = d65 * 0.5
+sum_spd = d65 + d65.copy()
+```
+
+Object arithmetic requires identical wavelength samples. Multi-channel
+arithmetic also requires identical labels. Automatic alignment is intentionally
+not performed; call `align(...)` explicitly first.
+
+## Scope
+
+This object layer includes:
+
+- object construction and validation
+- conversion from raw columns and registered datasets
+- interpolation with explicit out-of-domain handling
+- reshape, trim, extrapolate, and align
+- numpy and pandas export
+- arithmetic operations
+
+It does not implement spectral integration, `area()`, or SPD x CMF to XYZ
+colourimetry. Those operations belong in a later colorimetric computation
+layer.

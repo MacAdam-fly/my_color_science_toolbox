@@ -1,7 +1,7 @@
 """Dataset loading layer for color science reference data.
 
-Provides lazy-loaded, cached access to all static datasets in ``color/data/``,
-plus computed datasets (blackbody radiation, CIE D-series daylight).
+Provides lazy-loaded, cached access to static datasets in ``color/data/``.
+Formula-generated data lives in :mod:`color.generators`.
 
 Quick start::
 
@@ -9,8 +9,6 @@ Quick start::
 
     # Illuminants
     d65 = get('illuminants', 'D65')
-    bb  = get('illuminants', 'blackbody', temperature=5500)
-    d50 = get('illuminants', 'daylight', cct=5000)
 
     # Color cards
     macbeth = get('color_cards', 'macbeth')
@@ -45,7 +43,6 @@ from ._registry import (
     list_categories,
     list_datasets,
     register,
-    register_computed,
     search,
 )
 
@@ -71,7 +68,6 @@ __all__ = [
     "list_categories",
     "list_datasets",
     "register",
-    "register_computed",
     "search",
     # Illuminants
     "get_illuminant",

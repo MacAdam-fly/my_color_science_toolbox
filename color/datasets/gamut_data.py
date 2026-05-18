@@ -37,7 +37,7 @@ _DATA_START_ROW = 8
 _N_HUE_ROWS = 37
 
 
-def _read_pointer_calculations(**kwargs: Any) -> SpectralDict:
+def _read_pointer_calculations(path: str, **kwargs: Any) -> SpectralDict:
     """Parse the Pointer Calculations sheet.
 
     The sheet has 8 L* sections arranged side-by-side, each with 37 hue-angle
@@ -51,7 +51,6 @@ def _read_pointer_calculations(**kwargs: Any) -> SpectralDict:
     """
     import xlrd
 
-    path = f"{_GAMUT_DIR}/PointerData.xls"
     wb = xlrd.open_workbook(path)
     ws = wb.sheet_by_name("Calculations")
 
@@ -118,8 +117,8 @@ register(DatasetEntry(
     name="pointer",
     description="Pointer's gamut of real surface colours — Calculations sheet boundary data",
     source="Pointer (1980)",
-    computed=True,
-    compute_fn=_read_pointer_calculations,
+    file_path=f"{_GAMUT_DIR}/PointerData.xls",
+    parser_fn=_read_pointer_calculations,
     metadata={
         "sheets": ("Data", "Calculations", "IllumDat", "SpecLoc"),
         "quantity": "real_surface_gamut_boundary",
