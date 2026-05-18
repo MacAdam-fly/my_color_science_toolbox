@@ -12,6 +12,9 @@ dict[str, numpy.ndarray]
 interpolation, extrapolation, alignment, reshaping, export, and arithmetic. It
 does not replace raw dataset access.
 
+For a detailed guide to object creation, sampling, interpolation, alignment,
+export, and common workflows, see `README_DETAILS.md`.
+
 ## Quick Start
 
 ```python
