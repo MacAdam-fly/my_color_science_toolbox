@@ -14,6 +14,7 @@ color_agent/
 	math/        # solvers, interpolation, fitting, simulation
 	models/      # appearance/opponent/observer models
 	plot/        # 2D/3D visualization helpers
+	spectra/     # spectral object wrappers, interpolation, alignment
 	spaces/      # color space definitions and conversions (XYZ centered)
 	tools/       # high-level workflow toolkits
 	utils/       # legacy helpers used during refactor
