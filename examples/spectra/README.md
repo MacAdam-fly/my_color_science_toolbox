@@ -20,6 +20,7 @@ Run from the project root:
 .\.venv\Scripts\python.exe examples\spectra\example_arithmetic_alignment.py
 .\.venv\Scripts\python.exe examples\spectra\example_plot_single_distribution.py
 .\.venv\Scripts\python.exe examples\spectra\example_plot_cmfs.py
+.\.venv\Scripts\python.exe examples\spectra\example_plot_pmc_color_card.py
 ```
 
 The examples intentionally do not perform colorimetric integration. The
@@ -41,3 +42,4 @@ Coverage
 - `example_export_formats.py`: dict, NumPy, and pandas export.
 - `example_plot_single_distribution.py`: visualize interpolation/extrapolation.
 - `example_plot_cmfs.py`: visualize multi-channel CMFs.
+- `example_plot_pmc_color_card.py`: wrap three PMC color-card patches and plot 0.5 nm interpolation.
