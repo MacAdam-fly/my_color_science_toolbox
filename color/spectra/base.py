@@ -24,6 +24,27 @@ def metadata_copy(metadata: Mapping[str, Any] | None) -> dict[str, Any]:
     return dict(metadata or {})
 
 
+def apply_nan_policy(
+    values: np.ndarray,
+    metadata: Mapping[str, Any] | None,
+    *,
+    fill_nan: float | None,
+) -> tuple[np.ndarray, dict[str, Any]]:
+    """Return values and metadata after an explicit NaN handling policy."""
+    meta = metadata_copy(metadata)
+    if fill_nan is None:
+        return values, meta
+    if not np.isfinite(fill_nan):
+        raise ValueError("fill_nan must be finite")
+
+    filled = np.array(values, dtype=np.float64, copy=True)
+    filled[np.isnan(filled)] = fill_nan
+    filled.setflags(write=False)
+    meta["nan_policy"] = "fill"
+    meta["nan_fill_value"] = float(fill_nan)
+    return filled, meta
+
+
 def check_wavelengths(wavelengths: np.ndarray) -> None:
     """Validate wavelength array."""
     if wavelengths.size == 0:

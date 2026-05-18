@@ -8,7 +8,7 @@
 color.datasets     静态数据文件 -> dict[str, ndarray]
 color.generators   公式/过程生成数据 -> dict[str, ndarray]
 color.spectra      光谱对象与信号域操作
-color.colorimetry  后续用于 XYZ 积分和色度计算结果
+color.colorimetry  XYZ/LMS 积分和色度计算结果
 ```
 
 ## 核心对象
@@ -46,6 +46,24 @@ wavelength + 多个非 wavelength 列 -> MultiSpectralDistribution
 ```
 
 这个入口适合标准静态数据，但它仍然只是一个包装入口。`color.datasets.get(...)` 本身依然返回原始字典。
+
+默认情况下，包装层会保留 `NaN`。如果某些数据源用空白单元格表示明确的零响应，可以在包装时显式填充：
+
+```python
+lms = from_dataset(
+    "standard_observers.cone_fundamentals",
+    "cie2006_lms2_linE_1nm",
+    fill_nan=0.0,
+)
+```
+
+这样生成对象的 `metadata` 会记录：
+
+```python
+{"nan_policy": "fill", "nan_fill_value": 0.0}
+```
+
+这个策略只属于计算准备阶段，不改变 `datasets` 对原始文件的忠实读取行为。
 
 ### 2. 从列字典创建
 
@@ -91,6 +109,12 @@ pmc = from_columns(raw, x="wavelength", ys=patch_names)
 ```
 
 `from_columns(..., ys=patch_names)` 会在内部提取这些列，并把它们堆叠成多通道对象。只有在需要重命名、筛选、归一化或提前变换列数据时，才需要手动把列取出来再包装。
+
+`from_columns(...)` 同样支持显式 NaN 填充：
+
+```python
+sd = from_columns(raw, x="wavelength", y="spd", fill_nan=0.0)
+```
 
 ### 3. 直接使用构造函数
 
@@ -398,7 +422,7 @@ pmc = from_columns(raw, ys=patches, name="PMC selected patches")
 pmc_05nm = pmc.reshape(SpectralShape(400, 700, 0.5), method="pchip")
 ```
 
-### 为后续色度计算准备信号
+### 为色度计算准备信号
 
 ```python
 shape = SpectralShape(400, 700, 5)
@@ -407,7 +431,7 @@ reflectance = reflectance.align(shape)
 weighted = spd * reflectance
 ```
 
-真正的 XYZ 转换应该放在 `color.colorimetry` 中，而不是放在本模块中。
+XYZ/LMS 转换由 `color.colorimetry` 提供；本模块只负责光谱对象准备、重采样和对齐。
 
 ## 示例
 
@@ -418,21 +442,25 @@ weighted = spd * reflectance
 | `example_single_distribution.py` | 已注册的单通道数据集 |
 | `example_multi_distribution.py` | 已注册的多通道 CMFs |
 | `example_from_columns.py` | 原始列字典 |
+| `example_interpolation_bounds.py` | 越界插值、`bounds_error` 和 `fill_value` |
+| `example_align_and_arithmetic.py` | 对齐、shape 导出和标量算术 |
 | `example_sample_and_aliases.py` | `sample`、`__call__`、`domain`、`range` |
 | `example_interpolation_methods.py` | 插值器对比 |
 | `example_extrapolation_strategies.py` | 外推策略对比 |
+| `example_multi_channel_workflow.py` | 多通道对象的通道提取、reshape 和导出 |
+| `example_export_formats.py` | `to_dict()`、`to_numpy()`、`to_pandas()` |
 | `example_arithmetic_alignment.py` | 算术前显式对齐 |
+| `example_plot_single_distribution.py` | 单通道光谱的插值/外推可视化 |
+| `example_plot_cmfs.py` | CIE 1931 XYZ CMFs 原始/reshape 可视化 |
 | `example_plot_pmc_color_card.py` | PMC 色卡包装与 0.5 nm 插值 |
 
-## 当前不做的内容
+## 模块边界
 
-`color.spectra` 当前不实现：
+`color.spectra` 不直接实现：
 
 - 光谱积分
 - `area()`
-- SPD x CMF 到 XYZ
-- 反射率 x 照明体 x CMF 到 XYZ
-- 色适应
-- 色差计算
+- SPD x 响应函数到 XYZ/LMS
+- 反射率 x 照明体 x 响应函数到 XYZ/LMS
 
-这些内容应该放到后续计算层中实现，让本模块继续专注于光谱信号表示和重采样。
+其中 XYZ/LMS 响应积分已经由 `color.colorimetry` 承接

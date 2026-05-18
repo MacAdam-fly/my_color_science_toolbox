@@ -23,9 +23,8 @@ Run from the project root:
 .\.venv\Scripts\python.exe examples\spectra\example_plot_pmc_color_card.py
 ```
 
-The examples intentionally do not perform colorimetric integration. The
-spectral object layer handles object wrapping and signal-domain operations;
-SPD-to-XYZ calculations belong in a later colorimetric computation layer.
+The examples intentionally focus on the spectral object layer. Use
+`examples/colorimetry/` for XYZ/LMS spectral integration workflows.
 
 Plot examples save PNG files under `examples/spectra/output/`.
 

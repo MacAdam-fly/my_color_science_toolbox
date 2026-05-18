@@ -9,10 +9,10 @@ import numpy as np
 from color.math import Extrapolator, Interpolator
 
 from .base import (
+    apply_nan_policy,
     check_wavelengths,
     extrapolate_values,
     interpolate_values,
-    metadata_copy,
     readonly_array,
     target_wavelengths,
 )
@@ -32,9 +32,11 @@ class SpectralDistribution:
         *,
         name: str = "",
         metadata: Mapping[str, Any] | None = None,
+        fill_nan: float | None = None,
     ) -> None:
         wl = readonly_array(wavelengths, ndim=1, name="wavelengths")
         val = readonly_array(values, ndim=1, name="values")
+        val, meta = apply_nan_policy(val, metadata, fill_nan=fill_nan)
         check_wavelengths(wl)
         if wl.shape[0] != val.shape[0]:
             raise ValueError(
@@ -45,7 +47,7 @@ class SpectralDistribution:
         self._wavelengths = wl
         self._values = val
         self.name = name
-        self.metadata = metadata_copy(metadata)
+        self.metadata = meta
 
     @property
     def wavelengths(self) -> np.ndarray:
@@ -86,13 +88,14 @@ class SpectralDistribution:
         y: str = "value",
         name: str = "",
         metadata: Mapping[str, Any] | None = None,
+        fill_nan: float | None = None,
     ) -> "SpectralDistribution":
         """Build a distribution from a column mapping."""
         if x not in raw:
             raise ValueError(f"missing wavelength column {x!r}")
         if y not in raw:
             raise ValueError(f"missing value column {y!r}")
-        return cls(raw[x], raw[y], name=name, metadata=metadata)
+        return cls(raw[x], raw[y], name=name, metadata=metadata, fill_nan=fill_nan)
 
     def copy(self) -> "SpectralDistribution":
         """Return an independent copy."""

@@ -30,6 +30,17 @@ cmfs = from_dataset("standard_observers.cmfs", "CIE 1931 XYZ 1 nm")
 y_bar = cmfs.channel("Y")
 ```
 
+Missing values are preserved by default. When a data source uses blank cells to
+mean zero response in a known computation context, opt in explicitly:
+
+```python
+lms = from_dataset(
+    "standard_observers.cone_fundamentals",
+    "cie2006_lms2_linE_1nm",
+    fill_nan=0.0,
+)
+```
+
 ## Objects
 
 | Object | Purpose |
@@ -99,6 +110,6 @@ This object layer includes:
 - numpy and pandas export
 - arithmetic operations
 
-It does not implement spectral integration, `area()`, or SPD x CMF to XYZ
-colourimetry. Those operations belong in a later colorimetric computation
-layer.
+It does not implement spectral integration or colorimetric response
+computation directly. Use `color.colorimetry` for XYZ/LMS computations once
+spectral objects have been prepared and aligned.

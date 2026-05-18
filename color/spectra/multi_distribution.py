@@ -9,10 +9,10 @@ import numpy as np
 from color.math import Extrapolator, Interpolator
 
 from .base import (
+    apply_nan_policy,
     check_wavelengths,
     extrapolate_values,
     interpolate_values,
-    metadata_copy,
     readonly_array,
     target_wavelengths,
 )
@@ -34,9 +34,11 @@ class MultiSpectralDistribution:
         *,
         name: str = "",
         metadata: Mapping[str, Any] | None = None,
+        fill_nan: float | None = None,
     ) -> None:
         wl = readonly_array(wavelengths, ndim=1, name="wavelengths")
         val = readonly_array(values, ndim=2, name="values")
+        val, meta = apply_nan_policy(val, metadata, fill_nan=fill_nan)
         check_wavelengths(wl)
         label_tuple = tuple(labels)
         if wl.shape[0] != val.shape[0]:
@@ -56,7 +58,7 @@ class MultiSpectralDistribution:
         self._values = val
         self.labels = label_tuple
         self.name = name
-        self.metadata = metadata_copy(metadata)
+        self.metadata = meta
 
     @property
     def wavelengths(self) -> np.ndarray:
@@ -97,6 +99,7 @@ class MultiSpectralDistribution:
         ys: Sequence[str],
         name: str = "",
         metadata: Mapping[str, Any] | None = None,
+        fill_nan: float | None = None,
     ) -> "MultiSpectralDistribution":
         """Build a multi-channel distribution from a column mapping."""
         if x not in raw:
@@ -105,7 +108,14 @@ class MultiSpectralDistribution:
         if missing:
             raise ValueError(f"missing value columns: {missing}")
         values = np.column_stack([raw[label] for label in ys])
-        return cls(raw[x], values, tuple(ys), name=name, metadata=metadata)
+        return cls(
+            raw[x],
+            values,
+            tuple(ys),
+            name=name,
+            metadata=metadata,
+            fill_nan=fill_nan,
+        )
 
     def copy(self) -> "MultiSpectralDistribution":
         """Return an independent copy."""

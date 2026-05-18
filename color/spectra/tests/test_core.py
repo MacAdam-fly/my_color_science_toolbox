@@ -46,6 +46,17 @@ class TestSpectralDistribution:
         assert sd.wavelengths.flags.writeable is False
         assert sd.values.flags.writeable is False
 
+    def test_fill_nan(self):
+        sd = SpectralDistribution([400, 500], [0.1, np.nan], fill_nan=0.0)
+        np.testing.assert_allclose(sd.values, [0.1, 0.0])
+        assert sd.values.flags.writeable is False
+        assert sd.metadata["nan_policy"] == "fill"
+        assert sd.metadata["nan_fill_value"] == 0.0
+
+    def test_fill_nan_rejects_non_finite_value(self):
+        with pytest.raises(ValueError, match="fill_nan must be finite"):
+            SpectralDistribution([400, 500], [0.1, np.nan], fill_nan=np.nan)
+
     def test_domain_range_aliases(self):
         sd = SpectralDistribution([400, 500], [0.1, 0.2])
         assert sd.domain is sd.wavelengths
@@ -196,6 +207,18 @@ class TestMultiSpectralDistribution:
         assert msd.values.shape == (2, 2)
         assert msd.wavelengths.flags.writeable is False
         assert msd.values.flags.writeable is False
+
+    def test_fill_nan(self):
+        msd = MultiSpectralDistribution(
+            [400, 500],
+            [[0.1, np.nan], [0.3, 0.4]],
+            ("X", "Y"),
+            fill_nan=0.0,
+        )
+        np.testing.assert_allclose(msd.values, [[0.1, 0.0], [0.3, 0.4]])
+        assert msd.values.flags.writeable is False
+        assert msd.metadata["nan_policy"] == "fill"
+        assert msd.metadata["nan_fill_value"] == 0.0
 
     def test_domain_range_aliases(self):
         msd = MultiSpectralDistribution(
@@ -373,6 +396,11 @@ class TestFromColumns:
         result = from_columns(raw, y="spd")
         assert isinstance(result, SpectralDistribution)
 
+    def test_single_channel_fill_nan(self):
+        raw = {"wavelength": np.array([400, 500]), "spd": np.array([0.1, np.nan])}
+        result = from_columns(raw, y="spd", fill_nan=0.0)
+        np.testing.assert_allclose(result.values, [0.1, 0.0])
+
     def test_multi_channel(self):
         raw = {
             "wavelength": np.array([400, 500]),
@@ -406,6 +434,16 @@ class TestFromDataset:
         result = from_dataset("standard_observers.cmfs", "cie1931_xyz_1nm")
         assert isinstance(result, MultiSpectralDistribution)
         assert result.labels == ("X", "Y", "Z")
+
+    def test_standard_observer_lms_fill_nan(self):
+        result = from_dataset(
+            "standard_observers.cone_fundamentals",
+            "cie2006_lms2_linE_1nm",
+            fill_nan=0.0,
+        )
+        assert isinstance(result, MultiSpectralDistribution)
+        assert np.isfinite(result.values).all()
+        assert result.metadata["nan_policy"] == "fill"
 
     def test_canonical_names(self):
         result = from_dataset("Standard Observers CMFS", "CIE 1931 XYZ 1 nm")

@@ -21,6 +21,7 @@ def from_columns(
     ys: Sequence[str] | None = None,
     name: str = "",
     metadata: Mapping[str, Any] | None = None,
+    fill_nan: float | None = None,
 ) -> SpectralDistribution | MultiSpectralDistribution:
     """Build a spectral object from a raw column mapping."""
     if y is not None and ys is not None:
@@ -34,6 +35,7 @@ def from_columns(
             y=y,
             name=name,
             metadata=metadata,
+            fill_nan=fill_nan,
         )
     assert ys is not None
     return MultiSpectralDistribution.from_columns(
@@ -42,12 +44,15 @@ def from_columns(
         ys=ys,
         name=name,
         metadata=metadata,
+        fill_nan=fill_nan,
     )
 
 
 def from_dataset(
     category: str,
     name: str,
+    *,
+    fill_nan: float | None = None,
     **kwargs: Any,
 ) -> SpectralDistribution | MultiSpectralDistribution:
     """Build a spectral object from a registered static dataset."""
@@ -77,6 +82,7 @@ def from_dataset(
             y=labels[0],
             name=object_name,
             metadata=metadata,
+            fill_nan=fill_nan,
         )
 
     return MultiSpectralDistribution.from_columns(
@@ -85,4 +91,5 @@ def from_dataset(
         ys=labels,
         name=object_name,
         metadata=metadata,
+        fill_nan=fill_nan,
     )
