@@ -1,4 +1,4 @@
-"""Tests for formula-generated illuminants."""
+"""Tests for blackbody and illuminant generators."""
 
 from __future__ import annotations
 
@@ -6,12 +6,24 @@ import numpy as np
 import pytest
 
 from color.generators import generate
-from color.generators.illuminants import (
+from color.generators.blackbody import (
     blackbody_spd,
+    generate_blackbody,
+    list_blackbody_generators,
+)
+from color.generators.illuminants import (
     daylight_spd,
     generate_illuminant,
+    illuminant_a_spd,
     list_illuminant_generators,
 )
+
+
+class TestListBlackbodyGenerators:
+    """Tests for list_blackbody_generators()."""
+
+    def test_contains_expected_names(self):
+        assert "planck" in list_blackbody_generators()
 
 
 class TestListIlluminantGenerators:
@@ -19,8 +31,8 @@ class TestListIlluminantGenerators:
 
     def test_contains_expected_names(self):
         result = list_illuminant_generators()
-        assert "blackbody" in result
-        assert "daylight" in result
+        assert "A" in result
+        assert "cie_d_daylight" in result
 
 
 class TestBlackbody:
@@ -32,12 +44,12 @@ class TestBlackbody:
         assert "radiance" in data
 
     def test_registry_generate(self):
-        data = generate("illuminants", "blackbody", temperature=6500)
+        data = generate("blackbody", "planck", temperature=6500)
         assert "radiance" in data
         assert "spd" not in data
 
     def test_convenience_generate(self):
-        data = generate_illuminant("blackbody", temperature=6500)
+        data = generate_blackbody(temperature=6500)
         assert "radiance" in data
 
     def test_different_temperatures(self):
@@ -63,6 +75,33 @@ class TestBlackbody:
         np.testing.assert_array_equal(data["wavelength"], wl)
 
 
+class TestIlluminantA:
+    """Tests for CIE Standard Illuminant A."""
+
+    def test_basic(self):
+        data = illuminant_a_spd()
+        assert "wavelength" in data
+        assert "spd" in data
+
+    def test_registry_generate(self):
+        data = generate("illuminants", "A")
+        assert "wavelength" in data
+        assert "spd" in data
+
+    def test_convenience_generate(self):
+        data = generate_illuminant("A")
+        assert "spd" in data
+
+    def test_normalised_at_560_nm(self):
+        data = illuminant_a_spd(wavelength_nm=np.array([560.0]))
+        assert data["spd"][0] == pytest.approx(100.0)
+
+    def test_custom_wavelength(self):
+        wl = np.arange(400, 701, 10.0)
+        data = illuminant_a_spd(wavelength_nm=wl)
+        np.testing.assert_array_equal(data["wavelength"], wl)
+
+
 class TestDaylight:
     """Tests for CIE D-series daylight."""
 
@@ -72,7 +111,7 @@ class TestDaylight:
         assert "spd" in data
 
     def test_registry_generate(self):
-        data = generate("illuminants", "daylight", cct=6500)
+        data = generate("illuminants", "cie_d_daylight", cct=6500)
         assert "wavelength" in data
         assert "spd" in data
 

@@ -379,7 +379,7 @@ d65_5nm = d65.reshape(SpectralShape(400, 700, 5))
 ### 生成黑体光谱后转对象
 
 ```python
-from color.generators.illuminants import blackbody_spd
+from color.generators.blackbody import blackbody_spd
 from color.spectra import from_columns
 
 raw = blackbody_spd(temperature=6500)

@@ -14,7 +14,8 @@ from color.datasets import (
     get_illuminant,
     get_standard_observer,
 )
-from color.generators.illuminants import blackbody_spd, daylight_spd
+from color.generators.blackbody import blackbody_spd
+from color.generators.illuminants import daylight_spd
 
 d65 = get_illuminant("D65")
 bb = blackbody_spd(temperature=6500)
@@ -104,7 +105,8 @@ get("standard-observers/cmfs", "cie-1931-xyz-1nm")
 黑体辐射和 CIE D-series daylight 不是静态数据集，使用 `color.generators`：
 
 ```python
-from color.generators.illuminants import blackbody_spd, daylight_spd
+from color.generators.blackbody import blackbody_spd
+from color.generators.illuminants import daylight_spd
 
 bb = blackbody_spd(temperature=5500)
 d50 = daylight_spd(cct=5000)
@@ -290,9 +292,10 @@ register(DatasetEntry(
 
 ```python
 from color.generators import generate
-from color.generators.illuminants import blackbody_spd, daylight_spd
+from color.generators.blackbody import blackbody_spd
+from color.generators.illuminants import daylight_spd
 
-bb = generate("illuminants", "blackbody", temperature=6500)
+bb = generate("blackbody", "planck", temperature=6500)
 d50 = daylight_spd(cct=5000)
 ```
 

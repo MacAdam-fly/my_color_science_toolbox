@@ -1,4 +1,4 @@
-"""Formula-generated illuminant and light-source spectral data."""
+"""Formula-generated CIE illuminant spectra."""
 
 from __future__ import annotations
 
@@ -9,30 +9,24 @@ import numpy as np
 from ._registry import GeneratedDict, GeneratorEntry, generate, list_generators, register
 
 
-_H = 6.62607015e-34
-_C = 2.99792458e8
-_K = 1.380649e-23
-_C1 = 2.0 * np.pi * _H * _C**2
-_C2 = _H * _C / _K
-
-
-def blackbody_spd(
+def illuminant_a_spd(
     wavelength_nm: np.ndarray | None = None,
-    temperature: float = 6500.0,
 ) -> GeneratedDict:
-    """Compute Planck spectral radiance at *temperature* in kelvin."""
-    if temperature <= 0:
-        raise ValueError(f"temperature must be positive, got {temperature}")
-
+    """Compute CIE Standard Illuminant A relative spectral power distribution."""
     if wavelength_nm is None:
         wavelength_nm = np.arange(300, 831, 1.0, dtype=np.float64)
     else:
         wavelength_nm = np.asarray(wavelength_nm, dtype=np.float64)
 
-    wl_m = wavelength_nm * 1e-9
-    exponent = _C2 / (wl_m * temperature)
-    radiance = _C1 / (wl_m**5 * (np.exp(exponent) - 1.0))
-    return {"wavelength": wavelength_nm, "radiance": radiance}
+    spd = (
+        100.0
+        * (560.0 / wavelength_nm) ** 5
+        * (
+            np.expm1((1.435 * 10**7) / (2848.0 * 560.0))
+            / np.expm1((1.435 * 10**7) / (2848.0 * wavelength_nm))
+        )
+    )
+    return {"wavelength": wavelength_nm, "spd": spd}
 
 
 def daylight_spd(
@@ -97,31 +91,33 @@ def daylight_spd(
 
 register(GeneratorEntry(
     category="illuminants",
-    name="blackbody",
-    description="Planck blackbody spectral radiance at arbitrary temperature",
-    generate_fn=blackbody_spd,
-    parameters=("temperature", "wavelength_nm"),
+    name="A",
+    description="CIE Standard Illuminant A",
+    generate_fn=illuminant_a_spd,
+    parameters=("wavelength_nm",),
     metadata={
-        "quantity": "spectral_radiance",
+        "quantity": "relative_spd",
         "wavelength_unit": "nm",
+        "reference": "CIE Standard Illuminant A",
     },
 ))
 
 register(GeneratorEntry(
     category="illuminants",
-    name="daylight",
+    name="cie_d_daylight",
     description="CIE D-series daylight SPD at arbitrary CCT",
     generate_fn=daylight_spd,
     parameters=("cct", "wavelength_nm"),
     metadata={
         "quantity": "relative_spd",
         "wavelength_unit": "nm",
+        "reference": "CIE D-series daylight model",
     },
 ))
 
 
 def generate_illuminant(name: str, **kwargs) -> GeneratedDict:
-    """Generate an illuminant spectral distribution."""
+    """Generate a CIE illuminant spectral distribution."""
     return generate("illuminants", name, **kwargs)
 
 

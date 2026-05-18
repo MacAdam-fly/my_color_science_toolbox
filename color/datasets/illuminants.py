@@ -1,8 +1,8 @@
 """Static standard illuminant spectral power distributions.
 
 Provides file-based access to CIE A, D65, and fluorescent F1-F12 data.
-Formula-generated illuminants such as blackbody radiation and CIE D-series
-daylight live in :mod:`color.generators.illuminants`.
+Formula-generated source models live in :mod:`color.generators.blackbody`
+and :mod:`color.generators.illuminants`.
 """
 
 from __future__ import annotations

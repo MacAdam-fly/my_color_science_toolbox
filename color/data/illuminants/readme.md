@@ -22,13 +22,15 @@ live in `color.datasets.illuminants`.
 | `reference/DaylightSeries.xlsx` | CIE D-series daylight table | Reference/validation |
 | `reference/blackbody.xlsx` | Planck blackbody table | Reference/validation |
 
-Formula-generated blackbody and daylight spectra are provided by
-`color.generators.illuminants`:
+Formula-generated blackbody radiation and CIE illuminants are provided by
+`color.generators.blackbody` and `color.generators.illuminants`:
 
 ```python
-from color.generators.illuminants import blackbody_spd, daylight_spd
+from color.generators.blackbody import blackbody_spd
+from color.generators.illuminants import daylight_spd, illuminant_a_spd
 
 bb = blackbody_spd(temperature=6500)
+a = illuminant_a_spd()
 d50 = daylight_spd(cct=5000)
 ```
 

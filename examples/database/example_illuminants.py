@@ -13,7 +13,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from color.datasets import get_illuminant, list_illuminants
-from color.generators.illuminants import blackbody_spd, daylight_spd
+from color.generators.blackbody import blackbody_spd
+from color.generators.illuminants import daylight_spd
 
 
 def main() -> None:
