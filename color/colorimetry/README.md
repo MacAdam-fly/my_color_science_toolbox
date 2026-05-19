@@ -20,6 +20,15 @@ from color.colorimetry import (
     reflectance_to_LMS,
     LMS_to_XYZ,
     XYZ_to_LMS,
+    ChromaticityAnalysis,
+    analyze_chromaticity,
+    is_inside_chromaticity_locus,
+    dominant_wavelength,
+    complementary_wavelength,
+    excitation_purity,
+    colorimetric_purity,
+    xy_from_dominant_wavelength_pe,
+    xy_from_dominant_wavelength_pc,
     Y_to_Lstar,
     Lstar_to_Y,
     photopic_luminous_efficiency_function,
@@ -104,6 +113,36 @@ xy = XYZ_to_xy(XYZ)
 `XYZ_to_xy(...)` intentionally returns only the chromaticity
 coordinates and is not a reversible conversion by itself.
 
+Dominant wavelength and purity helpers operate on CIE xy chromaticity
+coordinates:
+
+```python
+wavelength, dominant_xy = dominant_wavelength(xy)
+complementary_wavelength_nm, complementary_xy = complementary_wavelength(xy)
+purity_e = excitation_purity(xy)
+purity_c = colorimetric_purity(xy)
+
+result = analyze_chromaticity(xy)
+inside = is_inside_chromaticity_locus(xy)
+xy_from_pe = xy_from_dominant_wavelength_pe(result.wavelength, result.excitation_purity)
+xy_from_pc = xy_from_dominant_wavelength_pc(result.wavelength, result.colorimetric_purity)
+```
+
+By default, these functions use D65 white `xy_n=(0.3127, 0.3290)` and the
+`standard_observers.chromaticity_coordinates/cie1931_chro_1nm` spectral locus.
+`dominant_wavelength(...)` and `complementary_wavelength(...)` return only their
+own wavelength and intersection coordinate. Use `analyze_chromaticity(...)`
+when you need the paired dominant/complementary result, `dominant_region`,
+`complementary_region`, excitation purity and colorimetric purity together.
+Region values are `"spectral"`, `"purple"` or `"undefined"`.
+`analyze_chromaticity(...)` returns a `ChromaticityAnalysis` object.
+`is_inside_chromaticity_locus(...)` checks whether xy coordinates are inside the
+closed spectral locus plus purple-line boundary, with boundary points counted as
+inside.
+The reverse constructors use the same signed-wavelength convention: positive
+wavelengths point to the spectral locus, while negative wavelengths reconstruct
+non-spectral purple colours from their complementary spectral wavelength.
+
 Lightness helpers are available for CIE 1976 `Y <-> L*`:
 
 ```python
@@ -153,5 +192,6 @@ See `examples/colorimetry/` for end-to-end scripts covering:
 - color-card reflectance to XYZ/LMS under D65
 - generated vs static CIE Illuminant A XYZ comparison
 - direct CIE 2006 LMS/XYZ matrix transformations
+- dominant wavelength, complementary wavelength and purity
 - photopic and scotopic LEFs with luminous efficacy comparison
 - smoke checks across datasets, generators, spectra and colorimetry

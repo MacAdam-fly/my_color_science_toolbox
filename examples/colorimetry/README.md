@@ -17,6 +17,7 @@ Run them from the project root:
 .\.venv\Scripts\python.exe examples\colorimetry\example_photometry.py
 .\.venv\Scripts\python.exe examples\colorimetry\example_lightness.py
 .\.venv\Scripts\python.exe examples\colorimetry\example_lms_xyz_transformations.py
+.\.venv\Scripts\python.exe examples\colorimetry\example_dominant_wavelength.py
 ```
 
 Plots are written to `examples/colorimetry/output/`.
@@ -34,6 +35,12 @@ relative luminance samples.
 
 `example_lms_xyz_transformations.py` shows direct CIE 2006 LMS and XYZ matrix
 round-trips after values have already been computed.
+
+`example_dominant_wavelength.py` computes and plots dominant wavelength,
+complementary wavelength, excitation purity and colorimetric purity for a few
+CIE xy samples, including the full `analyze_chromaticity(...)` result
+used for plotting both intersections and a reverse reconstruction from
+dominant wavelength plus colorimetric purity.
 
 The LMS examples use `from_dataset(..., fill_nan=0.0)` because some CVRL cone
 fundamental files contain blank long-wavelength S-cone entries that are treated

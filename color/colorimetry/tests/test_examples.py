@@ -23,6 +23,7 @@ def test_colorimetry_examples_run():
         _EXAMPLES / "example_photometry.py",
         _EXAMPLES / "example_lightness.py",
         _EXAMPLES / "example_lms_xyz_transformations.py",
+        _EXAMPLES / "example_dominant_wavelength.py",
     ]
 
     for path in example_paths:

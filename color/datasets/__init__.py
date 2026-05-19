@@ -60,30 +60,30 @@ from .standard_observers import (
 
 __all__ = [
     # Core registry
-    "DatasetEntry",
-    "canonicalize_name",
-    "get",
-    "describe",
-    "clear_cache",
-    "list_categories",
-    "list_datasets",
-    "register",
-    "search",
+    "DatasetEntry",  # metadata record for a registered dataset
+    "canonicalize_name",  # resolve a dataset name to its canonical name
+    "get",  # load a registered dataset as raw arrays
+    "describe",  # describe a registered dataset
+    "clear_cache",  # clear cached dataset loads
+    "list_categories",  # list dataset categories
+    "list_datasets",  # list datasets in a category
+    "register",  # register a dataset entry
+    "search",  # search registered datasets
     # Illuminants
-    "get_illuminant",
-    "list_illuminants",
+    "get_illuminant",  # load an illuminant dataset
+    "list_illuminants",  # list illuminant datasets
     # Color cards
-    "get_color_card",
-    "list_color_cards",
+    "get_color_card",  # load a color-card dataset
+    "list_color_cards",  # list color-card datasets
     # Standard observers
-    "get_standard_observer",
-    "list_standard_observers",
-    "list_standard_observer_categories",
-    "describe_standard_observer",
+    "get_standard_observer",  # load a standard-observer dataset
+    "list_standard_observers",  # list standard observers in a category
+    "list_standard_observer_categories",  # list standard-observer subcategories
+    "describe_standard_observer",  # describe a standard-observer dataset
     # Gamut data
-    "get_gamut_data",
-    "list_gamut_data",
+    "get_gamut_data",  # load a gamut reference dataset
+    "list_gamut_data",  # list gamut reference datasets
     # Color systems
-    "get_color_system",
-    "list_color_systems",
+    "get_color_system",  # load a color-system dataset
+    "list_color_systems",  # list color-system datasets
 ]

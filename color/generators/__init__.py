@@ -43,44 +43,44 @@ from .leds import (
 
 # Core generator registry.
 __all__ = [
-    "GeneratorEntry",
-    "generate",
-    "describe",
-    "clear_cache",
-    "list_categories",
-    "list_generators",
-    "register",
+    "GeneratorEntry",  # metadata record for a registered generator
+    "generate",  # generate data from a registered generator
+    "describe",  # describe a registered generator
+    "clear_cache",  # clear cached generator outputs
+    "list_categories",  # list generator categories
+    "list_generators",  # list generators in a category
+    "register",  # register a generator entry
 ]
 
 # Blackbody and Planck-family generators.
 __all__ += [
-    "blackbody_spd",
-    "generate_blackbody",
-    "list_blackbody_generators",
+    "blackbody_spd",  # generate a blackbody spectral power distribution
+    "generate_blackbody",  # generate a registered blackbody dataset
+    "list_blackbody_generators",  # list blackbody generator names
 ]
 
 # Illuminant generators.
 __all__ += [
-    "illuminant_a_spd",
-    "daylight_spd",
-    "generate_illuminant",
-    "list_illuminant_generators",
+    "illuminant_a_spd",  # generate CIE Illuminant A SPD
+    "daylight_spd",  # generate CIE daylight SPD
+    "generate_illuminant",  # generate a registered illuminant dataset
+    "list_illuminant_generators",  # list illuminant generator names
 ]
 
 # Ideal analytic spectra.
 __all__ += [
-    "constant_spd",
-    "zero_spd",
-    "equal_energy_spd",
-    "gaussian_spd",
-    "generate_ideal",
-    "list_ideal_generators",
+    "constant_spd",  # generate a constant ideal spectrum
+    "zero_spd",  # generate a zero-valued ideal spectrum
+    "equal_energy_spd",  # generate an equal-energy ideal spectrum
+    "gaussian_spd",  # generate a Gaussian ideal spectrum
+    "generate_ideal",  # generate a registered ideal spectrum
+    "list_ideal_generators",  # list ideal generator names
 ]
 
 # LED spectral generators.
 __all__ += [
-    "single_led_spd",
-    "multi_led_spd",
-    "generate_led",
-    "list_led_generators",
+    "single_led_spd",  # generate a single LED spectrum
+    "multi_led_spd",  # generate a multi-channel LED mixture spectrum
+    "generate_led",  # generate a registered LED spectrum
+    "list_led_generators",  # list LED generator names
 ]
