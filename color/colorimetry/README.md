@@ -18,6 +18,8 @@ from color.colorimetry import (
     reflectance_to_XYZ,
     emission_to_LMS,
     reflectance_to_LMS,
+    Y_to_Lstar,
+    Lstar_to_Y,
     photopic_luminous_efficiency_function,
     scotopic_luminous_efficiency_function,
     photopic_luminous_flux,
@@ -88,6 +90,16 @@ xy = XYZ_to_xy(XYZ)
 
 `XYZ_to_xy(...)` intentionally returns only the chromaticity
 coordinates and is not a reversible conversion by itself.
+
+Lightness helpers are available for CIE 1976 `Y <-> L*`:
+
+```python
+Lstar = Y_to_Lstar(Y, Y_n=100.0)
+Y = Lstar_to_Y(Lstar, Y_n=100.0)
+```
+
+These functions operate on the relative luminance component `Y`, not on an
+absolute luminance unit model such as `cd/m^2`.
 
 Photometric helpers are also available:
 

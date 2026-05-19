@@ -41,6 +41,7 @@ from .leds import (
     single_led_spd,
 )
 
+# Core generator registry.
 __all__ = [
     "GeneratorEntry",
     "generate",
@@ -49,19 +50,35 @@ __all__ = [
     "list_categories",
     "list_generators",
     "register",
+]
+
+# Blackbody and Planck-family generators.
+__all__ += [
     "blackbody_spd",
     "generate_blackbody",
     "list_blackbody_generators",
+]
+
+# Illuminant generators.
+__all__ += [
     "illuminant_a_spd",
     "daylight_spd",
     "generate_illuminant",
     "list_illuminant_generators",
+]
+
+# Ideal analytic spectra.
+__all__ += [
     "constant_spd",
     "zero_spd",
     "equal_energy_spd",
     "gaussian_spd",
     "generate_ideal",
     "list_ideal_generators",
+]
+
+# LED spectral generators.
+__all__ += [
     "single_led_spd",
     "multi_led_spd",
     "generate_led",
