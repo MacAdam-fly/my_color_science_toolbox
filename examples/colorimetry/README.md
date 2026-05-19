@@ -18,6 +18,7 @@ Run them from the project root:
 .\.venv\Scripts\python.exe examples\colorimetry\example_lightness.py
 .\.venv\Scripts\python.exe examples\colorimetry\example_lms_xyz_transformations.py
 .\.venv\Scripts\python.exe examples\colorimetry\example_dominant_wavelength.py
+.\.venv\Scripts\python.exe examples\colorimetry\example_temperature.py
 ```
 
 Plots are written to `examples/colorimetry/output/`.
@@ -41,6 +42,9 @@ complementary wavelength, excitation purity and colorimetric purity for a few
 CIE xy samples, including the full `analyze_chromaticity(...)` result
 used for plotting both intersections and a reverse reconstruction from
 dominant wavelength plus colorimetric purity.
+
+`example_temperature.py` computes CCT/mired relationships, Robertson CCT+Duv
+values and plots the CIE D daylight locus for a few named daylight whitepoints.
 
 The LMS examples use `from_dataset(..., fill_nan=0.0)` because some CVRL cone
 fundamental files contain blank long-wavelength S-cone entries that are treated

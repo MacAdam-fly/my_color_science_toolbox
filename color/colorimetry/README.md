@@ -29,6 +29,20 @@ from color.colorimetry import (
     colorimetric_purity,
     xy_from_dominant_wavelength_pe,
     xy_from_dominant_wavelength_pc,
+    CCT_to_mired,
+    mired_to_CCT,
+    xy_to_CCT_McCamy1992,
+    CCT_to_xy_CIE_D,
+    xy_to_CCT,
+    CCT_to_xy,
+    xy_to_uv1960,
+    XYZ_to_uv1960,
+    uv1960_to_xy,
+    uv_to_CCT_Robertson1968,
+    CCT_to_uv_Robertson1968,
+    uv_to_CCT,
+    CCT_to_uv,
+    xy_to_CCT_Duv,
     Y_to_Lstar,
     Lstar_to_Y,
     photopic_luminous_efficiency_function,
@@ -143,6 +157,28 @@ The reverse constructors use the same signed-wavelength convention: positive
 wavelengths point to the spectral locus, while negative wavelengths reconstruct
 non-spectral purple colours from their complementary spectral wavelength.
 
+Correlated colour temperature helpers cover the basic xy/CCT path:
+
+```python
+mired = CCT_to_mired(6500)
+CCT = mired_to_CCT(mired)
+xy_d65 = CCT_to_xy_CIE_D(6504.38938305)
+CCT_estimate = xy_to_CCT_McCamy1992(xy_d65)
+xy = CCT_to_xy(6504.38938305, method="cie_d")
+CCT = xy_to_CCT(xy, method="mccamy1992")
+uv = xy_to_uv1960(xy)
+CCT_Duv = uv_to_CCT(uv, method="robertson1968")
+xy_again = uv1960_to_xy(CCT_to_uv(CCT_Duv, method="robertson1968"))
+```
+
+`CCT_to_xy_CIE_D(...)` returns only CIE D-series daylight chromaticity
+coordinates. It uses the same daylight locus formula as
+`color.generators.illuminants.daylight_spd(...)`, while the generator builds the
+full spectral power distribution. `xy_to_CCT_McCamy1992(...)` is a simple CCT
+approximation and does not return `Duv`. For CCT plus `Duv`, use the CIE 1960
+UCS helpers and Robertson 1968 path. `Duv > 0` and `Duv < 0` indicate opposite
+sides of the Planckian locus in CIE 1960 UCS.
+
 Lightness helpers are available for CIE 1976 `Y <-> L*`:
 
 ```python
@@ -193,5 +229,6 @@ See `examples/colorimetry/` for end-to-end scripts covering:
 - generated vs static CIE Illuminant A XYZ comparison
 - direct CIE 2006 LMS/XYZ matrix transformations
 - dominant wavelength, complementary wavelength and purity
+- basic CCT, mired and CIE D daylight chromaticity calculations
 - photopic and scotopic LEFs with luminous efficacy comparison
 - smoke checks across datasets, generators, spectra and colorimetry
