@@ -1,4 +1,4 @@
-"""Convenience spectral conversions to XYZ and LMS responses."""
+"""LMS cone response computations from spectral data."""
 
 from __future__ import annotations
 
@@ -13,24 +13,14 @@ from color.spectra import (
     from_dataset,
 )
 
-from .lms import emission_to_lms, reflectance_to_lms
-from .spectral_responses import SpectralInput
-from .xyz import emission_to_xyz, reflectance_to_xyz
+from .integration import SpectralInput, _validate_responses, integrate_responses
 
 
 ResponseSource = Union[str, MultiSpectralDistribution]
 IlluminantSource = Union[str, SpectralDistribution]
 
-DEFAULT_CMFS = "cie1931_xyz_1nm"
 DEFAULT_FUNDAMENTALS = "cie2006_lms2_linE_1nm"
 DEFAULT_ILLUMINANT = "D65"
-
-
-def _load_cmfs(cmfs: ResponseSource) -> MultiSpectralDistribution:
-    """Return XYZ colour matching functions from an object or dataset name."""
-    if isinstance(cmfs, MultiSpectralDistribution):
-        return cmfs
-    return from_dataset("standard_observers.cmfs", cmfs)
 
 
 def _load_fundamentals(
@@ -55,46 +45,44 @@ def _load_illuminant(illuminant: IlluminantSource) -> SpectralDistribution:
     return from_dataset("illuminants", illuminant)
 
 
-def emission_to_XYZ(
-    emission: SpectralInput,
+def emission_to_lms(
+    spd: SpectralInput,
+    fundamentals: MultiSpectralDistribution,
     *,
-    cmfs: ResponseSource = "cie1931_xyz_1nm",
     shape: SpectralShape | None = None,
     k: float | None = None,
 ) -> np.ndarray:
-    """Convert self-luminous spectral data to XYZ.
-
-    By default, this uses ``standard_observers.cmfs/cie1931_xyz_1nm``.
-    """
-    return emission_to_xyz(emission, _load_cmfs(cmfs), shape=shape, k=k)
+    """Convert self-luminous spectral data to LMS cone responses."""
+    _validate_responses(fundamentals)
+    return integrate_responses(spd, fundamentals, mode="emission", shape=shape, k=k)
 
 
-def reflectance_to_XYZ(
+def reflectance_to_lms(
     reflectance: SpectralInput,
+    illuminant: SpectralDistribution,
+    fundamentals: MultiSpectralDistribution,
     *,
-    illuminant: IlluminantSource = "D65",
-    cmfs: ResponseSource = "cie1931_xyz_1nm",
     shape: SpectralShape | None = None,
     k: float | None = None,
+    normalisation_channel: str | int | None = None,
 ) -> np.ndarray:
-    """Convert reflectance data to XYZ.
-
-    By default, this uses ``illuminants/D65`` and
-    ``standard_observers.cmfs/cie1931_xyz_1nm``.
-    """
-    return reflectance_to_xyz(
+    """Convert reflectance data under an illuminant to LMS cone responses."""
+    _validate_responses(fundamentals)
+    return integrate_responses(
         reflectance,
-        _load_illuminant(illuminant),
-        _load_cmfs(cmfs),
+        fundamentals,
+        mode="reflectance",
+        illuminant=illuminant,
         shape=shape,
         k=k,
+        normalisation_channel=normalisation_channel,
     )
 
 
 def emission_to_LMS(
     emission: SpectralInput,
     *,
-    fundamentals: ResponseSource = "cie2006_lms2_linE_1nm",
+    fundamentals: ResponseSource = DEFAULT_FUNDAMENTALS,
     shape: SpectralShape | None = None,
     k: float | None = None,
     fill_nan: float | None = 0.0,
@@ -116,8 +104,8 @@ def emission_to_LMS(
 def reflectance_to_LMS(
     reflectance: SpectralInput,
     *,
-    illuminant: IlluminantSource = "D65",
-    fundamentals: ResponseSource = "cie2006_lms2_linE_1nm",
+    illuminant: IlluminantSource = DEFAULT_ILLUMINANT,
+    fundamentals: ResponseSource = DEFAULT_FUNDAMENTALS,
     shape: SpectralShape | None = None,
     k: float | None = None,
     fill_nan: float | None = 0.0,
@@ -140,11 +128,10 @@ def reflectance_to_LMS(
 
 
 __all__ = [
-    "DEFAULT_CMFS",
     "DEFAULT_FUNDAMENTALS",
     "DEFAULT_ILLUMINANT",
-    "emission_to_XYZ",
-    "reflectance_to_XYZ",
+    "emission_to_lms",
+    "reflectance_to_lms",
     "emission_to_LMS",
     "reflectance_to_LMS",
 ]

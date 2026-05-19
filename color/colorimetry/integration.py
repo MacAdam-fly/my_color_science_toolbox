@@ -1,4 +1,4 @@
-"""Spectral integration against three-channel response functions."""
+"""Shared spectral integration against three-channel response functions."""
 
 from __future__ import annotations
 
@@ -94,12 +94,7 @@ def integrate_responses(
     normalisation_channel: str | int | None = None,
     output_scale: float = 100.0,
 ) -> np.ndarray:
-    """Integrate spectra against three-channel response functions.
-
-    ``mode="emission"`` treats ``spectrum`` as self-luminous spectral data.
-    ``mode="reflectance"`` treats ``spectrum`` as reflectance data and requires
-    an illuminant.
-    """
+    """Integrate spectra against three-channel response functions."""
     _validate_responses(responses)
     if mode == "reflectance" and illuminant is None:
         raise ValueError("illuminant is required for reflectance mode")
@@ -143,3 +138,10 @@ def integrate_responses(
     if source_labels is None:
         return result[0]
     return result
+
+
+__all__ = [
+    "SpectralInput",
+    "Mode",
+    "integrate_responses",
+]

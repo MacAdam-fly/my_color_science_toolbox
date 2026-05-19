@@ -18,6 +18,8 @@ from color.colorimetry import (
     reflectance_to_XYZ,
     emission_to_LMS,
     reflectance_to_LMS,
+    LMS_to_XYZ,
+    XYZ_to_LMS,
     Y_to_Lstar,
     Lstar_to_Y,
     photopic_luminous_efficiency_function,
@@ -80,6 +82,17 @@ XYZ -> CIE XYZ colour matching functions
 LMS -> cone fundamentals
 ```
 
+Direct CIE 2006 LMS and XYZ matrix transformations are available after values
+have already been computed:
+
+```python
+XYZ = LMS_to_XYZ(LMS, observer=2)
+LMS = XYZ_to_LMS(XYZ, observer=2)
+```
+
+Use `observer=2` or `observer=10` to select the matching CIE 2006 observer
+matrix.
+
 Chromaticity helpers keep the luminance component explicit:
 
 ```python
@@ -139,5 +152,6 @@ See `examples/colorimetry/` for end-to-end scripts covering:
 - generated emission spectra to XYZ/LMS
 - color-card reflectance to XYZ/LMS under D65
 - generated vs static CIE Illuminant A XYZ comparison
+- direct CIE 2006 LMS/XYZ matrix transformations
 - photopic and scotopic LEFs with luminous efficacy comparison
 - smoke checks across datasets, generators, spectra and colorimetry

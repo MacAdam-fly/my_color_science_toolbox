@@ -11,8 +11,8 @@ from color.colorimetry import (
     reflectance_to_LMS,
     reflectance_to_XYZ,
 )
-from color.colorimetry.lms import emission_to_lms, reflectance_to_lms
-from color.colorimetry.xyz import emission_to_xyz, reflectance_to_xyz
+from color.colorimetry.cone_responses import emission_to_lms, reflectance_to_lms
+from color.colorimetry.tristimulus import emission_to_xyz, reflectance_to_xyz
 from color.spectra import SpectralDistribution, SpectralShape, from_dataset
 
 

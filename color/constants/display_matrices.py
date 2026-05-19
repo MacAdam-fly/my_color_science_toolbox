@@ -1,4 +1,4 @@
-"""Common conversion matrices."""
+"""Display RGB colour-space conversion matrices."""
 
 from __future__ import annotations
 

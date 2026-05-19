@@ -3,6 +3,12 @@
 from __future__ import annotations
 
 from .chromaticity import XYZ_to_xy, XYZ_to_xyY, xyY_to_XYZ
+from .cone_responses import (
+    DEFAULT_FUNDAMENTALS,
+    DEFAULT_ILLUMINANT,
+    emission_to_LMS,
+)
+from .cone_responses import reflectance_to_LMS
 from .lightness import Lstar_to_Y, Y_to_Lstar
 from .photometry import (
     DEFAULT_PHOTOPIC_K_M,
@@ -21,15 +27,8 @@ from .photometry import (
     scotopic_luminous_efficiency_function,
     scotopic_luminous_flux,
 )
-from .spectral_conversion import (
-    DEFAULT_CMFS,
-    DEFAULT_FUNDAMENTALS,
-    DEFAULT_ILLUMINANT,
-    emission_to_LMS,
-    emission_to_XYZ,
-    reflectance_to_LMS,
-    reflectance_to_XYZ,
-)
+from .tristimulus import DEFAULT_CMFS, emission_to_XYZ, reflectance_to_XYZ
+from .transformations import LMS_to_XYZ, XYZ_to_LMS
 
 # Spectral-conversion defaults.
 __all__ = [
@@ -57,6 +56,12 @@ __all__ += [
 __all__ += [
     "Y_to_Lstar",
     "Lstar_to_Y",
+]
+
+# Direct colour-response transformations.
+__all__ += [
+    "LMS_to_XYZ",
+    "XYZ_to_LMS",
 ]
 
 # Spectral to colorimetric-response conversions.
