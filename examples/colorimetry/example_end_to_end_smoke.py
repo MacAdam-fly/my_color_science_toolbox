@@ -12,25 +12,17 @@ if str(_PROJECT_ROOT) not in sys.path:
 import numpy as np
 
 from color.colorimetry import (
-    emission_to_lms,
-    emission_to_xyz,
-    reflectance_to_lms,
-    reflectance_to_xyz,
+    emission_to_LMS,
+    emission_to_XYZ,
+    reflectance_to_LMS,
+    reflectance_to_XYZ,
 )
 from color.generators.ideal import equal_energy_spd
-from color.spectra import SpectralDistribution, SpectralShape, from_columns, from_dataset
+from color.spectra import SpectralDistribution, SpectralShape, from_columns
 
 
 def main() -> None:
     shape = SpectralShape(400, 700, 5)
-
-    cmfs = from_dataset("standard_observers.cmfs", "cie1931_xyz_1nm").align(shape)
-    fundamentals = from_dataset(
-        "standard_observers.cone_fundamentals",
-        "cie2006_lms2_linE_1nm",
-        fill_nan=0.0,
-    ).align(shape)
-    illuminant = from_dataset("illuminants", "D65").align(shape)
 
     perfect_reflector = SpectralDistribution(
         shape.wavelengths,
@@ -43,20 +35,17 @@ def main() -> None:
         name="equal energy",
     )
 
-    xyz_reflectance = reflectance_to_xyz(
+    xyz_reflectance = reflectance_to_XYZ(
         perfect_reflector,
-        illuminant,
-        cmfs,
         shape=shape,
     )
-    lms_reflectance = reflectance_to_lms(
+    lms_reflectance = reflectance_to_LMS(
         perfect_reflector,
-        illuminant,
-        fundamentals,
         shape=shape,
     )
-    xyz_emission = emission_to_xyz(equal_energy, cmfs, shape=shape)
-    lms_emission = emission_to_lms(equal_energy, fundamentals, shape=shape)
+    
+    xyz_emission = emission_to_XYZ(equal_energy, shape=shape)
+    lms_emission = emission_to_LMS(equal_energy, shape=shape)
 
     assert xyz_reflectance.shape == (3,)
     assert lms_reflectance.shape == (3,)

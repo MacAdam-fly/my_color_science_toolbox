@@ -12,7 +12,7 @@ if str(_PROJECT_ROOT) not in sys.path:
 import matplotlib.pyplot as plt
 import numpy as np
 
-from color.colorimetry import emission_to_lms, emission_to_xyz
+from color.colorimetry import emission_to_LMS, emission_to_XYZ
 from color.generators.blackbody import blackbody_spd
 from color.generators.ideal import gaussian_spd
 from color.generators.illuminants import daylight_spd
@@ -57,15 +57,19 @@ def main() -> None:
     ]
     spectra = [sd.align(shape) for sd in spectra]
 
-    cmfs = from_dataset("standard_observers.cmfs", "cie1931_xyz_1nm").align(shape)
     fundamentals = from_dataset(
         "standard_observers.cone_fundamentals",
         "cie2006_lms2_linE_1nm",
         fill_nan=0.0,
     ).align(shape)
 
-    xyz = np.vstack([emission_to_xyz(sd, cmfs, shape=shape) for sd in spectra])
-    lms = np.vstack([emission_to_lms(sd, fundamentals, shape=shape) for sd in spectra])
+    xyz = np.vstack([emission_to_XYZ(sd, shape=shape) for sd in spectra])
+    lms = np.vstack(
+        [
+            emission_to_LMS(sd, fundamentals=fundamentals, shape=shape)
+            for sd in spectra
+        ]
+    )
     names = [sd.name for sd in spectra]
 
     print("Generated emission spectra:")

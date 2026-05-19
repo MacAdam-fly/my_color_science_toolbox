@@ -5,13 +5,9 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from color.colorimetry import (
-    emission_to_lms,
-    emission_to_xyz,
-    integrate_responses,
-    reflectance_to_lms,
-    reflectance_to_xyz,
-)
+from color.colorimetry.lms import emission_to_lms, reflectance_to_lms
+from color.colorimetry.spectral_responses import integrate_responses
+from color.colorimetry.xyz import emission_to_xyz, reflectance_to_xyz
 from color.spectra import (
     MultiSpectralDistribution,
     SpectralDistribution,

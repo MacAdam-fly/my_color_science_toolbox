@@ -6,9 +6,9 @@ import numpy as np
 import pytest
 
 from color.colorimetry import (
+    emission_to_XYZ,
     XYZ_to_xy,
     XYZ_to_xyY,
-    emission_to_xyz,
     xyY_to_XYZ,
 )
 from color.spectra import SpectralShape, from_dataset
@@ -93,9 +93,8 @@ def test_rejects_invalid_fallback_xy():
 
 def test_d65_dataset_xy_smoke():
     shape = SpectralShape(360, 780, 1)
-    cmfs = from_dataset("standard_observers.cmfs", "cie1931_xyz_1nm").align(shape)
     d65 = from_dataset("illuminants", "D65").align(shape)
 
-    xy = XYZ_to_xy(emission_to_xyz(d65, cmfs, shape=shape))
+    xy = XYZ_to_xy(emission_to_XYZ(d65, shape=shape))
 
     np.testing.assert_allclose(xy, [0.3127, 0.3290], atol=5e-5)

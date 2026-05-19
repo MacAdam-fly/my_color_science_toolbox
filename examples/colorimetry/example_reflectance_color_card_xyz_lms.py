@@ -12,7 +12,7 @@ if str(_PROJECT_ROOT) not in sys.path:
 import matplotlib.pyplot as plt
 import numpy as np
 
-from color.colorimetry import reflectance_to_lms, reflectance_to_xyz
+from color.colorimetry import reflectance_to_LMS, reflectance_to_XYZ
 from color.datasets import get_color_card
 from color.spectra import MultiSpectralDistribution, SpectralShape, from_columns, from_dataset
 
@@ -41,16 +41,14 @@ def main() -> None:
         )
     reflectances = reflectances.align(shape)
 
-    illuminant = from_dataset("illuminants", "D65").align(shape)
-    cmfs = from_dataset("standard_observers.cmfs", "cie1931_xyz_1nm").align(shape)
     fundamentals = from_dataset(
         "standard_observers.cone_fundamentals",
         "cie2006_lms2_linE_1nm",
         fill_nan=0.0,
     ).align(shape)
 
-    xyz = reflectance_to_xyz(reflectances, illuminant, cmfs, shape=shape)
-    lms = reflectance_to_lms(reflectances, illuminant, fundamentals, shape=shape)
+    xyz = reflectance_to_XYZ(reflectances, shape=shape)
+    lms = reflectance_to_LMS(reflectances, fundamentals=fundamentals, shape=shape)
 
     print("PMC patches:", patch_names)
     print("XYZ rows match patch order:")

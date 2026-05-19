@@ -12,7 +12,7 @@ if str(_PROJECT_ROOT) not in sys.path:
 import matplotlib.pyplot as plt
 import numpy as np
 
-from color.colorimetry import XYZ_to_xyY, emission_to_xyz
+from color.colorimetry import XYZ_to_xyY, emission_to_XYZ
 from color.generators.illuminants import illuminant_a_spd
 from color.spectra import SpectralShape, from_columns, from_dataset
 
@@ -28,10 +28,9 @@ def main() -> None:
         y="spd",
         name="formula A",
     )
-    cmfs = from_dataset("standard_observers.cmfs", "cie1931_xyz_1nm").align(shape)
 
-    xyz_dataset = emission_to_xyz(dataset_a, cmfs, shape=shape)
-    xyz_formula = emission_to_xyz(formula_a, cmfs, shape=shape)
+    xyz_dataset = emission_to_XYZ(dataset_a, shape=shape)
+    xyz_formula = emission_to_XYZ(formula_a, shape=shape)
     difference = xyz_formula - xyz_dataset
     xyy_dataset = XYZ_to_xyY(xyz_dataset)
     xyy_formula = XYZ_to_xyY(xyz_formula)

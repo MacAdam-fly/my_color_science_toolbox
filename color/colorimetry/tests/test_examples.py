@@ -20,6 +20,7 @@ def test_colorimetry_examples_run():
         _EXAMPLES / "example_illuminant_a_xyz_comparison.py",
         _EXAMPLES / "example_reflectance_color_card_xyz_lms.py",
         _EXAMPLES / "example_emission_generators_xyz_lms.py",
+        _EXAMPLES / "example_photometry.py",
     ]
 
     for path in example_paths:
