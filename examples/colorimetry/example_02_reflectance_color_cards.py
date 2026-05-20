@@ -1,4 +1,4 @@
-"""Convert selected PMC color-card reflectances to XYZ and LMS."""
+"""Convert selected PMC colour-card reflectances to xyY, XYZ and LMS."""
 
 from __future__ import annotations
 
@@ -12,15 +12,21 @@ if str(_PROJECT_ROOT) not in sys.path:
 import matplotlib.pyplot as plt
 import numpy as np
 
+from _plot_helpers import (
+    annotate_xy_points,
+    example_output_dir,
+    plot_srgb_swatches,
+    plot_xy_locus,
+    print_xyY_table,
+    xy_from_XYZ_rows,
+)
 from color.colorimetry import reflectance_to_LMS, reflectance_to_XYZ
 from color.datasets import get_color_card
 from color.spectra import MultiSpectralDistribution, SpectralShape, from_columns, from_dataset
 
 
 def main() -> None:
-    output_dir = Path(__file__).resolve().parent / "output"
-    output_dir.mkdir(exist_ok=True)
-
+    output_dir = example_output_dir()
     shape = SpectralShape(400, 700, 5)
     patch_names = ("Caucasian", "Carrot", "Blue Sky")
 
@@ -49,46 +55,47 @@ def main() -> None:
 
     xyz = reflectance_to_XYZ(reflectances, shape=shape)
     lms = reflectance_to_LMS(reflectances, fundamentals=fundamentals, shape=shape)
+    xy = xy_from_XYZ_rows(xyz)
 
-    print("PMC patches:", patch_names)
-    print("XYZ rows match patch order:")
-    print(np.round(xyz, 4))
+    print_xyY_table("PMC reflectance patches under D65", patch_names, xyz)
     print("LMS rows match patch order:")
-    print(np.round(lms, 4))
+    print(np.round(lms, 5))
 
-    fig, axes = plt.subplots(1, 3, figsize=(15, 4.8))
+    fig, axes = plt.subplots(2, 2, figsize=(12.5, 9.0))
 
-    ax = axes[0]
+    ax = axes[0, 0]
     for index, patch in enumerate(patch_names):
         ax.plot(reflectances.wavelengths, reflectances.values[:, index], label=patch)
     ax.set_title("PMC Reflectance Curves")
     ax.set_xlabel("Wavelength (nm)")
     ax.set_ylabel("Reflectance")
-    ax.legend()
+    ax.legend(fontsize=8)
     ax.grid(True, alpha=0.3)
 
+    ax = axes[0, 1]
+    plot_xy_locus(ax, title="Chromaticity under D65")
+    annotate_xy_points(ax, xy, patch_names, color="tab:orange")
+    ax.legend(loc="upper right", fontsize=8)
+
+    ax = axes[1, 0]
     x = np.arange(len(patch_names))
-    width = 0.24
-    ax = axes[1]
-    for offset, label in zip((-width, 0, width), ("X", "Y", "Z")):
-        ax.bar(x + offset, xyz[:, ("X", "Y", "Z").index(label)], width, label=label)
-    ax.set_title("Reflectance to XYZ under D65")
-    ax.set_xticks(x, patch_names, rotation=20)
-    ax.set_ylabel("Value")
-    ax.legend()
+    ax.bar(x, xyz[:, 1], color="tab:blue", alpha=0.8)
+    ax.set_title("Relative Luminance Y")
+    ax.set_xticks(x, patch_names, rotation=20, ha="right")
+    ax.set_ylabel("Y")
     ax.grid(True, axis="y", alpha=0.3)
 
-    ax = axes[2]
-    for offset, label in zip((-width, 0, width), fundamentals.labels):
-        ax.bar(x + offset, lms[:, fundamentals.labels.index(label)], width, label=label)
-    ax.set_title("Reflectance to LMS under D65")
-    ax.set_xticks(x, patch_names, rotation=20)
-    ax.set_ylabel("Value")
-    ax.legend()
-    ax.grid(True, axis="y", alpha=0.3)
+    ax = axes[1, 1]
+    plot_srgb_swatches(
+        ax,
+        patch_names,
+        xyz,
+        white_Y=100.0,
+        title="Approximate sRGB Preview",
+    )
 
     fig.tight_layout()
-    output_path = output_dir / "reflectance_color_card_xyz_lms.png"
+    output_path = output_dir / "02_reflectance_color_cards.png"
     fig.savefig(output_path, dpi=150)
     plt.close(fig)
     print(f"Plot saved to {output_path}")

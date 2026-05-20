@@ -83,7 +83,7 @@ def main() -> None:
     ax.grid(True, axis="y", alpha=0.3)
 
     fig.tight_layout()
-    output_path = output_dir / "photometry.png"
+    output_path = output_dir / "06_photometry.png"
     fig.savefig(output_path, dpi=150)
     plt.close(fig)
     print(f"Plot saved to {output_path}")

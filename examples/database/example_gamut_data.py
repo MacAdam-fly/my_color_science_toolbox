@@ -67,7 +67,7 @@ def main() -> None:
     ax.grid(True, alpha=0.3)
 
     plt.tight_layout()
-    out = Path(__file__).resolve().parent / "gamut_data.png"
+    out = Path(__file__).resolve().parent / 'output' / "gamut_data.png"
     plt.savefig(out, dpi=150)
     plt.show()
     print(f"\nPlot saved to {out}")

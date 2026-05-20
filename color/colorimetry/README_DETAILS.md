@@ -598,20 +598,21 @@ print(result.locus)
 
 | 示例 | 内容 |
 | --- | --- |
-| `example_end_to_end_smoke.py` | datasets / generators / spectra / colorimetry 综合烟测 |
-| `example_emission_generators_xyz_lms.py` | 生成光谱到 XYZ/LMS |
-| `example_reflectance_color_card_xyz_lms.py` | 色卡反射率到 XYZ/LMS |
-| `example_illuminant_a_xyz_comparison.py` | 静态 A 光源与公式 A 光源比较 |
-| `example_lms_xyz_transformations.py` | LMS 与 XYZ 矩阵转换 |
-| `example_photometry.py` | 明视觉/暗视觉光视效率和光效 |
-| `example_lightness.py` | Y 与 L* 往返 |
-| `example_dominant_wavelength.py` | 主波长、互补波长和纯度可视化 |
-| `example_temperature.py` | CCT、Duv、CIE D 轨迹和普朗克轨迹可视化 |
+| `example_01_spectral_conversion_overview.py` | 光谱到 XYZ、xyY、xy 和近似 sRGB 预览的总览 |
+| `example_02_reflectance_color_cards.py` | 色卡反射率到 xyY、LMS、色度图和亮度展示 |
+| `example_03_emission_spectra.py` | 生成发光光谱到 xyY、LMS、色度图和色块预览 |
+| `example_04_illuminant_a_comparison.py` | 静态 A 光源与公式 A 光源的 SPD、xy 和 Y 差异比较 |
+| `example_05_chromaticity_arrays.py` | 批量 `n*m*3` XYZ 数组到 xyY / xy 的转换 |
+| `example_06_photometry.py` | 明视觉/暗视觉光视效率和光效 |
+| `example_07_lightness.py` | Y 与 L* 往返 |
+| `example_08_lms_xyz_transformations.py` | LMS 与 XYZ 矩阵转换 |
+| `example_09_dominant_wavelength.py` | 主波长、互补波长和纯度可视化 |
+| `example_10_temperature.py` | CCT、Duv、CIE D 轨迹和普朗克轨迹可视化 |
 
 运行示例：
 
 ```powershell
-.\.venv\Scripts\python.exe examples\colorimetry\example_temperature.py
+.\.venv\Scripts\python.exe examples\colorimetry\example_10_temperature.py
 ```
 
 图像输出位于：

@@ -80,7 +80,7 @@ def main() -> None:
     ax.grid(True, alpha=0.3)
 
     plt.tight_layout()
-    out = Path(__file__).resolve().parent / "color_systems.png"
+    out = Path(__file__).resolve().parent / 'output' / "color_systems.png"
     plt.savefig(out, dpi=150)
     plt.show()
     print(f"\nPlot saved to {out}")

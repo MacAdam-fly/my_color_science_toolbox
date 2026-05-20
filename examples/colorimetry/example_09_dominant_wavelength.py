@@ -190,7 +190,7 @@ def main() -> None:
     fig.legend(legend_items.values(), legend_items.keys(), loc="lower center", ncol=4)
     fig.suptitle("Dominant and Complementary Wavelength on CIE 1931 xy")
     fig.tight_layout(rect=(0, 0.08, 1, 0.95))
-    output_path = output_dir / "dominant_wavelength.png"
+    output_path = output_dir / "09_dominant_wavelength.png"
     fig.savefig(output_path, dpi=150)
     plt.close(fig)
     print(f"Plot saved to {output_path}")

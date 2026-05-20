@@ -104,8 +104,8 @@ def _plot_loci_comparison(
     ax.grid(True, alpha=0.3)
     ax.legend(loc="lower right", fontsize=9, framealpha=0.92)
     fig.tight_layout()
-    _save(fig, output_dir, "temperature_cie_d_locus.png", close=False)
-    _save(fig, output_dir, "temperature_loci_comparison.png")
+    _save(fig, output_dir, "10_temperature_cie_d_locus.png", close=False)
+    _save(fig, output_dir, "10_temperature_loci_comparison.png")
 
 
 def _plot_duv_offsets(output_dir: Path) -> None:
@@ -152,7 +152,7 @@ def _plot_duv_offsets(output_dir: Path) -> None:
     ax.grid(True, alpha=0.3)
     ax.legend(loc="upper right", fontsize=9, framealpha=0.92)
     fig.tight_layout()
-    _save(fig, output_dir, "temperature_duv_offsets_uv.png")
+    _save(fig, output_dir, "10_temperature_duv_offsets_uv.png")
 
 
 def _plot_method_comparison(
@@ -211,7 +211,7 @@ def _plot_method_comparison(
     ax2.legend(ncol=2, fontsize=9)
 
     fig.tight_layout()
-    _save(fig, output_dir, "temperature_method_comparison.png")
+    _save(fig, output_dir, "10_temperature_method_comparison.png")
 
 
 def _plot_mired_curve(output_dir: Path) -> None:
@@ -237,7 +237,7 @@ def _plot_mired_curve(output_dir: Path) -> None:
     ax.set_ylabel("Mired")
     ax.grid(True, alpha=0.3)
     fig.tight_layout()
-    _save(fig, output_dir, "temperature_mired_curve.png")
+    _save(fig, output_dir, "10_temperature_mired_curve.png")
 
 
 def main() -> None:

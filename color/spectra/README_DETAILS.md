@@ -439,20 +439,11 @@ XYZ/LMS 转换由 `color.colorimetry` 提供；本模块只负责光谱对象准
 
 | 示例 | 重点 |
 | --- | --- |
-| `example_single_distribution.py` | 已注册的单通道数据集 |
-| `example_multi_distribution.py` | 已注册的多通道 CMFs |
-| `example_from_columns.py` | 原始列字典 |
-| `example_interpolation_bounds.py` | 越界插值、`bounds_error` 和 `fill_value` |
-| `example_align_and_arithmetic.py` | 对齐、shape 导出和标量算术 |
-| `example_sample_and_aliases.py` | `sample`、`__call__`、`domain`、`range` |
-| `example_interpolation_methods.py` | 插值器对比 |
-| `example_extrapolation_strategies.py` | 外推策略对比 |
-| `example_multi_channel_workflow.py` | 多通道对象的通道提取、reshape 和导出 |
-| `example_export_formats.py` | `to_dict()`、`to_numpy()`、`to_pandas()` |
-| `example_arithmetic_alignment.py` | 算术前显式对齐 |
-| `example_plot_single_distribution.py` | 单通道光谱的插值/外推可视化 |
-| `example_plot_cmfs.py` | CIE 1931 XYZ CMFs 原始/reshape 可视化 |
-| `example_plot_pmc_color_card.py` | PMC 色卡包装与 0.5 nm 插值 |
+| `example_01_create_spectral_objects.py` | `from_dataset`、`from_columns` 和直接构造对象 |
+| `example_02_sampling_interpolation_alignment.py` | sample、插值、reshape、trim、外推和 align |
+| `example_03_multi_channel_workflow.py` | CMFs 和 PMC 色卡这类多通道对象工作流 |
+| `example_04_export_and_arithmetic.py` | 导出格式、标量算术和显式对齐后的对象算术 |
+| `example_05_visualization_cases.py` | 单通道、CMFs 和 PMC 色卡的重点可视化案例 |
 
 ## 模块边界
 

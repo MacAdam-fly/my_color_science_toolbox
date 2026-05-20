@@ -91,7 +91,7 @@ def main() -> None:
     ax.grid(True, alpha=0.3)
 
     fig.tight_layout()
-    output_path = Path(__file__).resolve().parent / "illuminants.png"
+    output_path = Path(__file__).resolve().parent / 'output' / "illuminants.png"
     fig.savefig(output_path, dpi=150)
     plt.close(fig)
     print(f"Plot saved to {output_path}")

@@ -1,44 +1,60 @@
 # spectra examples
 
-These examples show how `color.spectra` wraps raw `color.datasets` arrays as
-spectral objects for interpolation, extrapolation, reshaping, export, and
+These examples show how `color.spectra` wraps raw arrays as immutable spectral
+objects for sampling, interpolation, extrapolation, alignment, export and basic
 arithmetic.
 
-Run from the project root:
+The directory is intentionally small. Read the numbered files in order:
 
-```powershell
-.\.venv\Scripts\python.exe examples\spectra\example_single_distribution.py
-.\.venv\Scripts\python.exe examples\spectra\example_multi_distribution.py
-.\.venv\Scripts\python.exe examples\spectra\example_from_columns.py
-.\.venv\Scripts\python.exe examples\spectra\example_interpolation_bounds.py
-.\.venv\Scripts\python.exe examples\spectra\example_align_and_arithmetic.py
-.\.venv\Scripts\python.exe examples\spectra\example_sample_and_aliases.py
-.\.venv\Scripts\python.exe examples\spectra\example_interpolation_methods.py
-.\.venv\Scripts\python.exe examples\spectra\example_extrapolation_strategies.py
-.\.venv\Scripts\python.exe examples\spectra\example_multi_channel_workflow.py
-.\.venv\Scripts\python.exe examples\spectra\example_export_formats.py
-.\.venv\Scripts\python.exe examples\spectra\example_arithmetic_alignment.py
-.\.venv\Scripts\python.exe examples\spectra\example_plot_single_distribution.py
-.\.venv\Scripts\python.exe examples\spectra\example_plot_cmfs.py
-.\.venv\Scripts\python.exe examples\spectra\example_plot_pmc_color_card.py
+```text
+datasets / raw columns -> spectra -> sampling / alignment / export / plots
 ```
 
-The examples intentionally focus on the spectral object layer. Use
-`examples/colorimetry/` for XYZ/LMS spectral integration workflows.
+Use `examples/colorimetry/` for XYZ/LMS spectral integration workflows.
 
-Plot examples save PNG files under `examples/spectra/output/`.
+## Run
 
-Coverage
-- `example_single_distribution.py`: registered single-channel dataset.
-- `example_multi_distribution.py`: registered multi-channel CMFs.
-- `example_from_columns.py`: user-provided raw column dictionaries.
-- `example_sample_and_aliases.py`: `sample()`, `__call__()`, `domain`, `range`.
-- `example_interpolation_methods.py`: `nearest`, `linear`, `pchip`, `sprague`.
-- `example_interpolation_bounds.py`: bounds handling and fill values.
-- `example_extrapolation_strategies.py`: `constant`, `linear`, `fill`, left/right.
-- `example_align_and_arithmetic.py`: align, export shape, scalar arithmetic.
-- `example_arithmetic_alignment.py`: align two signals before object arithmetic.
-- `example_export_formats.py`: dict, NumPy, and pandas export.
-- `example_plot_single_distribution.py`: visualize interpolation/extrapolation.
-- `example_plot_cmfs.py`: visualize multi-channel CMFs.
-- `example_plot_pmc_color_card.py`: wrap three PMC color-card patches and plot 0.5 nm interpolation.
+Run individual examples from the project root:
+
+```powershell
+.\.venv\Scripts\python.exe examples\spectra\example_01_create_spectral_objects.py
+.\.venv\Scripts\python.exe examples\spectra\example_02_sampling_interpolation_alignment.py
+.\.venv\Scripts\python.exe examples\spectra\example_03_multi_channel_workflow.py
+.\.venv\Scripts\python.exe examples\spectra\example_04_export_and_arithmetic.py
+.\.venv\Scripts\python.exe examples\spectra\example_05_visualization_cases.py
+```
+
+Plot outputs are written to `examples/spectra/output/`.
+
+## Guide
+
+`example_01_create_spectral_objects.py` shows the object creation paths:
+registered datasets with `from_dataset(...)`, in-memory column mappings with
+`from_columns(...)`, and direct `SpectralDistribution` /
+`MultiSpectralDistribution` construction. It also clarifies that `y` selects one
+value column while `ys` selects multiple value columns.
+
+`example_02_sampling_interpolation_alignment.py` covers the main domain
+operations: `sample()`, `__call__()`, `domain`, `range`, `interpolate()`,
+`reshape()`, `trim()`, `extrapolate()` and `align()`. It compares `nearest`,
+`linear`, `pchip` and `sprague` interpolation and shows explicit out-of-domain
+handling.
+
+`example_03_multi_channel_workflow.py` focuses on multi-channel objects such as
+XYZ CMFs and PMC colour-card patches. It demonstrates labels, `channel(label)`,
+multi-channel reshape and a shared wavelength domain.
+
+`example_04_export_and_arithmetic.py` shows `to_dict()`, `to_numpy()`,
+`to_pandas()`, scalar arithmetic and object arithmetic. It intentionally shows
+that object arithmetic requires matching wavelength domains, so callers should
+align explicitly before multiplying two spectral objects.
+
+`example_05_visualization_cases.py` generates three focused plots:
+
+- single-channel interpolation and extrapolation strategies
+- CIE 1931 XYZ CMFs before and after reshape
+- three PMC colour-card patches with source samples and PCHIP interpolation
+
+The examples only demonstrate the spectral object layer. They do not compute
+XYZ, LMS or photometric responses; those integrations live in
+`color.colorimetry` and `examples/colorimetry/`.

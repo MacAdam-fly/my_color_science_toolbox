@@ -18,15 +18,16 @@ def test_colorimetry_examples_run():
             sys.path.insert(0, str(directory))
 
     example_paths = [
-        _COLORIMETRY_EXAMPLES / "example_end_to_end_smoke.py",
-        _COLORIMETRY_EXAMPLES / "example_illuminant_a_xyz_comparison.py",
-        _COLORIMETRY_EXAMPLES / "example_reflectance_color_card_xyz_lms.py",
-        _COLORIMETRY_EXAMPLES / "example_emission_generators_xyz_lms.py",
-        _COLORIMETRY_EXAMPLES / "example_photometry.py",
-        _COLORIMETRY_EXAMPLES / "example_lightness.py",
-        _COLORIMETRY_EXAMPLES / "example_lms_xyz_transformations.py",
-        _COLORIMETRY_EXAMPLES / "example_dominant_wavelength.py",
-        _COLORIMETRY_EXAMPLES / "example_temperature.py",
+        _COLORIMETRY_EXAMPLES / "example_01_spectral_conversion_overview.py",
+        _COLORIMETRY_EXAMPLES / "example_02_reflectance_color_cards.py",
+        _COLORIMETRY_EXAMPLES / "example_03_emission_spectra.py",
+        _COLORIMETRY_EXAMPLES / "example_04_illuminant_a_comparison.py",
+        _COLORIMETRY_EXAMPLES / "example_05_chromaticity_arrays.py",
+        _COLORIMETRY_EXAMPLES / "example_06_photometry.py",
+        _COLORIMETRY_EXAMPLES / "example_07_lightness.py",
+        _COLORIMETRY_EXAMPLES / "example_08_lms_xyz_transformations.py",
+        _COLORIMETRY_EXAMPLES / "example_09_dominant_wavelength.py",
+        _COLORIMETRY_EXAMPLES / "example_10_temperature.py",
         _SPACES_EXAMPLES / "example_rgb_spaces.py",
     ]
 
