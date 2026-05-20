@@ -1,17 +1,10 @@
-"""Colour-space conversion helpers."""
+"""RGB colour-space definitions and conversions."""
 
 from __future__ import annotations
 
-from .rgb import (
-    RGBColorSpace,
-    RGB_COLORSPACES,
-    RGB_to_XYZ,
-    XYZ_to_RGB,
-    XYZ_to_sRGB,
-    get_RGB_colourspace,
-    list_RGB_colourspaces,
-    sRGB_to_XYZ,
-)
+from .colourspace import RGBColorSpace
+from .conversion import RGB_to_XYZ, XYZ_to_RGB, XYZ_to_sRGB, sRGB_to_XYZ
+from .registry import RGB_COLORSPACES, get_RGB_colourspace, list_RGB_colourspaces
 
 __all__ = [
     "RGBColorSpace",  # RGB colour-space definition object

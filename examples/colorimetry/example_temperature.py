@@ -283,6 +283,11 @@ def main() -> None:
     _plot_method_comparison(output_dir, named_ccts)
     _plot_mired_curve(output_dir)
 
+    # test the analyze_temperature function with a non-standard xy sample
+    test_xy = np.array([0.31, 0.33])  # D65
+    analysis = analyze_temperature(test_xy, method="ohno2013")
+    print(analysis)
+
 
 if __name__ == "__main__":
     main()

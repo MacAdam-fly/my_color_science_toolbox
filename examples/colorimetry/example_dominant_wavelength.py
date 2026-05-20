@@ -195,6 +195,11 @@ def main() -> None:
     plt.close(fig)
     print(f"Plot saved to {output_path}")
 
+    # test the analyze_chromaticity function with a non-standard xy sample
+    test_xy = np.array([0.31, 0.33])  # D65
+    analysis = analyze_chromaticity(test_xy, xy_n=xy_n)
+    print(analysis)
+
 
 if __name__ == "__main__":
     main()
