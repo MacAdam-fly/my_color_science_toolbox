@@ -388,6 +388,28 @@ CCT_Duv = uv_to_CCT(uv, method="robertson1968")
 uv = CCT_to_uv(CCT_Duv, method="robertson1968")
 ```
 
+算法直觉：
+
+```text
+输入 uv
+  -> 在预定义 iso-temperature line 表中找到所在区间
+  -> 在相邻等温线之间插值
+  -> 得到 CCT 和到普朗克轨迹的有符号距离 Duv
+```
+
+Robertson 使用的是一张稀疏的等温线表，表中包含：
+
+```text
+reciprocal temperature r = 10^6 / T
+Planckian locus u
+Planckian locus v
+iso-temperature line slope
+```
+
+反向 `CCT + Duv -> uv` 时，也是在表格中找到对应温度区间，再沿等温线方向偏移。
+它的优点是快、稳定、实现相对直接；缺点是表格比较稀疏，精度不如更密集的
+轨迹拟合方法。
+
 ### Ohno 2013
 
 | 函数 | 说明 |
@@ -405,6 +427,42 @@ blackbody_spd -> emission_to_XYZ -> XYZ_to_uv1960
 ```
 
 默认 Ohno 表会缓存，避免重复生成。
+
+算法直觉：
+
+```text
+输入 uv
+  -> 生成或读取密集 Planckian locus 表 T, u(T), v(T)
+  -> 找到距离输入点最近的普朗克轨迹采样点
+  -> 取最近点前后相邻三个点
+  -> 用几何方式估计最近位置和 Duv
+  -> 对离轨迹较远的点使用抛物线修正
+```
+
+反向 `CCT + Duv -> uv` 时，Ohno 先计算对应 CCT 的普朗克轨迹点，再沿局部法线方向
+偏移 `Duv`。
+
+与 Robertson 相比，Ohno 的基础不是稀疏等温线表，而是更密的普朗克轨迹表，因此
+结果通常更精细，更适合严肃色温分析；代价是计算更重，所以本工程对默认表做了
+内部缓存。
+
+### Robertson 与 Ohno 的区别
+
+| 项目 | Robertson 1968 | Ohno 2013 |
+| --- | --- | --- |
+| 基础数据 | 稀疏等温线表 | 密集普朗克轨迹表 |
+| 工作空间 | CIE 1960 UCS uv | CIE 1960 UCS uv |
+| 输出 | `[CCT, Duv]` | `[CCT, Duv]` |
+| 速度 | 快 | 较慢，但默认表会缓存 |
+| 精度 | 常规分析够用 | 更细，更适合严肃分析 |
+| 反向构造 | 表格等温线偏移 | 普朗克点 + 局部法线偏移 |
+
+一句话概括：
+
+```text
+Robertson 是查等温线表。
+Ohno 是在密集普朗克轨迹上找最近点并修正。
+```
 
 ### 便捷入口
 
