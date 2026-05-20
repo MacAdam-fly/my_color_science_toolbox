@@ -43,8 +43,9 @@ CIE xy samples, including the full `analyze_chromaticity(...)` result
 used for plotting both intersections and a reverse reconstruction from
 dominant wavelength plus colorimetric purity.
 
-`example_temperature.py` computes CCT/mired relationships, Robertson CCT+Duv
-values and plots the CIE D daylight locus for a few named daylight whitepoints.
+`example_temperature.py` computes CCT/mired relationships, compares Robertson
+and Ohno CCT+Duv values, and writes several plots: CIE D daylight vs Planckian
+loci, Duv offsets in CIE 1960 uv, method comparison, and the CCT/mired curve.
 
 The LMS examples use `from_dataset(..., fill_nan=0.0)` because some CVRL cone
 fundamental files contain blank long-wavelength S-cone entries that are treated

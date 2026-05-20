@@ -39,15 +39,25 @@ from .photometry import (
     scotopic_luminous_flux,
 )
 from .temperature import (
+    CCT_DEFAULT_SPACING_OHNO2013,
+    CCT_Duv_to_xy,
+    CCT_MAXIMAL_OHNO2013,
+    CCT_MINIMAL_OHNO2013,
     CCT_to_mired,
     CCT_to_uv,
+    CCT_to_uv_Ohno2013,
     CCT_to_uv_Robertson1968,
     CCT_to_xy,
     CCT_to_xy_CIE_D,
+    DEFAULT_CMFS_OHNO2013,
+    TemperatureAnalysis,
     XYZ_to_uv1960,
+    analyze_temperature,
     mired_to_CCT,
+    planckian_table_Ohno2013,
     uv1960_to_xy,
     uv_to_CCT,
+    uv_to_CCT_Ohno2013,
     uv_to_CCT_Robertson1968,
     xy_to_CCT,
     xy_to_CCT_Duv,
@@ -72,6 +82,14 @@ __all__ += [
     "DEFAULT_SCOTOPIC_K_M",  # default scotopic maximum luminous efficacy
 ]
 
+# temperature defaults.
+__all__ += [
+    "CCT_MINIMAL_OHNO2013",  # default lower CCT bound for Ohno 2013 tables
+    "CCT_MAXIMAL_OHNO2013",  # default upper CCT bound for Ohno 2013 tables
+    "CCT_DEFAULT_SPACING_OHNO2013",  # default table spacing for Ohno 2013
+    "DEFAULT_CMFS_OHNO2013",  # default CMFS dataset for Ohno 2013 computations
+]
+
 # Chromaticity conversions.
 __all__ += [
     "XYZ_to_xyY",  # convert tristimulus values to xyY coordinates
@@ -83,18 +101,30 @@ __all__ += [
 __all__ += [
     "CCT_to_mired",  # convert CCT in kelvins to mired
     "mired_to_CCT",  # convert mired to CCT in kelvins
+    "TemperatureAnalysis",  # result object for full CCT and Duv analysis
+    "analyze_temperature",  # full CCT and Duv analysis from xy coordinates
+
     "xy_to_CCT_McCamy1992",  # estimate CCT from xy using McCamy 1992
     "CCT_to_xy_CIE_D",  # compute CIE D-series daylight xy from CCT
+
     "xy_to_CCT",  # estimate CCT from xy using a named method
     "CCT_to_xy",  # compute xy from CCT using a named method
+
     "xy_to_uv1960",  # convert xy chromaticity coordinates to CIE 1960 uv
     "XYZ_to_uv1960",  # convert XYZ tristimulus values to CIE 1960 uv
     "uv1960_to_xy",  # convert CIE 1960 uv coordinates to xy
+
     "uv_to_CCT_Robertson1968",  # compute CCT and Duv from uv using Robertson 1968
     "CCT_to_uv_Robertson1968",  # compute uv from CCT and Duv using Robertson 1968
+
+    "planckian_table_Ohno2013",  # generate the Planckian uv table used by Ohno 2013
+    "uv_to_CCT_Ohno2013",  # compute CCT and Duv from uv using Ohno 2013
+    "CCT_to_uv_Ohno2013",  # compute uv from CCT and Duv using Ohno 2013
+
     "uv_to_CCT",  # compute CCT and Duv from uv using a named method
     "CCT_to_uv",  # compute uv from CCT and Duv using a named method
     "xy_to_CCT_Duv",  # compute CCT and Duv from xy using a named method
+    "CCT_Duv_to_xy",  # compute xy from CCT and Duv using a named method
 ]
 
 # CIE 1976 lightness conversions.

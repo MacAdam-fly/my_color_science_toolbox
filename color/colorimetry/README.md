@@ -3,6 +3,8 @@
 `color.colorimetry` converts spectral object wrappers into colorimetric
 responses. It is the computation layer above:
 
+中文详细说明见 [`README_DETAILS.md`](README_DETAILS.md)。
+
 ```text
 color.datasets     static reference data
 color.generators   formula-generated data
@@ -40,9 +42,15 @@ from color.colorimetry import (
     uv1960_to_xy,
     uv_to_CCT_Robertson1968,
     CCT_to_uv_Robertson1968,
+    TemperatureAnalysis,
+    analyze_temperature,
+    uv_to_CCT_Ohno2013,
+    CCT_to_uv_Ohno2013,
+    planckian_table_Ohno2013,
     uv_to_CCT,
     CCT_to_uv,
     xy_to_CCT_Duv,
+    CCT_Duv_to_xy,
     Y_to_Lstar,
     Lstar_to_Y,
     photopic_luminous_efficiency_function,
@@ -169,15 +177,41 @@ CCT = xy_to_CCT(xy, method="mccamy1992")
 uv = xy_to_uv1960(xy)
 CCT_Duv = uv_to_CCT(uv, method="robertson1968")
 xy_again = uv1960_to_xy(CCT_to_uv(CCT_Duv, method="robertson1968"))
+CCT_Duv_ohno = uv_to_CCT(uv, method="ohno2013")
+xy_from_CCT_Duv = CCT_Duv_to_xy(CCT_Duv_ohno, method="ohno2013")
+analysis = analyze_temperature(xy, method="ohno2013")
 ```
 
-`CCT_to_xy_CIE_D(...)` returns only CIE D-series daylight chromaticity
-coordinates. It uses the same daylight locus formula as
+There are two different loci in this module:
+
+- `CCT_to_xy_CIE_D(...)` / `CCT_to_xy(..., method="cie_d")` use the CIE D-series
+  daylight locus. This gives daylight chromaticity coordinates such as D65
+  near `xy=(0.3127, 0.3290)`. It is not the Planckian blackbody locus.
+- `uv_to_CCT_*`, `CCT_to_uv_*`, `xy_to_CCT_Duv(...)` and `CCT_Duv_to_xy(...)`
+  operate relative to the Planckian locus in CIE 1960 UCS. `Duv=0` means the
+  point lies on the Planckian locus.
+
+`CCT_to_xy_CIE_D(...)` uses the same daylight locus formula as
 `color.generators.illuminants.daylight_spd(...)`, while the generator builds the
-full spectral power distribution. `xy_to_CCT_McCamy1992(...)` is a simple CCT
-approximation and does not return `Duv`. For CCT plus `Duv`, use the CIE 1960
-UCS helpers and Robertson 1968 path. `Duv > 0` and `Duv < 0` indicate opposite
-sides of the Planckian locus in CIE 1960 UCS.
+full spectral power distribution. `xy_to_CCT_McCamy1992(...)` is a simple
+one-way CCT approximation from xy and does not return `Duv`. For CCT plus `Duv`,
+use the CIE 1960 UCS helpers. Robertson 1968 is the default fast path; Ohno
+2013 is also available when you want a denser Planckian-table calculation:
+
+```python
+CCT_Duv = uv_to_CCT_Ohno2013(uv)
+uv = CCT_to_uv_Ohno2013(CCT_Duv)
+table = planckian_table_Ohno2013()
+```
+
+`uv_to_CCT(..., method="ohno2013")`, `CCT_to_uv(..., method="ohno2013")` and
+`xy_to_CCT_Duv(..., method="ohno2013")` route through the same Ohno helpers.
+`CCT_Duv_to_xy(...)` is the convenience inverse of `xy_to_CCT_Duv(...)`.
+Use `analyze_temperature(...)` when you want named fields instead of a raw
+`[CCT, Duv]` array; it returns a `TemperatureAnalysis` object containing `CCT`,
+`Duv`, `xy`, `uv`, `method` and `locus`.
+`Duv > 0` and `Duv < 0` indicate opposite sides of the Planckian locus in CIE
+1960 UCS.
 
 Lightness helpers are available for CIE 1976 `Y <-> L*`:
 
@@ -229,6 +263,6 @@ See `examples/colorimetry/` for end-to-end scripts covering:
 - generated vs static CIE Illuminant A XYZ comparison
 - direct CIE 2006 LMS/XYZ matrix transformations
 - dominant wavelength, complementary wavelength and purity
-- basic CCT, mired and CIE D daylight chromaticity calculations
+- basic CCT, mired, CIE D daylight chromaticity and CCT+Duv calculations
 - photopic and scotopic LEFs with luminous efficacy comparison
 - smoke checks across datasets, generators, spectra and colorimetry
