@@ -16,7 +16,7 @@ from color.spaces import (
 
 
 def test_convert_XYZ_to_xyY():
-    XYZ = np.array([0.95047, 1.0, 1.08883])
+    XYZ = np.array([95.047, 100.0, 108.883])
 
     np.testing.assert_allclose(
         convert_color(XYZ, "XYZ", "xyY"),
@@ -25,7 +25,7 @@ def test_convert_XYZ_to_xyY():
 
 
 def test_convert_xyY_to_XYZ():
-    xyY = np.array([0.31272661, 0.32902313, 1.0])
+    xyY = np.array([0.31272661, 0.32902313, 100.0])
 
     np.testing.assert_allclose(
         convert_color(xyY, "xyY", "XYZ"),
@@ -34,7 +34,7 @@ def test_convert_xyY_to_XYZ():
 
 
 def test_convert_identity_returns_numeric_copy():
-    XYZ = np.array([0.1, 0.2, 0.3])
+    XYZ = np.array([10.0, 20.0, 30.0])
 
     result = convert_color(XYZ, "XYZ", "XYZ")
 
@@ -69,7 +69,7 @@ def test_convert_RGB_to_XYZ():
 
 
 def test_convert_XYZ_to_RGB():
-    XYZ = np.array([0.2, 0.3, 0.4])
+    XYZ = np.array([20.0, 30.0, 40.0])
 
     np.testing.assert_allclose(
         convert_color(XYZ, "XYZ", "sRGB"),
@@ -96,7 +96,7 @@ def test_convert_RGB_to_xyY():
 
 
 def test_convert_xyY_to_RGB():
-    xyY = np.array([0.31272661, 0.32902313, 1.0])
+    xyY = np.array([0.31272661, 0.32902313, 100.0])
 
     np.testing.assert_allclose(
         convert_color(xyY, "xyY", "sRGB"),

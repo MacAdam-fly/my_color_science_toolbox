@@ -32,20 +32,20 @@ __all__ = [
     "D55_XYZ",  # CIE D55 whitepoint tristimulus values
     "D65_XYZ",  # CIE D65 whitepoint tristimulus values
     "E_XYZ",  # equal-energy whitepoint tristimulus values
-    "SRGB_TO_XYZ",  # linear sRGB to XYZ conversion matrix
-    "XYZ_TO_SRGB",  # XYZ to linear sRGB conversion matrix
-    "REC709_TO_XYZ",  # linear Rec.709 to XYZ conversion matrix
-    "XYZ_TO_REC709",  # XYZ to linear Rec.709 conversion matrix
-    "REC2020_TO_XYZ",  # linear Rec.2020 to XYZ conversion matrix
-    "XYZ_TO_REC2020",  # XYZ to linear Rec.2020 conversion matrix
-    "ADOBE_RGB_TO_XYZ",  # linear Adobe RGB (1998) to XYZ conversion matrix
-    "XYZ_TO_ADOBE_RGB",  # XYZ to linear Adobe RGB (1998) conversion matrix
-    "DISPLAY_P3_TO_XYZ",  # linear Display P3 to XYZ conversion matrix
-    "XYZ_TO_DISPLAY_P3",  # XYZ to linear Display P3 conversion matrix
-    "DCIP3_TO_XYZ",  # linear DCI-P3 to XYZ conversion matrix
-    "XYZ_TO_DCIP3",  # XYZ to linear DCI-P3 conversion matrix
-    "NTSC_1953_TO_XYZ",  # linear NTSC (1953) to XYZ conversion matrix
-    "XYZ_TO_NTSC_1953",  # XYZ to linear NTSC (1953) conversion matrix
+    "SRGB_TO_XYZ",  # linear sRGB to Y=100 XYZ conversion matrix
+    "XYZ_TO_SRGB",  # Y=100 XYZ to linear sRGB conversion matrix
+    "REC709_TO_XYZ",  # linear Rec.709 to Y=100 XYZ conversion matrix
+    "XYZ_TO_REC709",  # Y=100 XYZ to linear Rec.709 conversion matrix
+    "REC2020_TO_XYZ",  # linear Rec.2020 to Y=100 XYZ conversion matrix
+    "XYZ_TO_REC2020",  # Y=100 XYZ to linear Rec.2020 conversion matrix
+    "ADOBE_RGB_TO_XYZ",  # linear Adobe RGB (1998) to Y=100 XYZ conversion matrix
+    "XYZ_TO_ADOBE_RGB",  # Y=100 XYZ to linear Adobe RGB (1998) conversion matrix
+    "DISPLAY_P3_TO_XYZ",  # linear Display P3 to Y=100 XYZ conversion matrix
+    "XYZ_TO_DISPLAY_P3",  # Y=100 XYZ to linear Display P3 conversion matrix
+    "DCIP3_TO_XYZ",  # linear DCI-P3 to Y=100 XYZ conversion matrix
+    "XYZ_TO_DCIP3",  # Y=100 XYZ to linear DCI-P3 conversion matrix
+    "NTSC_1953_TO_XYZ",  # linear NTSC (1953) to Y=100 XYZ conversion matrix
+    "XYZ_TO_NTSC_1953",  # Y=100 XYZ to linear NTSC (1953) conversion matrix
     "RGB_COLOURSPACE_DEFINITIONS",  # RGB colour-space standard definitions
     "RGB_GAMUT_METADATA",  # backwards-compatible RGB definitions alias
     "COMMON_GAMUTS",  # backwards-compatible RGB matrix registry

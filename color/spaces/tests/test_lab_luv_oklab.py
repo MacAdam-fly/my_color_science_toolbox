@@ -30,42 +30,42 @@ def _whitepoint_xy(whitepoint_XYZ):
     return whitepoint[:2] / np.sum(whitepoint)
 
 
-def test_default_whitepoint_is_relative_D65():
-    np.testing.assert_allclose(DEFAULT_WHITEPOINT_XYZ, D65_XYZ / 100.0)
+def test_default_whitepoint_is_D65_reference_domain():
+    np.testing.assert_allclose(DEFAULT_WHITEPOINT_XYZ, D65_XYZ)
     assert not DEFAULT_WHITEPOINT_XYZ.flags.writeable
 
 
 def test_Lab_matches_colour_reference():
     colour = pytest.importorskip("colour")
-    XYZ = np.array([0.2, 0.3, 0.4])
+    XYZ = np.array([20.0, 30.0, 40.0])
     illuminant = _whitepoint_xy(DEFAULT_WHITEPOINT_XYZ)
 
     np.testing.assert_allclose(
         XYZ_to_Lab(XYZ),
-        colour.XYZ_to_Lab(XYZ, illuminant=illuminant),
+        colour.XYZ_to_Lab(XYZ / 100.0, illuminant=illuminant),
         atol=1e-10,
     )
 
 
 def test_Luv_matches_colour_reference():
     colour = pytest.importorskip("colour")
-    XYZ = np.array([0.2, 0.3, 0.4])
+    XYZ = np.array([20.0, 30.0, 40.0])
     illuminant = _whitepoint_xy(DEFAULT_WHITEPOINT_XYZ)
 
     np.testing.assert_allclose(
         XYZ_to_Luv(XYZ),
-        colour.XYZ_to_Luv(XYZ, illuminant=illuminant),
+        colour.XYZ_to_Luv(XYZ / 100.0, illuminant=illuminant),
         atol=1e-10,
     )
 
 
 def test_Oklab_matches_colour_reference():
     colour = pytest.importorskip("colour")
-    XYZ = np.array([0.2, 0.3, 0.4])
+    XYZ = np.array([20.0, 30.0, 40.0])
 
     np.testing.assert_allclose(
         XYZ_to_Oklab(XYZ),
-        colour.XYZ_to_Oklab(XYZ),
+        colour.XYZ_to_Oklab(XYZ / 100.0),
         atol=1e-10,
     )
 
@@ -80,15 +80,15 @@ def test_Oklab_matches_colour_reference():
 )
 def test_XYZ_round_trip_single_and_batch(forward, inverse):
     XYZ = np.array([
-        [0.2, 0.3, 0.4],
-        [0.05, 0.10, 0.02],
+        [20.0, 30.0, 40.0],
+        [5.0, 10.0, 2.0],
     ])
 
     values = forward(XYZ)
     recovered = inverse(values)
 
     assert values.shape == XYZ.shape
-    np.testing.assert_allclose(recovered, XYZ, atol=1e-7)
+    np.testing.assert_allclose(recovered, XYZ, atol=1e-5)
 
 
 @pytest.mark.parametrize(
@@ -109,8 +109,8 @@ def test_cylindrical_round_trip(to_lch, from_lch, value):
 
 
 def test_custom_whitepoint_changes_Lab_and_round_trips():
-    XYZ = np.array([0.2, 0.3, 0.4])
-    whitepoint = D50_XYZ / 100.0
+    XYZ = np.array([20.0, 30.0, 40.0])
+    whitepoint = D50_XYZ
 
     Lab = XYZ_to_Lab(XYZ, whitepoint_XYZ=whitepoint)
     recovered = Lab_to_XYZ(Lab, whitepoint_XYZ=whitepoint)
@@ -129,49 +129,49 @@ def test_Luv_black_round_trip():
 @pytest.mark.parametrize("function", [XYZ_to_Lab, Lab_to_XYZ, XYZ_to_Luv, Luv_to_XYZ])
 def test_rejects_invalid_whitepoint(function):
     with pytest.raises(ValueError, match="whitepoint_XYZ"):
-        function([0.2, 0.3, 0.4], whitepoint_XYZ=[1.0, 1.0])
+        function([20.0, 30.0, 40.0], whitepoint_XYZ=[1.0, 1.0])
     with pytest.raises(ValueError, match="positive"):
-        function([0.2, 0.3, 0.4], whitepoint_XYZ=[1.0, 0.0, 1.0])
+        function([20.0, 30.0, 40.0], whitepoint_XYZ=[1.0, 0.0, 1.0])
 
 
 @pytest.mark.parametrize("function", [XYZ_to_Lab, XYZ_to_Luv, XYZ_to_Oklab])
 def test_rejects_invalid_colour_values(function):
     with pytest.raises(ValueError, match="3 values"):
-        function([0.2, 0.3])
+        function([20.0, 30.0])
     with pytest.raises(ValueError, match="finite"):
-        function([0.2, np.nan, 0.4])
+        function([20.0, np.nan, 40.0])
 
 
 def test_convert_color_uses_source_and_target_space_spec_parameters():
-    XYZ = np.array([0.2, 0.3, 0.4])
-    Lab_D50 = XYZ_to_Lab(XYZ, whitepoint_XYZ=D50_XYZ / 100.0)
+    XYZ = np.array([20.0, 30.0, 40.0])
+    Lab_D50 = XYZ_to_Lab(XYZ, whitepoint_XYZ=D50_XYZ)
 
     result = convert_color(
         Lab_D50,
-        SpaceSpec("Lab", whitepoint_XYZ=D50_XYZ / 100.0),
-        SpaceSpec("Luv", whitepoint_XYZ=D65_XYZ / 100.0),
+        SpaceSpec("Lab", whitepoint_XYZ=D50_XYZ),
+        SpaceSpec("Luv", whitepoint_XYZ=D65_XYZ),
     )
-    expected = XYZ_to_Luv(XYZ, whitepoint_XYZ=D65_XYZ / 100.0)
+    expected = XYZ_to_Luv(XYZ, whitepoint_XYZ=D65_XYZ)
 
     np.testing.assert_allclose(result, expected, atol=1e-10)
 
 
 def test_convert_color_derived_to_derived_path():
-    XYZ = np.array([0.2, 0.3, 0.4])
+    XYZ = np.array([20.0, 30.0, 40.0])
     LCHab = convert_color(
         XYZ,
         "XYZ",
-        SpaceSpec("LCHab", whitepoint_XYZ=D50_XYZ / 100.0),
+        SpaceSpec("LCHab", whitepoint_XYZ=D50_XYZ),
     )
 
     Oklch = convert_color(
         LCHab,
-        SpaceSpec("LCHab", whitepoint_XYZ=D50_XYZ / 100.0),
+        SpaceSpec("LCHab", whitepoint_XYZ=D50_XYZ),
         "Oklch",
     )
     recovered = convert_color(Oklch, "Oklch", "XYZ")
 
-    np.testing.assert_allclose(recovered, XYZ, atol=1e-7)
+    np.testing.assert_allclose(recovered, XYZ, atol=1e-5)
 
 
 def test_convert_color_RGB_to_Lab():
@@ -179,11 +179,11 @@ def test_convert_color_RGB_to_Lab():
     Lab = convert_color(
         RGB,
         "sRGB",
-        SpaceSpec("Lab", whitepoint_XYZ=D65_XYZ / 100.0),
+        SpaceSpec("Lab", whitepoint_XYZ=D65_XYZ),
     )
 
     assert Lab.shape == (3,)
     np.testing.assert_allclose(
-        convert_color(Lab, SpaceSpec("Lab", whitepoint_XYZ=D65_XYZ / 100.0), "XYZ"),
+        convert_color(Lab, SpaceSpec("Lab", whitepoint_XYZ=D65_XYZ), "XYZ"),
         convert_color(RGB, "sRGB", "XYZ"),
     )

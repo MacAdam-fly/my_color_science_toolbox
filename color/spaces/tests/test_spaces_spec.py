@@ -27,7 +27,7 @@ def test_space_spec_stores_read_only_parameters():
 
 
 def test_convert_accepts_space_spec_identity():
-    XYZ = np.array([0.1, 0.2, 0.3])
+    XYZ = np.array([10.0, 20.0, 30.0])
 
     result = convert_color(XYZ, SpaceSpec("XYZ"), SpaceSpec("XYZ"))
 
@@ -47,7 +47,7 @@ def test_target_space_spec_parameters_apply_to_from_XYZ():
 
 
 def test_source_space_spec_parameters_apply_to_to_XYZ():
-    xyY = np.array([0.3127, 0.3290, 0.5])
+    xyY = np.array([0.3127, 0.3290, 50.0])
 
     np.testing.assert_allclose(
         convert_color(xyY, SpaceSpec("xyY"), "XYZ"),
@@ -89,7 +89,7 @@ def test_rgb_source_space_spec_parameters_apply_to_decoding():
 
 
 def test_rgb_target_space_spec_parameters_apply_to_encoding():
-    XYZ = np.array([0.2, 0.3, 0.4])
+    XYZ = np.array([20.0, 30.0, 40.0])
 
     np.testing.assert_allclose(
         convert_color(XYZ, "XYZ", SpaceSpec("sRGB", apply_encoding=False)),

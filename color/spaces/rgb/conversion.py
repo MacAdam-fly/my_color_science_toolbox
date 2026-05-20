@@ -24,11 +24,11 @@ def _as_last_axis_triplets(value: Sequence[float] | np.ndarray, *, name: str) ->
 
 
 def _white_xy_to_XYZ(white_xy: np.ndarray) -> np.ndarray:
-    """Return a relative XYZ whitepoint from xy chromaticity coordinates."""
+    """Return a Y=100 XYZ whitepoint from xy chromaticity coordinates."""
     x, y = np.asarray(white_xy, dtype=np.float64)
     if y <= 0:
         raise ValueError("RGB colour-space whitepoint y must be positive")
-    return np.array([x / y, 1.0, (1.0 - x - y) / y], dtype=np.float64)
+    return np.array([100.0 * x / y, 100.0, 100.0 * (1.0 - x - y) / y], dtype=np.float64)
 
 
 def RGB_to_XYZ(

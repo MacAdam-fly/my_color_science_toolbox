@@ -18,6 +18,7 @@ from color.spaces import (
     list_RGB_colourspaces,
     sRGB_to_XYZ,
 )
+from color.constants import D65_XYZ
 
 
 def test_registry_resolves_names_and_aliases():
@@ -48,8 +49,8 @@ def test_registry_objects_are_read_only():
 def test_sRGB_to_XYZ_white():
     np.testing.assert_allclose(
         sRGB_to_XYZ([1.0, 1.0, 1.0]),
-        get_RGB_colourspace("sRGB").matrix_RGB_to_XYZ @ np.ones(3),
-        atol=1e-12,
+        D65_XYZ,
+        atol=3e-2,
     )
 
 

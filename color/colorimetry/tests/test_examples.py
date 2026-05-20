@@ -30,6 +30,7 @@ def test_colorimetry_examples_run():
         _COLORIMETRY_EXAMPLES / "example_10_temperature.py",
         _SPACES_EXAMPLES / "example_01_rgb_colourspace_conversion.py",
         _SPACES_EXAMPLES / "example_02_colourspace_chain.py",
+        _SPACES_EXAMPLES / "example_03_cam02_uniform_spaces.py",
     ]
 
     for path in example_paths:

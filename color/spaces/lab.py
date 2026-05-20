@@ -12,7 +12,7 @@ from .node import ColorSpaceNode
 
 EPSILON = 216.0 / 24389.0
 KAPPA = 24389.0 / 27.0
-DEFAULT_WHITEPOINT_XYZ = np.array(D65_XYZ, dtype=np.float64) / 100.0
+DEFAULT_WHITEPOINT_XYZ = np.array(D65_XYZ, dtype=np.float64)
 DEFAULT_WHITEPOINT_XYZ.setflags(write=False)
 
 

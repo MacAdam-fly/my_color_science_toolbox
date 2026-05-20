@@ -93,7 +93,7 @@ def test_rgb_to_xyz_matrices_match_colour():
         colour_name = _REFERENCE_NAMES[local_name]
         np.testing.assert_allclose(
             matrix,
-            RGB_COLOURSPACES[colour_name].matrix_RGB_to_XYZ,
+            100.0 * RGB_COLOURSPACES[colour_name].matrix_RGB_to_XYZ,
             atol=1e-12,
         )
 

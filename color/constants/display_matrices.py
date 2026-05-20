@@ -9,8 +9,8 @@ import numpy as np
 
 
 def _readonly_matrix(values: list[list[float]]) -> np.ndarray:
-    """Return a read-only float matrix."""
-    matrix = np.array(values, dtype=float)
+    """Return a read-only RGB-to-XYZ matrix using the Y=100 XYZ scale."""
+    matrix = 100.0 * np.array(values, dtype=float)
     matrix.setflags(write=False)
     return matrix
 

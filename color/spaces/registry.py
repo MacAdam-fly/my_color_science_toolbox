@@ -7,6 +7,7 @@ from typing import Iterable, Mapping
 
 import numpy as np
 
+from .cam02_ucs import SPACE_NODES as CAM02_SPACE_NODES
 from .lab import SPACE_NODES as LAB_SPACE_NODES
 from .luv import SPACE_NODES as LUV_SPACE_NODES
 from .node import ColorSpaceNode
@@ -70,6 +71,7 @@ _NODES, _ALIASES = _build_registry(
         LAB_SPACE_NODES,
         LUV_SPACE_NODES,
         OKLAB_SPACE_NODES,
+        CAM02_SPACE_NODES,
     )
 )
 

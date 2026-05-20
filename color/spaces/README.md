@@ -11,9 +11,14 @@ Current scope is intentionally narrow:
 - sRGB convenience wrappers.
 - CIE `XYZ <-> xyY` conversions re-exported from `color.colorimetry`.
 - CIE `Lab / Luv`, `Oklab`, and cylindrical `LCHab / LCHuv / Oklch`.
+- `CAM02-UCS / CAM02-LCD / CAM02-SCD` uniform colour spaces.
 - A lightweight colour-space node registry for `XYZ`-centred routing.
 
 Colour appearance models, PQ and HLG are not part of this version.
+
+`color.spaces` uses CIE XYZ values on the `Y=100` reference scale. This matches
+`color.colorimetry` spectral integration results and `color.appearance`
+CIECAM02 viewing conditions.
 
 ## Quick Start
 
@@ -34,6 +39,7 @@ XYZ_roundtrip = xyY_to_XYZ(xyY)
 xyY_from_router = convert_color(XYZ, source="XYZ", target="xyY")
 Lab = convert_color(XYZ, "XYZ", "Lab")
 Oklch = convert_color(XYZ, "XYZ", "Oklch")
+CAM02UCS = convert_color(XYZ, "XYZ", "CAM02-UCS")
 xyY_with_fallback = convert_color(
     [0.0, 0.0, 0.0],
     source="XYZ",
@@ -166,11 +172,11 @@ additional absolute or system luminance semantics.
 from color.constants import D50_XYZ
 from color.spaces import Lab_to_XYZ, XYZ_to_Lab
 
-Lab_D50 = XYZ_to_Lab(XYZ, whitepoint_XYZ=D50_XYZ / 100)
-XYZ_roundtrip = Lab_to_XYZ(Lab_D50, whitepoint_XYZ=D50_XYZ / 100)
+Lab_D50 = XYZ_to_Lab(XYZ, whitepoint_XYZ=D50_XYZ)
+XYZ_roundtrip = Lab_to_XYZ(Lab_D50, whitepoint_XYZ=D50_XYZ)
 ```
 
-The default reference whitepoint is relative D65:
+The default reference whitepoint is D65 on the `Y=100` scale:
 
 ```python
 from color.spaces import DEFAULT_WHITEPOINT_XYZ
@@ -200,12 +206,12 @@ from color.spaces import SpaceSpec, convert_color
 LCHab_D50 = convert_color(
     XYZ,
     "XYZ",
-    SpaceSpec("LCHab", whitepoint_XYZ=D50_XYZ / 100),
+    SpaceSpec("LCHab", whitepoint_XYZ=D50_XYZ),
 )
 
 Oklch = convert_color(
     LCHab_D50,
-    SpaceSpec("LCHab", whitepoint_XYZ=D50_XYZ / 100),
+    SpaceSpec("LCHab", whitepoint_XYZ=D50_XYZ),
     "Oklch",
 )
 ```
@@ -266,8 +272,8 @@ target conversion must use different reference whites:
 ```python
 from color.constants import D50_XYZ, D65_XYZ
 
-Lab_D50 = SpaceSpec("Lab", whitepoint_XYZ=D50_XYZ / 100)
-Luv_D65 = SpaceSpec("Luv", whitepoint_XYZ=D65_XYZ / 100)
+Lab_D50 = SpaceSpec("Lab", whitepoint_XYZ=D50_XYZ)
+Luv_D65 = SpaceSpec("Luv", whitepoint_XYZ=D65_XYZ)
 
 Luv = convert_color(Lab, Lab_D50, Luv_D65)
 ```
@@ -284,3 +290,35 @@ Colour-space nodes are declared next to their implementation. For example,
 `color.spaces.xyy`, `color.spaces.lab`, `color.spaces.luv` and
 `color.spaces.oklab` expose `SPACE_NODES`; `color.spaces.registry` collects
 node groups, checks name and alias conflicts, and provides lookup helpers.
+
+## CAM02-UCS, CAM02-LCD And CAM02-SCD
+
+The CAM02 spaces are uniform colour spaces built on top of CIECAM02 appearance
+correlates:
+
+```text
+XYZ -> CIECAM02 J, M, h -> CAM02 J'a'b'
+CAM02 J'a'b' -> CIECAM02 J, M, h -> XYZ
+```
+
+They use the same `Y=100` XYZ scale as the rest of `color.spaces`:
+
+```python
+from color.constants import D65_XYZ
+from color.spaces import SpaceSpec, convert_color
+
+cam = convert_color(
+    XYZ,
+    "XYZ",
+    SpaceSpec("CAM02-UCS", XYZ_w=D65_XYZ, L_A=318.31, Y_b=20),
+)
+XYZ_again = convert_color(
+    cam,
+    SpaceSpec("CAM02-UCS", XYZ_w=D65_XYZ, L_A=318.31, Y_b=20),
+    "XYZ",
+)
+```
+
+`CAM02-UCS` is the general uniform space, while `CAM02-LCD` and `CAM02-SCD`
+use Luo et al. 2006 coefficients tuned for larger and smaller colour
+differences respectively.

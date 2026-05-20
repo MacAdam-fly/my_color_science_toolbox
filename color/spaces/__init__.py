@@ -2,6 +2,22 @@
 
 from __future__ import annotations
 
+from .cam02_ucs import (
+    CAM02LCD_to_JMh_CIECAM02,
+    CAM02LCD_to_XYZ,
+    CAM02SCD_to_JMh_CIECAM02,
+    CAM02SCD_to_XYZ,
+    CAM02UCS_to_JMh_CIECAM02,
+    CAM02UCS_to_XYZ,
+    COEFFICIENTS_UCS_LUO2006,
+    Coefficients_UCS_Luo2006,
+    JMh_CIECAM02_to_CAM02LCD,
+    JMh_CIECAM02_to_CAM02SCD,
+    JMh_CIECAM02_to_CAM02UCS,
+    XYZ_to_CAM02LCD,
+    XYZ_to_CAM02SCD,
+    XYZ_to_CAM02UCS,
+)
 from .conversion import convert_color
 from .lab import (
     DEFAULT_WHITEPOINT_XYZ,
@@ -86,4 +102,22 @@ __all__ += [
     "Oklab_to_XYZ",  # convert Oklab values to XYZ
     "Oklab_to_Oklch",  # convert Oklab values to Oklch
     "Oklch_to_Oklab",  # convert Oklch values to Oklab
+]
+
+# CAM02 uniform colour spaces.
+__all__ += [
+    "Coefficients_UCS_Luo2006",  # Luo et al. 2006 CAM02 uniform-space coefficients
+    "COEFFICIENTS_UCS_LUO2006",  # registered CAM02-UCS / LCD / SCD coefficient presets
+    "JMh_CIECAM02_to_CAM02UCS",  # convert CIECAM02 JMh correlates to CAM02-UCS
+    "CAM02UCS_to_JMh_CIECAM02",  # convert CAM02-UCS coordinates to CIECAM02 JMh
+    "JMh_CIECAM02_to_CAM02LCD",  # convert CIECAM02 JMh correlates to CAM02-LCD
+    "CAM02LCD_to_JMh_CIECAM02",  # convert CAM02-LCD coordinates to CIECAM02 JMh
+    "JMh_CIECAM02_to_CAM02SCD",  # convert CIECAM02 JMh correlates to CAM02-SCD
+    "CAM02SCD_to_JMh_CIECAM02",  # convert CAM02-SCD coordinates to CIECAM02 JMh
+    "XYZ_to_CAM02UCS",  # convert XYZ values to CAM02-UCS
+    "CAM02UCS_to_XYZ",  # convert CAM02-UCS values to XYZ
+    "XYZ_to_CAM02LCD",  # convert XYZ values to CAM02-LCD
+    "CAM02LCD_to_XYZ",  # convert CAM02-LCD values to XYZ
+    "XYZ_to_CAM02SCD",  # convert XYZ values to CAM02-SCD
+    "CAM02SCD_to_XYZ",  # convert CAM02-SCD values to XYZ
 ]

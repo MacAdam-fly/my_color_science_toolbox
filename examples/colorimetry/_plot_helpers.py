@@ -77,7 +77,7 @@ def preview_srgb_from_XYZ(
     xyz = np.asarray(XYZ, dtype=np.float64)
     if white_Y <= 0:
         raise ValueError("white_Y must be positive")
-    rgb = XYZ_to_sRGB(xyz / white_Y)
+    rgb = XYZ_to_sRGB(xyz * (100.0 / white_Y))
     return np.clip(rgb, 0.0, 1.0)
 
 

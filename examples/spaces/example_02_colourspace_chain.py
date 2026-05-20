@@ -34,32 +34,32 @@ def main() -> None:
     out = output_dir()
 
     XYZ = convert_color(SAMPLE_SRGB, "sRGB", "XYZ")
-    Lab_D65 = convert_color(XYZ, "XYZ", SpaceSpec("Lab", whitepoint_XYZ=D65_XYZ / 100.0))
+    Lab_D65 = convert_color(XYZ, "XYZ", SpaceSpec("Lab", whitepoint_XYZ=D65_XYZ))
     LCHab_D65 = convert_color(
         Lab_D65,
-        SpaceSpec("Lab", whitepoint_XYZ=D65_XYZ / 100.0),
-        SpaceSpec("LCHab", whitepoint_XYZ=D65_XYZ / 100.0),
+        SpaceSpec("Lab", whitepoint_XYZ=D65_XYZ),
+        SpaceSpec("LCHab", whitepoint_XYZ=D65_XYZ),
     )
     Luv_D65 = convert_color(
         LCHab_D65,
-        SpaceSpec("LCHab", whitepoint_XYZ=D65_XYZ / 100.0),
-        SpaceSpec("Luv", whitepoint_XYZ=D65_XYZ / 100.0),
+        SpaceSpec("LCHab", whitepoint_XYZ=D65_XYZ),
+        SpaceSpec("Luv", whitepoint_XYZ=D65_XYZ),
     )
     LCHuv_D65 = convert_color(
         Luv_D65,
-        SpaceSpec("Luv", whitepoint_XYZ=D65_XYZ / 100.0),
-        SpaceSpec("LCHuv", whitepoint_XYZ=D65_XYZ / 100.0),
+        SpaceSpec("Luv", whitepoint_XYZ=D65_XYZ),
+        SpaceSpec("LCHuv", whitepoint_XYZ=D65_XYZ),
     )
-    Oklab = convert_color(LCHuv_D65, SpaceSpec("LCHuv", whitepoint_XYZ=D65_XYZ / 100.0), "Oklab")
+    Oklab = convert_color(LCHuv_D65, SpaceSpec("LCHuv", whitepoint_XYZ=D65_XYZ), "Oklab")
     Oklch = convert_color(Oklab, "Oklab", "Oklch")
     XYZ_roundtrip = convert_color(Oklch, "Oklch", "XYZ")
     sRGB_roundtrip = convert_color(XYZ_roundtrip, "XYZ", "sRGB")
 
-    Lab_D50 = convert_color(XYZ, "XYZ", SpaceSpec("Lab", whitepoint_XYZ=D50_XYZ / 100.0))
+    Lab_D50 = convert_color(XYZ, "XYZ", SpaceSpec("Lab", whitepoint_XYZ=D50_XYZ))
     Luv_D65_from_Lab_D50 = convert_color(
         Lab_D50,
-        SpaceSpec("Lab", whitepoint_XYZ=D50_XYZ / 100.0),
-        SpaceSpec("Luv", whitepoint_XYZ=D65_XYZ / 100.0),
+        SpaceSpec("Lab", whitepoint_XYZ=D50_XYZ),
+        SpaceSpec("Luv", whitepoint_XYZ=D65_XYZ),
     )
 
     print("Colour-space conversion chain")
@@ -78,7 +78,7 @@ def main() -> None:
         ("Lab D50 -> Luv D65", preview_sRGB_from_XYZ(
             convert_color(
                 Luv_D65_from_Lab_D50,
-                SpaceSpec("Luv", whitepoint_XYZ=D65_XYZ / 100.0),
+                SpaceSpec("Luv", whitepoint_XYZ=D65_XYZ),
                 "XYZ",
             )
         )),
