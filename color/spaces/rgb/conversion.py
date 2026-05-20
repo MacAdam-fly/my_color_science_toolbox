@@ -6,6 +6,8 @@ from typing import Sequence
 
 import numpy as np
 
+from color.adaptation import chromatic_adaptation_XYZ
+
 from .colourspace import RGBColorSpace
 from .registry import get_RGB_colourspace
 from .transfer import decode_transfer, encode_transfer
@@ -19,6 +21,14 @@ def _as_last_axis_triplets(value: Sequence[float] | np.ndarray, *, name: str) ->
     if not np.all(np.isfinite(arr)):
         raise ValueError(f"{name} must be finite")
     return arr
+
+
+def _white_xy_to_XYZ(white_xy: np.ndarray) -> np.ndarray:
+    """Return a relative XYZ whitepoint from xy chromaticity coordinates."""
+    x, y = np.asarray(white_xy, dtype=np.float64)
+    if y <= 0:
+        raise ValueError("RGB colour-space whitepoint y must be positive")
+    return np.array([x / y, 1.0, (1.0 - x - y) / y], dtype=np.float64)
 
 
 def RGB_to_XYZ(
@@ -47,6 +57,44 @@ def XYZ_to_RGB(
     return encode_transfer(linear, rgb_space.transfer) if apply_encoding else linear
 
 
+def RGB_to_RGB(
+    RGB: Sequence[float] | np.ndarray,
+    source: str | RGBColorSpace,
+    target: str | RGBColorSpace,
+    *,
+    apply_decoding: bool = True,
+    apply_encoding: bool = True,
+    chromatic_adaptation: str | None = None,
+) -> np.ndarray:
+    """Convert RGB values from one RGB colour space to another.
+
+    By default, this is a stimulus-matching conversion through XYZ. If
+    *chromatic_adaptation* is provided, source-white XYZ values are adapted to
+    the target RGB colour-space white before encoding into the target space.
+    """
+    source_space = get_RGB_colourspace(source)
+    target_space = get_RGB_colourspace(target)
+
+    XYZ = RGB_to_XYZ(
+        RGB,
+        colourspace=source_space,
+        apply_decoding=apply_decoding,
+    )
+    if chromatic_adaptation is not None:
+        XYZ = chromatic_adaptation_XYZ(
+            XYZ,
+            source_white_XYZ=_white_xy_to_XYZ(source_space.white_xy),
+            target_white_XYZ=_white_xy_to_XYZ(target_space.white_xy),
+            transform=chromatic_adaptation,
+        )
+
+    return XYZ_to_RGB(
+        XYZ,
+        colourspace=target_space,
+        apply_encoding=apply_encoding,
+    )
+
+
 def sRGB_to_XYZ(
     RGB: Sequence[float] | np.ndarray,
     *,
@@ -68,6 +116,7 @@ def XYZ_to_sRGB(
 __all__ = [
     "RGB_to_XYZ",
     "XYZ_to_RGB",
+    "RGB_to_RGB",
     "sRGB_to_XYZ",
     "XYZ_to_sRGB",
 ]

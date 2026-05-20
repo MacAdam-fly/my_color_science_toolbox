@@ -10,6 +10,7 @@ import pytest
 from color.spaces import (
     RGBColorSpace,
     RGB_COLORSPACES,
+    RGB_to_RGB,
     RGB_to_XYZ,
     XYZ_to_RGB,
     XYZ_to_sRGB,
@@ -88,6 +89,46 @@ def test_rgb_spaces_white_round_trip(name):
 
     assert XYZ.shape == (3,)
     np.testing.assert_allclose(recovered, RGB, atol=1e-12)
+
+
+def test_RGB_to_RGB_matches_explicit_XYZ_path_without_adaptation():
+    RGB = np.array([0.2, 0.4, 0.6])
+
+    expected = XYZ_to_RGB(
+        RGB_to_XYZ(RGB, colourspace="sRGB"),
+        colourspace="Display P3",
+    )
+    result = RGB_to_RGB(RGB, "sRGB", "Display P3")
+
+    np.testing.assert_allclose(result, expected, atol=1e-12)
+
+
+def test_RGB_to_RGB_can_apply_chromatic_adaptation():
+    RGB = np.ones(3)
+
+    no_adaptation = RGB_to_RGB(RGB, "DCI-P3", "sRGB")
+    adapted = RGB_to_RGB(RGB, "DCI-P3", "sRGB", chromatic_adaptation="Bradford")
+
+    assert not np.allclose(adapted, no_adaptation)
+    np.testing.assert_allclose(adapted, np.ones(3), atol=1e-4)
+
+
+def test_RGB_to_RGB_preserves_batch_shape():
+    RGB = np.ones((2, 3, 3)) * 0.5
+
+    result = RGB_to_RGB(RGB, "sRGB", "Rec.2020")
+
+    assert result.shape == RGB.shape
+
+
+def test_RGB_to_RGB_rejects_unknown_adaptation_transform():
+    with pytest.raises(ValueError, match="unknown chromatic adaptation transform"):
+        RGB_to_RGB(
+            [1.0, 1.0, 1.0],
+            "DCI-P3",
+            "sRGB",
+            chromatic_adaptation="unknown",
+        )
 
 
 def test_batch_shape_preserved():
