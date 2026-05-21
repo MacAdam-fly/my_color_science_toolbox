@@ -20,6 +20,7 @@ def test_registry_resolves_xyz_and_xyy():
     assert get_colourspace_node("LCHab").parent == "Lab"
     assert get_colourspace_node("Luv").name == "Luv"
     assert get_colourspace_node("LCHuv").parent == "Luv"
+    assert get_colourspace_node("UVW").name == "UVW"
     assert get_colourspace_node("Oklab").name == "Oklab"
     assert get_colourspace_node("Oklch").parent == "Oklab"
     assert get_colourspace_node("CAM02-UCS").name == "CAM02-UCS"
@@ -40,6 +41,7 @@ def test_registry_resolves_aliases_case_insensitively():
     assert get_colourspace_node("xyy").name == "xyY"
     assert get_colourspace_node("CIE xyY").name == "xyY"
     assert get_colourspace_node("cie xyz").name == "XYZ"
+    assert get_colourspace_node("CIE 1964 UVW").name == "UVW"
     assert get_colourspace_node("CAM02UCS").name == "CAM02-UCS"
     assert get_colourspace_node("CAM02 LCD").name == "CAM02-LCD"
     assert get_colourspace_node("CAM16UCS").name == "CAM16-UCS"
@@ -55,6 +57,7 @@ def test_list_colourspace_nodes():
     assert "LCHab" in names
     assert "Luv" in names
     assert "LCHuv" in names
+    assert "UVW" in names
     assert "Oklab" in names
     assert "Oklch" in names
     assert "CAM02-UCS" in names
@@ -80,3 +83,12 @@ def test_get_colourspace_node_accepts_node_instance():
 def test_unknown_node_raises():
     with pytest.raises(ValueError, match="unknown colour-space node"):
         get_colourspace_node("unknown")
+
+
+def test_chromaticity_helpers_are_not_registered_as_space_nodes():
+    assert "uv1960" not in SPACE_REGISTRY
+    assert "upvp1976" not in SPACE_REGISTRY
+    with pytest.raises(ValueError, match="unknown colour-space node"):
+        get_colourspace_node("uv1960")
+    with pytest.raises(ValueError, match="unknown colour-space node"):
+        get_colourspace_node("upvp1976")

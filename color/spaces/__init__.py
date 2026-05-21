@@ -67,7 +67,19 @@ from .rgb import (
     sRGB_to_XYZ,
 )
 from .spec import SpaceSpec
-from .xyy import XYZ_to_xy, XYZ_to_xyY, xyY_to_XYZ, xyY_to_xy
+from .uvw import UVW_to_XYZ, XYZ_to_UVW
+from .xyy import (
+    XYZ_to_upvp1976,
+    XYZ_to_uv1960,
+    XYZ_to_xy,
+    XYZ_to_xyY,
+    upvp1976_to_xy,
+    uv1960_to_xy,
+    xyY_to_XYZ,
+    xyY_to_xy,
+    xy_to_upvp1976,
+    xy_to_uv1960,
+)
 
 # Generic colour-space graph.
 __all__ = [
@@ -106,6 +118,12 @@ __all__ += [
     "xyY_to_XYZ",  # convert xyY coordinates to XYZ values
     "XYZ_to_xy",  # project XYZ values to xy chromaticity coordinates
     "xyY_to_xy",  # project xyY values to xy chromaticity coordinates
+    "xy_to_uv1960",  # convert xy chromaticity coordinates to CIE 1960 uv
+    "XYZ_to_uv1960",  # project XYZ values to CIE 1960 uv
+    "uv1960_to_xy",  # convert CIE 1960 uv coordinates to xy
+    "xy_to_upvp1976",  # convert xy chromaticity coordinates to CIE 1976 u'v'
+    "XYZ_to_upvp1976",  # project XYZ values to CIE 1976 u'v'
+    "upvp1976_to_xy",  # convert CIE 1976 u'v' coordinates to xy
 ]
 
 # Perceptual colour spaces and cylindrical derivatives.
@@ -118,6 +136,8 @@ __all__ += [
     "Luv_to_XYZ",  # convert CIE Luv values to XYZ
     "Luv_to_LCHuv",  # convert CIE Luv values to LCHuv
     "LCHuv_to_Luv",  # convert LCHuv values to CIE Luv
+    "XYZ_to_UVW",  # convert XYZ values to CIE 1964 UVW
+    "UVW_to_XYZ",  # convert CIE 1964 UVW values to XYZ
     "XYZ_to_Oklab",  # convert XYZ values to Oklab
     "Oklab_to_XYZ",  # convert Oklab values to XYZ
     "Oklab_to_Oklch",  # convert Oklab values to Oklch

@@ -138,6 +138,26 @@ xyY 注册为空间节点
 xy 只作为色度投影辅助函数，不注册为空间节点
 ```
 
+同理，`uv1960` 和 `u'v'1976` 也是二维色度坐标，不包含亮度信息，因此只作为 helper 提供，不注册为空间节点：
+
+```python
+from color.spaces import (
+    xy_to_uv1960,
+    XYZ_to_uv1960,
+    uv1960_to_xy,
+    xy_to_upvp1976,
+    XYZ_to_upvp1976,
+    upvp1976_to_xy,
+)
+```
+
+其中 `uv1960` 常用于 CCT / Duv 计算，`u'v'1976` 是 CIE Luv 的基础色度图。二者关系为：
+
+```text
+u' = u
+v' = 1.5 v
+```
+
 当 `XYZ = [0, 0, 0]` 时，`x = X / (X + Y + Z)` 和 `y = Y / (X + Y + Z)` 没有定义。
 这时可以使用 `fallback_xy`：
 
@@ -160,6 +180,7 @@ xyY = convert_color(
 ```text
 XYZ <-> Lab <-> LCHab
 XYZ <-> Luv <-> LCHuv
+XYZ <-> UVW
 XYZ <-> Oklab <-> Oklch
 ```
 
@@ -175,6 +196,8 @@ from color.spaces import (
     Luv_to_XYZ,
     Luv_to_LCHuv,
     LCHuv_to_Luv,
+    XYZ_to_UVW,
+    UVW_to_XYZ,
     XYZ_to_Oklab,
     Oklab_to_XYZ,
     Oklab_to_Oklch,
@@ -231,6 +254,29 @@ from color.spaces import XYZ_to_Oklab, Oklab_to_XYZ
 Oklab = XYZ_to_Oklab(XYZ)
 XYZ_again = Oklab_to_XYZ(Oklab)
 ```
+
+### CIE UVW
+
+`UVW` 指 CIE 1964 `U*V*W*` 空间，是一个历史上的三维均匀颜色空间。它已经不是现代项目中最推荐的感知空间，但对于复现旧文献和与 `colour` 对照仍然有价值。
+
+它是完整三维空间，因此注册进 `SPACE_REGISTRY`：
+
+```python
+from color.constants import D65_XYZ
+from color.spaces import SpaceSpec, convert_color
+
+UVW = convert_color(XYZ, "XYZ", SpaceSpec("UVW", whitepoint_XYZ=D65_XYZ))
+XYZ_again = convert_color(UVW, SpaceSpec("UVW", whitepoint_XYZ=D65_XYZ), "XYZ")
+```
+
+`UVW` 支持两种白点参数：
+
+```python
+SpaceSpec("UVW", whitepoint_XYZ=D65_XYZ)
+SpaceSpec("UVW", whitepoint_xy=(0.3127, 0.3290))
+```
+
+两者不能同时传入，避免参考白点来源不清。
 
 ### LCH 派生空间
 
@@ -387,6 +433,7 @@ Luv
 LCHuv
 Oklab
 Oklch
+UVW
 CAM02-UCS
 CAM02-LCD
 CAM02-SCD

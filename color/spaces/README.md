@@ -10,7 +10,7 @@ Current scope is intentionally narrow:
 - `RGB -> RGB` conversions with optional explicit chromatic adaptation.
 - sRGB convenience wrappers.
 - CIE `XYZ <-> xyY` conversions re-exported from `color.colorimetry`.
-- CIE `Lab / Luv`, `Oklab`, and cylindrical `LCHab / LCHuv / Oklch`.
+- CIE `Lab / Luv / UVW`, `Oklab`, and cylindrical `LCHab / LCHuv / Oklch`.
 - `CAM02-UCS / CAM02-LCD / CAM02-SCD` and
   `CAM16-UCS / CAM16-LCD / CAM16-SCD` uniform colour spaces.
 - A lightweight colour-space node registry for `XYZ`-centred routing.
@@ -36,6 +36,7 @@ RGB_display_p3 = RGB_to_RGB([0.25, 0.50, 0.75], "sRGB", "Display P3")
 
 xyY = XYZ_to_xyY(XYZ)
 XYZ_roundtrip = xyY_to_XYZ(xyY)
+UVW = convert_color(XYZ, "XYZ", "UVW")
 
 xyY_from_router = convert_color(XYZ, source="XYZ", target="xyY")
 Lab = convert_color(XYZ, "XYZ", "Lab")
@@ -168,7 +169,7 @@ Supported v1 transfer identifiers:
 PQ and HLG are left for a later HDR transfer module because they require
 additional absolute or system luminance semantics.
 
-## Lab, Luv, Oklab And LCH
+## Lab, Luv, UVW, Oklab And LCH
 
 `Lab` and `Luv` use a reference whitepoint as a space parameter:
 
@@ -225,6 +226,19 @@ chromatic adaptation by itself. If the workflow needs appearance-preserving
 whitepoint adaptation, explicitly adapt the intermediate XYZ values with
 `color.adaptation`.
 
+`UVW` is the historical CIE 1964 U*V*W* space. It is registered because it is a
+complete three-channel space and can round-trip through XYZ, but it is mostly
+useful for reproducing older references rather than as a modern perceptual
+workhorse:
+
+```python
+from color.constants import D65_XYZ
+from color.spaces import SpaceSpec, convert_color
+
+UVW = convert_color(XYZ, "XYZ", SpaceSpec("UVW", whitepoint_XYZ=D65_XYZ))
+XYZ_again = convert_color(UVW, SpaceSpec("UVW", whitepoint_XYZ=D65_XYZ), "XYZ")
+```
+
 ## xyY And The Conversion Registry
 
 `xyY` is both a colour-space representation and a core colorimetry coordinate.
@@ -232,7 +246,14 @@ The formulas live in `color.colorimetry.chromaticity`; `color.spaces` re-exports
 them so users can access them from the colour-space layer:
 
 ```python
-from color.spaces import XYZ_to_xyY, xyY_to_XYZ, XYZ_to_xy, xyY_to_xy
+from color.spaces import (
+    XYZ_to_xyY,
+    xyY_to_XYZ,
+    XYZ_to_xy,
+    xyY_to_xy,
+    XYZ_to_uv1960,
+    XYZ_to_upvp1976,
+)
 ```
 
 `xyY` is registered as a complete three-channel colour-space node because it can
@@ -242,9 +263,10 @@ round-trip through XYZ:
 XYZ <-> xyY
 ```
 
-The two-channel `xy` coordinate is exposed only as a chromaticity projection. It
-is not registered as a full colour-space node because it loses luminance and
-cannot be converted back to XYZ without an external `Y` value.
+The two-channel `xy`, `uv1960` and `u'v'1976` coordinates are exposed only as
+chromaticity projections. They are not registered as full colour-space nodes
+because they lose luminance and cannot be converted back to XYZ without an
+external `Y` value.
 
 The generic conversion entry point supports `XYZ`, `xyY`, registered RGB
 colour-space names, and parameterized `SpaceSpec` endpoints:

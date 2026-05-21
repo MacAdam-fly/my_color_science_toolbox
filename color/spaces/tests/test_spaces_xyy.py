@@ -6,9 +6,22 @@ import numpy as np
 import pytest
 
 from color.colorimetry import XYZ_to_xy as colorimetry_XYZ_to_xy
+from color.colorimetry import XYZ_to_upvp1976 as colorimetry_XYZ_to_upvp1976
+from color.colorimetry import XYZ_to_uv1960 as colorimetry_XYZ_to_uv1960
 from color.colorimetry import XYZ_to_xyY as colorimetry_XYZ_to_xyY
+from color.colorimetry import xy_to_upvp1976 as colorimetry_xy_to_upvp1976
+from color.colorimetry import xy_to_uv1960 as colorimetry_xy_to_uv1960
 from color.colorimetry import xyY_to_XYZ as colorimetry_xyY_to_XYZ
-from color.spaces import XYZ_to_xy, XYZ_to_xyY, xyY_to_XYZ, xyY_to_xy
+from color.spaces import (
+    XYZ_to_upvp1976,
+    XYZ_to_uv1960,
+    XYZ_to_xy,
+    XYZ_to_xyY,
+    xyY_to_XYZ,
+    xyY_to_xy,
+    xy_to_upvp1976,
+    xy_to_uv1960,
+)
 
 
 def test_XYZ_to_xyY_matches_colorimetry():
@@ -66,3 +79,13 @@ def test_XYZ_to_xyY_zero_uses_fallback_xy():
 def test_xyY_to_xy_rejects_invalid_shape():
     with pytest.raises(ValueError, match="3 values"):
         xyY_to_xy([0.3127, 0.3290])
+
+
+def test_spaces_exports_chromaticity_helpers():
+    XYZ = np.array([95.047, 100.0, 108.883])
+    xy = XYZ_to_xy(XYZ)
+
+    np.testing.assert_allclose(XYZ_to_uv1960(XYZ), colorimetry_XYZ_to_uv1960(XYZ))
+    np.testing.assert_allclose(xy_to_uv1960(xy), colorimetry_xy_to_uv1960(xy))
+    np.testing.assert_allclose(XYZ_to_upvp1976(XYZ), colorimetry_XYZ_to_upvp1976(XYZ))
+    np.testing.assert_allclose(xy_to_upvp1976(xy), colorimetry_xy_to_upvp1976(xy))

@@ -6,7 +6,17 @@ from typing import Sequence
 
 import numpy as np
 
-from color.colorimetry.chromaticity import XYZ_to_xy, XYZ_to_xyY, xyY_to_XYZ
+from color.colorimetry.chromaticity import (
+    XYZ_to_upvp1976,
+    XYZ_to_uv1960,
+    XYZ_to_xy,
+    XYZ_to_xyY,
+    upvp1976_to_xy,
+    uv1960_to_xy,
+    xyY_to_XYZ,
+    xy_to_upvp1976,
+    xy_to_uv1960,
+)
 
 from .node import ColorSpaceNode
 
@@ -35,5 +45,11 @@ __all__ = [
     "xyY_to_XYZ",
     "XYZ_to_xy",
     "xyY_to_xy",
+    "xy_to_uv1960",
+    "XYZ_to_uv1960",
+    "uv1960_to_xy",
+    "xy_to_upvp1976",
+    "XYZ_to_upvp1976",
+    "upvp1976_to_xy",
     "SPACE_NODES",
 ]

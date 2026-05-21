@@ -2,7 +2,17 @@
 
 from __future__ import annotations
 
-from .chromaticity import XYZ_to_xy, XYZ_to_xyY, xyY_to_XYZ
+from .chromaticity import (
+    XYZ_to_upvp1976,
+    XYZ_to_uv1960,
+    XYZ_to_xy,
+    XYZ_to_xyY,
+    upvp1976_to_xy,
+    uv1960_to_xy,
+    xyY_to_XYZ,
+    xy_to_upvp1976,
+    xy_to_uv1960,
+)
 from .cone_responses import (
     DEFAULT_FUNDAMENTALS,
     DEFAULT_ILLUMINANT,
@@ -51,18 +61,15 @@ from .temperature import (
     CCT_to_xy_CIE_D,
     DEFAULT_CMFS_OHNO2013,
     TemperatureAnalysis,
-    XYZ_to_uv1960,
     analyze_temperature,
     mired_to_CCT,
     planckian_table_Ohno2013,
-    uv1960_to_xy,
     uv_to_CCT,
     uv_to_CCT_Ohno2013,
     uv_to_CCT_Robertson1968,
     xy_to_CCT,
     xy_to_CCT_Duv,
     xy_to_CCT_McCamy1992,
-    xy_to_uv1960,
 )
 from .tristimulus import DEFAULT_CMFS, emission_to_XYZ, reflectance_to_XYZ
 from .transformations import LMS_to_XYZ, XYZ_to_LMS
@@ -95,6 +102,12 @@ __all__ += [
     "XYZ_to_xyY",  # convert tristimulus values to xyY coordinates
     "xyY_to_XYZ",  # convert xyY coordinates to tristimulus values
     "XYZ_to_xy",  # convert tristimulus values to xy chromaticity coordinates
+    "xy_to_uv1960",  # convert xy chromaticity coordinates to CIE 1960 uv
+    "XYZ_to_uv1960",  # convert tristimulus values to CIE 1960 uv
+    "uv1960_to_xy",  # convert CIE 1960 uv coordinates to xy
+    "xy_to_upvp1976",  # convert xy chromaticity coordinates to CIE 1976 u'v'
+    "XYZ_to_upvp1976",  # convert tristimulus values to CIE 1976 u'v'
+    "upvp1976_to_xy",  # convert CIE 1976 u'v' coordinates to xy
 ]
 
 # Correlated colour temperature conversions.
@@ -109,10 +122,6 @@ __all__ += [
 
     "xy_to_CCT",  # estimate CCT from xy using a named method
     "CCT_to_xy",  # compute xy from CCT using a named method
-
-    "xy_to_uv1960",  # convert xy chromaticity coordinates to CIE 1960 uv
-    "XYZ_to_uv1960",  # convert XYZ tristimulus values to CIE 1960 uv
-    "uv1960_to_xy",  # convert CIE 1960 uv coordinates to xy
 
     "uv_to_CCT_Robertson1968",  # compute CCT and Duv from uv using Robertson 1968
     "CCT_to_uv_Robertson1968",  # compute uv from CCT and Duv using Robertson 1968

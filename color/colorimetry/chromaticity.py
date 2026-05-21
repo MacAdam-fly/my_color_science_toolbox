@@ -12,6 +12,18 @@ def _as_last_axis_triplets(value: Sequence[float] | np.ndarray, *, name: str) ->
     arr = np.asarray(value, dtype=np.float64)
     if arr.shape == () or arr.shape[-1] != 3:
         raise ValueError(f"{name} must have 3 values on the last axis")
+    if not np.all(np.isfinite(arr)):
+        raise ValueError(f"{name} must be finite")
+    return arr
+
+
+def _as_last_axis_pairs(value: Sequence[float] | np.ndarray, *, name: str) -> np.ndarray:
+    """Return *value* as a finite float array with two values on the last axis."""
+    arr = np.asarray(value, dtype=np.float64)
+    if arr.shape == () or arr.shape[-1] != 2:
+        raise ValueError(f"{name} must have 2 values on the last axis")
+    if not np.all(np.isfinite(arr)):
+        raise ValueError(f"{name} must be finite")
     return arr
 
 
@@ -73,3 +85,89 @@ def XYZ_to_xy(
 ) -> np.ndarray:
     """Return only the CIE xy chromaticity coordinates from XYZ values."""
     return XYZ_to_xyY(XYZ, fallback_xy=fallback_xy)[..., :2]
+
+
+def xy_to_uv1960(xy: Sequence[float] | np.ndarray) -> np.ndarray:
+    """Convert CIE xy chromaticity coordinates to CIE 1960 UCS uv."""
+    xy_arr = _as_last_axis_pairs(xy, name="xy")
+    x = xy_arr[..., 0]
+    y = xy_arr[..., 1]
+    denominator = -2.0 * x + 12.0 * y + 3.0
+    if np.any(denominator == 0):
+        raise ValueError("xy produces a zero denominator for CIE 1960 uv")
+    u = 4.0 * x / denominator
+    v = 6.0 * y / denominator
+    return np.stack([u, v], axis=-1)
+
+
+def XYZ_to_uv1960(XYZ: Sequence[float] | np.ndarray) -> np.ndarray:
+    """Convert CIE XYZ tristimulus values to CIE 1960 UCS uv."""
+    xyz = _as_last_axis_triplets(XYZ, name="XYZ")
+    X = xyz[..., 0]
+    Y = xyz[..., 1]
+    Z = xyz[..., 2]
+    denominator = X + 15.0 * Y + 3.0 * Z
+    if np.any(denominator == 0):
+        raise ValueError("XYZ produces a zero denominator for CIE 1960 uv")
+    u = 4.0 * X / denominator
+    v = 6.0 * Y / denominator
+    return np.stack([u, v], axis=-1)
+
+
+def uv1960_to_xy(uv: Sequence[float] | np.ndarray) -> np.ndarray:
+    """Convert CIE 1960 UCS uv coordinates to CIE xy chromaticity coordinates."""
+    uv_arr = _as_last_axis_pairs(uv, name="uv")
+    u = uv_arr[..., 0]
+    v = uv_arr[..., 1]
+    denominator = 2.0 * u - 8.0 * v + 4.0
+    if np.any(denominator == 0):
+        raise ValueError("uv produces a zero denominator for CIE xy")
+    x = 3.0 * u / denominator
+    y = 2.0 * v / denominator
+    return np.stack([x, y], axis=-1)
+
+
+def xy_to_upvp1976(xy: Sequence[float] | np.ndarray) -> np.ndarray:
+    """Convert CIE xy chromaticity coordinates to CIE 1976 UCS u'v'."""
+    uv = xy_to_uv1960(xy)
+    return np.stack([uv[..., 0], 1.5 * uv[..., 1]], axis=-1)
+
+
+def XYZ_to_upvp1976(XYZ: Sequence[float] | np.ndarray) -> np.ndarray:
+    """Convert CIE XYZ tristimulus values to CIE 1976 UCS u'v'."""
+    xyz = _as_last_axis_triplets(XYZ, name="XYZ")
+    X = xyz[..., 0]
+    Y = xyz[..., 1]
+    Z = xyz[..., 2]
+    denominator = X + 15.0 * Y + 3.0 * Z
+    if np.any(denominator == 0):
+        raise ValueError("XYZ produces a zero denominator for CIE 1976 u'v'")
+    u_p = 4.0 * X / denominator
+    v_p = 9.0 * Y / denominator
+    return np.stack([u_p, v_p], axis=-1)
+
+
+def upvp1976_to_xy(upvp: Sequence[float] | np.ndarray) -> np.ndarray:
+    """Convert CIE 1976 UCS u'v' coordinates to CIE xy chromaticity coordinates."""
+    upvp_arr = _as_last_axis_pairs(upvp, name="upvp")
+    u_p = upvp_arr[..., 0]
+    v_p = upvp_arr[..., 1]
+    denominator = 6.0 * u_p - 16.0 * v_p + 12.0
+    if np.any(denominator == 0):
+        raise ValueError("u'v' produces a zero denominator for CIE xy")
+    x = 9.0 * u_p / denominator
+    y = 4.0 * v_p / denominator
+    return np.stack([x, y], axis=-1)
+
+
+__all__ = [
+    "XYZ_to_xyY",
+    "xyY_to_XYZ",
+    "XYZ_to_xy",
+    "xy_to_uv1960",
+    "XYZ_to_uv1960",
+    "uv1960_to_xy",
+    "xy_to_upvp1976",
+    "XYZ_to_upvp1976",
+    "upvp1976_to_xy",
+]

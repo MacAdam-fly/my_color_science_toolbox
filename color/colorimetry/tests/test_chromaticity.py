@@ -7,9 +7,15 @@ import pytest
 
 from color.colorimetry import (
     emission_to_XYZ,
+    XYZ_to_upvp1976,
+    XYZ_to_uv1960,
     XYZ_to_xy,
     XYZ_to_xyY,
+    upvp1976_to_xy,
+    uv1960_to_xy,
     xyY_to_XYZ,
+    xy_to_upvp1976,
+    xy_to_uv1960,
 )
 from color.spectra import SpectralShape, from_dataset
 
@@ -67,6 +73,52 @@ def test_XYZ_to_xy():
     xy = XYZ_to_xy([95.047, 100.0, 108.883])
 
     np.testing.assert_allclose(xy, [0.31272661, 0.32902313], rtol=1e-7)
+
+
+def test_xy_to_uv1960_and_back():
+    xy = np.array([
+        [0.31270, 0.32900],
+        [0.54369555, 0.32107941],
+    ])
+
+    uv = xy_to_uv1960(xy)
+    recovered = uv1960_to_xy(uv)
+
+    assert uv.shape == xy.shape
+    np.testing.assert_allclose(recovered, xy, atol=1e-12)
+
+
+def test_XYZ_to_uv1960_matches_xy_path():
+    XYZ = np.array([95.047, 100.0, 108.883])
+
+    np.testing.assert_allclose(
+        XYZ_to_uv1960(XYZ),
+        xy_to_uv1960(XYZ_to_xy(XYZ)),
+        atol=1e-12,
+    )
+
+
+def test_xy_to_upvp1976_and_back():
+    xy = np.array([
+        [0.31270, 0.32900],
+        [0.54369555, 0.32107941],
+    ])
+
+    upvp = xy_to_upvp1976(xy)
+    recovered = upvp1976_to_xy(upvp)
+
+    assert upvp.shape == xy.shape
+    np.testing.assert_allclose(recovered, xy, atol=1e-12)
+
+
+def test_XYZ_to_upvp1976_matches_xy_path_and_uv1960_relation():
+    XYZ = np.array([95.047, 100.0, 108.883])
+    uv = XYZ_to_uv1960(XYZ)
+    upvp = XYZ_to_upvp1976(XYZ)
+
+    np.testing.assert_allclose(upvp, xy_to_upvp1976(XYZ_to_xy(XYZ)), atol=1e-12)
+    np.testing.assert_allclose(upvp[..., 0], uv[..., 0], atol=1e-12)
+    np.testing.assert_allclose(upvp[..., 1], 1.5 * uv[..., 1], atol=1e-12)
 
 
 def test_zero_xyz_uses_fallback_xy_and_preserves_y():
