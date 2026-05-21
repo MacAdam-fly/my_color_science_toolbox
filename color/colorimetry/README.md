@@ -9,7 +9,7 @@ responses. It is the computation layer above:
 color.datasets     static reference data
 color.generators   formula-generated data
 color.spectra      spectral object wrappers
-color.colorimetry  spectral integration to XYZ / LMS
+color.colorimetry  colorimetry calculations
 ```
 
 ## Public Entrypoints
