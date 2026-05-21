@@ -5,12 +5,16 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
+from color.constants import D50_XYZ, D65_XYZ
 from color.spaces import (
+    ConversionPath,
     RGB_to_RGB,
     RGB_to_XYZ,
+    SpaceSpec,
     XYZ_to_RGB,
     XYZ_to_xyY,
     convert_color,
+    describe_conversion_path,
     xyY_to_XYZ,
 )
 
@@ -117,3 +121,55 @@ def test_convert_rejects_chromatic_adaptation_option():
 def test_convert_rejects_unregistered_paths():
     with pytest.raises(ValueError, match="unknown colour-space node"):
         convert_color([1.0, 1.0, 1.0], "unknown", "xyY")
+
+
+def test_describe_conversion_path_RGB_to_RGB():
+    path = describe_conversion_path("sRGB", "Display P3")
+
+    assert isinstance(path, ConversionPath)
+    assert [node.name for node in path.nodes] == ["sRGB", "XYZ", "Display P3"]
+    assert [node.kind for node in path.nodes] == ["rgb", "hub", "rgb"]
+    assert [edge.operation for edge in path.edges] == ["decode", "encode"]
+    assert "chromatic_adaptation=None" in path.edges[0].description
+
+
+def test_describe_conversion_path_with_derived_source():
+    path = describe_conversion_path("JzCzhz", "Lab")
+
+    assert [node.name for node in path.nodes] == ["JzCzhz", "Jzazbz", "XYZ", "Lab"]
+    assert [edge.operation for edge in path.edges] == [
+        "to_parent",
+        "to_XYZ",
+        "from_XYZ",
+    ]
+
+
+def test_describe_conversion_path_with_spacespec_parameters():
+    path = describe_conversion_path(
+        SpaceSpec("LCHab", whitepoint_XYZ=D50_XYZ),
+        SpaceSpec("Luv", whitepoint_XYZ=D65_XYZ),
+    )
+
+    assert [node.name for node in path.nodes] == ["LCHab", "Lab", "XYZ", "Luv"]
+    assert [edge.operation for edge in path.edges] == [
+        "to_parent",
+        "to_XYZ",
+        "from_XYZ",
+    ]
+
+
+def test_describe_conversion_path_identity():
+    path = describe_conversion_path("XYZ", "XYZ")
+
+    assert [node.name for node in path.nodes] == ["XYZ"]
+    assert [edge.operation for edge in path.edges] == ["identity"]
+
+
+def test_describe_conversion_path_rejects_chromatic_adaptation():
+    with pytest.raises(ValueError, match="chromatic_adaptation"):
+        describe_conversion_path("DCI-P3", "sRGB", chromatic_adaptation="Bradford")
+
+
+def test_describe_conversion_path_rejects_unregistered_paths():
+    with pytest.raises(ValueError, match="unknown colour-space node"):
+        describe_conversion_path("unknown", "xyY")

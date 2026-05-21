@@ -12,6 +12,19 @@ from .lab import (
     SPACE_NODES as LAB_SPACE_NODES,
     XYZ_to_Lab,
 )
+from .ipt import (
+    IPT_hue_angle,
+    IPT_to_XYZ,
+    SPACE_NODES as IPT_SPACE_NODES,
+    XYZ_to_IPT,
+)
+from .jzazbz import (
+    JzCzhz_to_Jzazbz,
+    Jzazbz_to_JzCzhz,
+    Jzazbz_to_XYZ,
+    SPACE_NODES as JZAZBZ_SPACE_NODES,
+    XYZ_to_Jzazbz,
+)
 from .luv import (
     LCHuv_to_Luv,
     Luv_to_LCHuv,
@@ -47,6 +60,8 @@ SPACE_NODES = (
     *LUV_SPACE_NODES,
     *UVW_SPACE_NODES,
     *OKLAB_SPACE_NODES,
+    *IPT_SPACE_NODES,
+    *JZAZBZ_SPACE_NODES,
 )
 
 __all__ = [
@@ -77,5 +92,12 @@ __all__ = [
     "Oklab_to_XYZ",
     "Oklab_to_Oklch",
     "Oklch_to_Oklab",
+    "XYZ_to_IPT",
+    "IPT_to_XYZ",
+    "IPT_hue_angle",
+    "XYZ_to_Jzazbz",
+    "Jzazbz_to_XYZ",
+    "Jzazbz_to_JzCzhz",
+    "JzCzhz_to_Jzazbz",
     "SPACE_NODES",
 ]

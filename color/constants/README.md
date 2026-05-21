@@ -1,22 +1,26 @@
 # constants
 
 Purpose
+
 - Authoritative home for important standard constants used by the project.
 - High-level modules such as `color.spaces`, `color.colorimetry`,
   `color.appearance`, and `color.adaptation` should import shared standard
   constants from here.
 
 Naming
+
 - Use descriptive, lowercase names (snake_case) for constants.
 - Group related constants in files like display_standards.py, standard_observer_matrices.py, illuminants_XYZ.py, adaptation_matrices.py.
 
 Entry points
+
 - `color.constants` is the main public entry point for common standard
   constants.
 - Submodules such as `display_standards.py`, `adaptation_matrices.py`, and
   `standard_observer_matrices.py` group related constants by subject.
 
 Semantic ownership
+
 - Whitepoint and reference illuminant tristimulus constants such as `D65_XYZ`
   are defined in `illuminants_XYZ.py` because
   they are shared across colorimetry, spaces, appearance, and adaptation.
@@ -32,6 +36,7 @@ Semantic ownership
   - `CHROMATIC_ADAPTATION_TRANSFORMS`
 
 RGB data policy
+
 - `display_standards.py` keeps common compatibility matrix constants such as
   `SRGB_TO_XYZ` and `XYZ_TO_SRGB`.
 - `RGB_COLOURSPACE_DEFINITIONS` is the canonical RGB standards table. Each

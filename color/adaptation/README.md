@@ -24,6 +24,30 @@ XYZ_D50 = chromatic_adaptation_XYZ(
 )
 ```
 
+For the common workflow of preparing XYZ values for D65-referred spaces such as
+Oklab, IPT and Jzazbz, use the D65 convenience helpers:
+
+```python
+from color.adaptation import adapt_from_D65, adapt_to_D65
+from color.constants import D50_XYZ
+
+XYZ_D65_referred = adapt_to_D65(
+    XYZ_D50,
+    source_white_XYZ=D50_XYZ,
+    transform="Bradford",
+)
+
+XYZ_D50 = adapt_from_D65(
+    XYZ_D65_referred,
+    target_white_XYZ=D50_XYZ,
+    transform="Bradford",
+)
+```
+
+`adapt_to_D65(...)` and `adapt_from_D65(...)` are thin wrappers around
+`chromatic_adaptation_XYZ(...)`; they only fix one side of the whitepoint pair
+to `D65_XYZ`.
+
 `transform=None` performs no adaptation and returns a numeric copy. This is the
 stimulus-matching path.
 

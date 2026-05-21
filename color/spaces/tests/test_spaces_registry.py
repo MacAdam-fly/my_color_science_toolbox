@@ -23,6 +23,9 @@ def test_registry_resolves_xyz_and_xyy():
     assert get_colourspace_node("UVW").name == "UVW"
     assert get_colourspace_node("Oklab").name == "Oklab"
     assert get_colourspace_node("Oklch").parent == "Oklab"
+    assert get_colourspace_node("IPT").name == "IPT"
+    assert get_colourspace_node("Jzazbz").name == "Jzazbz"
+    assert get_colourspace_node("JzCzhz").parent == "Jzazbz"
     assert get_colourspace_node("CAM02-UCS").name == "CAM02-UCS"
     assert get_colourspace_node("CAM02-LCD").name == "CAM02-LCD"
     assert get_colourspace_node("CAM02-SCD").name == "CAM02-SCD"
@@ -46,6 +49,11 @@ def test_registry_resolves_aliases_case_insensitively():
     assert get_colourspace_node("CAM02 LCD").name == "CAM02-LCD"
     assert get_colourspace_node("CAM16UCS").name == "CAM16-UCS"
     assert get_colourspace_node("CAM16 LCD").name == "CAM16-LCD"
+    assert get_colourspace_node("Fairchild IPT").name == "IPT"
+    assert get_colourspace_node("JzAzBz").name == "Jzazbz"
+    assert get_colourspace_node("Jz a_z b_z").name == "Jzazbz"
+    assert get_colourspace_node("JzCzHz").name == "JzCzhz"
+    assert get_colourspace_node("Jz C_z h_z").name == "JzCzhz"
 
 
 def test_list_colourspace_nodes():
@@ -60,6 +68,9 @@ def test_list_colourspace_nodes():
     assert "UVW" in names
     assert "Oklab" in names
     assert "Oklch" in names
+    assert "IPT" in names
+    assert "Jzazbz" in names
+    assert "JzCzhz" in names
     assert "CAM02-UCS" in names
     assert "CAM02-LCD" in names
     assert "CAM02-SCD" in names

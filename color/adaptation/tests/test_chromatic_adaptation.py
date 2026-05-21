@@ -10,6 +10,8 @@ import pytest
 from color.adaptation import (
     CAT_BRADFORD,
     CHROMATIC_ADAPTATION_TRANSFORMS,
+    adapt_from_D65,
+    adapt_to_D65,
     chromatic_adaptation_XYZ,
     matrix_chromatic_adaptation_von_kries,
 )
@@ -124,6 +126,56 @@ def test_round_trip_recovers_XYZ():
     recovered = chromatic_adaptation_XYZ(adapted, target, source, transform="CAT16")
 
     np.testing.assert_allclose(recovered, XYZ, atol=1e-12)
+
+
+def test_adapt_to_D65_matches_explicit_adaptation():
+    XYZ_D50 = np.array([
+        [0.2, 0.3, 0.4],
+        [0.5, 0.4, 0.2],
+    ])
+
+    expected = chromatic_adaptation_XYZ(
+        XYZ_D50,
+        source_white_XYZ=D50_XYZ,
+        target_white_XYZ=D65_XYZ,
+        transform="Bradford",
+    )
+    actual = adapt_to_D65(XYZ_D50, source_white_XYZ=D50_XYZ)
+
+    np.testing.assert_allclose(actual, expected, atol=1e-12)
+
+
+def test_adapt_from_D65_matches_explicit_adaptation():
+    XYZ_D65 = np.array([
+        [0.2, 0.3, 0.4],
+        [0.5, 0.4, 0.2],
+    ])
+
+    expected = chromatic_adaptation_XYZ(
+        XYZ_D65,
+        source_white_XYZ=D65_XYZ,
+        target_white_XYZ=D50_XYZ,
+        transform="CAT16",
+    )
+    actual = adapt_from_D65(
+        XYZ_D65_referred=XYZ_D65,
+        target_white_XYZ=D50_XYZ,
+        transform="CAT16",
+    )
+
+    np.testing.assert_allclose(actual, expected, atol=1e-12)
+
+
+def test_D65_helpers_round_trip():
+    XYZ_D50 = np.array([
+        [0.2, 0.3, 0.4],
+        [0.5, 0.4, 0.2],
+    ])
+
+    XYZ_D65 = adapt_to_D65(XYZ_D50, source_white_XYZ=D50_XYZ)
+    recovered = adapt_from_D65(XYZ_D65, target_white_XYZ=D50_XYZ)
+
+    np.testing.assert_allclose(recovered, XYZ_D50, atol=1e-12)
 
 
 @pytest.mark.parametrize(

@@ -1,10 +1,12 @@
-"""Von Kries style chromatic adaptation."""
+"""Core chromatic adaptation helpers."""
 
 from __future__ import annotations
 
 from typing import Sequence
 
 import numpy as np
+
+from color.constants.illuminants_XYZ import D65_XYZ
 
 from .matrices import CHROMATIC_ADAPTATION_TRANSFORMS
 
@@ -93,7 +95,39 @@ def chromatic_adaptation_XYZ(
     return xyz @ matrix.T
 
 
+def adapt_to_D65(
+    XYZ: Sequence[float] | np.ndarray,
+    source_white_XYZ: Sequence[float] | np.ndarray,
+    *,
+    transform: str | None = "Bradford",
+) -> np.ndarray:
+    """Adapt XYZ values from *source_white_XYZ* to the D65 whitepoint."""
+    return chromatic_adaptation_XYZ(
+        XYZ,
+        source_white_XYZ=source_white_XYZ,
+        target_white_XYZ=D65_XYZ,
+        transform=transform,
+    )
+
+
+def adapt_from_D65(
+    XYZ_D65_referred: Sequence[float] | np.ndarray,
+    target_white_XYZ: Sequence[float] | np.ndarray,
+    *,
+    transform: str | None = "Bradford",
+) -> np.ndarray:
+    """Adapt D65-referred XYZ values to *target_white_XYZ*."""
+    return chromatic_adaptation_XYZ(
+        XYZ_D65_referred,
+        source_white_XYZ=D65_XYZ,
+        target_white_XYZ=target_white_XYZ,
+        transform=transform,
+    )
+
+
 __all__ = [
     "matrix_chromatic_adaptation_von_kries",
     "chromatic_adaptation_XYZ",
+    "adapt_to_D65",
+    "adapt_from_D65",
 ]

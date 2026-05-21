@@ -64,7 +64,7 @@ def test_Oklab_matches_colour_reference():
     XYZ = np.array([20.0, 30.0, 40.0])
 
     np.testing.assert_allclose(
-        XYZ_to_Oklab(XYZ),
+        XYZ_to_Oklab(XYZ_D65_referred=XYZ),
         colour.XYZ_to_Oklab(XYZ / 100.0),
         atol=1e-10,
     )

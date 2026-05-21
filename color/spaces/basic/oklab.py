@@ -59,15 +59,18 @@ def _as_last_axis_triplets(value: Sequence[float] | np.ndarray, *, name: str) ->
     return arr
 
 
-def XYZ_to_Oklab(XYZ: Sequence[float] | np.ndarray) -> np.ndarray:
-    """Convert CIE XYZ values to Oklab values."""
-    xyz = _as_last_axis_triplets(XYZ, name="XYZ") / 100.0
+def XYZ_to_Oklab(XYZ_D65_referred: Sequence[float] | np.ndarray) -> np.ndarray:
+    """Convert D65-referred CIE XYZ values to Oklab values."""
+    xyz = _as_last_axis_triplets(
+        XYZ_D65_referred,
+        name="XYZ_D65_referred",
+    ) / 100.0
     LMS = xyz @ MATRIX_XYZ_TO_LMS.T
     return np.cbrt(LMS) @ MATRIX_LMS_TO_OKLAB.T
 
 
 def Oklab_to_XYZ(Oklab: Sequence[float] | np.ndarray) -> np.ndarray:
-    """Convert Oklab values to CIE XYZ values."""
+    """Convert Oklab values to D65-referred CIE XYZ values."""
     oklab = _as_last_axis_triplets(Oklab, name="Oklab")
     LMS_cbrt = oklab @ MATRIX_OKLAB_TO_LMS.T
     return 100.0 * ((LMS_cbrt**3) @ MATRIX_LMS_TO_XYZ.T)

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import inspect
 from collections.abc import Mapping
+from dataclasses import dataclass
 
 import numpy as np
 
@@ -16,6 +17,34 @@ from .rgb import (
     get_RGB_colourspace,
 )
 from .spec import SpaceSpec, as_space_spec
+
+
+@dataclass(frozen=True)
+class ConversionPathNode:
+    """A node in a described colour-space conversion path."""
+
+    name: str
+    kind: str
+
+
+@dataclass(frozen=True)
+class ConversionPathEdge:
+    """A directed edge in a described colour-space conversion path."""
+
+    source: str
+    target: str
+    operation: str
+    description: str
+
+
+@dataclass(frozen=True)
+class ConversionPath:
+    """A structural description of a colour-space conversion route."""
+
+    source: str
+    target: str
+    nodes: tuple[ConversionPathNode, ...]
+    edges: tuple[ConversionPathEdge, ...]
 
 
 def _call_conversion(function, value, options: dict[str, object]) -> np.ndarray:
@@ -150,6 +179,117 @@ def _raise_path_error_or_original_option_error(
     ) from exc
 
 
+def _validate_conversion_options(function, options: Mapping[str, object]) -> None:
+    """Validate that *function* accepts the given conversion *options*."""
+    signature = inspect.signature(function)
+    accepts_var_kwargs = any(
+        parameter.kind == inspect.Parameter.VAR_KEYWORD
+        for parameter in signature.parameters.values()
+    )
+    if accepts_var_kwargs:
+        return
+
+    unused = set(options) - set(signature.parameters)
+    if unused:
+        names = ", ".join(sorted(unused))
+        raise ValueError(f"unsupported conversion option(s): {names}")
+
+
+def _conversion_path_node(name: str, kind: str = "generic") -> ConversionPathNode:
+    """Return a conversion path node, marking XYZ as the central hub."""
+    if name == "XYZ":
+        return ConversionPathNode(name="XYZ", kind="hub")
+    return ConversionPathNode(name=name, kind=kind)
+
+
+def _node_sequence_from_edges(
+    first: ConversionPathNode,
+    edges: list[ConversionPathEdge],
+    kind_lookup: Mapping[str, str] | None = None,
+) -> tuple[ConversionPathNode, ...]:
+    """Build an ordered node sequence from *first* and *edges*."""
+    kind_lookup = kind_lookup or {}
+    nodes = [first]
+    for edge in edges:
+        kind = kind_lookup.get(edge.target, "generic")
+        nodes.append(_conversion_path_node(edge.target, kind=kind))
+    return tuple(nodes)
+
+
+def _describe_to_XYZ(
+    node: ColorSpaceNode,
+    endpoint_spec: SpaceSpec,
+    common_options: Mapping[str, object],
+) -> list[ConversionPathEdge]:
+    """Describe conversion from *node* to XYZ, following parent links."""
+    if node.name == "XYZ":
+        _require_no_options(endpoint_spec.parameters)
+        return []
+
+    if node.to_XYZ is not None:
+        options = _merge_options(common_options, endpoint_spec)
+        _validate_conversion_options(node.to_XYZ, options)
+        return [
+            ConversionPathEdge(
+                source=node.name,
+                target="XYZ",
+                operation="to_XYZ",
+                description=f"{node.name} to XYZ",
+            )
+        ]
+
+    if node.parent is not None and node.to_parent is not None:
+        parent_node = get_colourspace_node(node.parent)
+        return [
+            ConversionPathEdge(
+                source=node.name,
+                target=parent_node.name,
+                operation="to_parent",
+                description=f"{node.name} to parent {parent_node.name}",
+            ),
+            *_describe_to_XYZ(parent_node, endpoint_spec, common_options),
+        ]
+
+    raise ValueError(f"colour-space node {node.name!r} cannot convert to XYZ")
+
+
+def _describe_from_XYZ(
+    node: ColorSpaceNode,
+    endpoint_spec: SpaceSpec,
+    common_options: Mapping[str, object],
+) -> list[ConversionPathEdge]:
+    """Describe conversion from XYZ to *node*, following parent links."""
+    if node.name == "XYZ":
+        _require_no_options(endpoint_spec.parameters)
+        return []
+
+    if node.from_XYZ is not None:
+        options = _merge_options(common_options, endpoint_spec)
+        _validate_conversion_options(node.from_XYZ, options)
+        return [
+            ConversionPathEdge(
+                source="XYZ",
+                target=node.name,
+                operation="from_XYZ",
+                description=f"XYZ to {node.name}",
+            )
+        ]
+
+    if node.parent is not None and node.from_parent is not None:
+        parent_node = get_colourspace_node(node.parent)
+        return [
+            *_describe_from_XYZ(parent_node, endpoint_spec, common_options),
+            ConversionPathEdge(
+                source=parent_node.name,
+                target=node.name,
+                operation="from_parent",
+                description=f"Parent {parent_node.name} to {node.name}",
+            ),
+        ]
+
+    raise ValueError(f"colour-space node {node.name!r} cannot convert from XYZ")
+
+
 def _to_XYZ(
     value,
     node: ColorSpaceNode,
@@ -274,6 +414,150 @@ def convert_color(
         _raise_path_error_or_original_option_error(exc, source_node.name, target_node.name)
 
 
+def describe_conversion_path(
+    source: str | ColorSpaceNode | RGBColorSpace | SpaceSpec,
+    target: str | ColorSpaceNode | RGBColorSpace | SpaceSpec,
+    **kwargs,
+) -> ConversionPath:
+    """Describe the structural route used for a colour-space conversion."""
+    source_spec = as_space_spec(source)
+    target_spec = as_space_spec(target)
+
+    _reject_chromatic_adaptation(kwargs, source="describe_conversion_path keyword arguments")
+    _reject_chromatic_adaptation(source_spec.parameters, source="source SpaceSpec")
+    _reject_chromatic_adaptation(target_spec.parameters, source="target SpaceSpec")
+
+    source_rgb = _try_get_RGB_colourspace(source_spec.name)
+    target_rgb = _try_get_RGB_colourspace(target_spec.name)
+
+    if source_rgb is not None and target_rgb is not None:
+        options = dict(kwargs)
+        source_options = _rgb_source_options(options, source_spec)
+        target_options = _rgb_target_options(options, target_spec)
+        apply_decoding = _pop_rgb_option(source_options, "apply_decoding", True)
+        apply_encoding = _pop_rgb_option(target_options, "apply_encoding", True)
+        _require_no_options(options)
+        _require_no_options(source_options)
+        _require_no_options(target_options)
+        edges = (
+            ConversionPathEdge(
+                source=source_rgb.name,
+                target="XYZ",
+                operation="decode",
+                description=(
+                    f"{source_rgb.name} to XYZ; apply_decoding={apply_decoding}; "
+                    "chromatic_adaptation=None"
+                ),
+            ),
+            ConversionPathEdge(
+                source="XYZ",
+                target=target_rgb.name,
+                operation="encode",
+                description=f"XYZ to {target_rgb.name}; apply_encoding={apply_encoding}",
+            ),
+        )
+        return ConversionPath(
+            source=source_rgb.name,
+            target=target_rgb.name,
+            nodes=(
+                ConversionPathNode(source_rgb.name, "rgb"),
+                ConversionPathNode("XYZ", "hub"),
+                ConversionPathNode(target_rgb.name, "rgb"),
+            ),
+            edges=edges,
+        )
+
+    if source_rgb is not None:
+        target_node = _get_generic_node(target_spec.name)  # type: ignore[arg-type]
+        options = dict(kwargs)
+        source_options = _rgb_source_options(options, source_spec)
+        apply_decoding = _pop_rgb_option(source_options, "apply_decoding", True)
+        _require_no_options(source_options)
+        edges = [
+            ConversionPathEdge(
+                source=source_rgb.name,
+                target="XYZ",
+                operation="decode",
+                description=f"{source_rgb.name} to XYZ; apply_decoding={apply_decoding}",
+            ),
+            *_describe_from_XYZ(target_node, target_spec, options),
+        ]
+        return ConversionPath(
+            source=source_rgb.name,
+            target=target_node.name,
+            nodes=_node_sequence_from_edges(
+                ConversionPathNode(source_rgb.name, "rgb"),
+                edges,
+                kind_lookup={source_rgb.name: "rgb"},
+            ),
+            edges=tuple(edges),
+        )
+
+    if target_rgb is not None:
+        source_node = _get_generic_node(source_spec.name)  # type: ignore[arg-type]
+        options = dict(kwargs)
+        target_options = _rgb_target_options(options, target_spec)
+        apply_encoding = _pop_rgb_option(target_options, "apply_encoding", True)
+        _require_no_options(target_options)
+        edges = [
+            *_describe_to_XYZ(source_node, source_spec, options),
+            ConversionPathEdge(
+                source="XYZ",
+                target=target_rgb.name,
+                operation="encode",
+                description=f"XYZ to {target_rgb.name}; apply_encoding={apply_encoding}",
+            ),
+        ]
+        return ConversionPath(
+            source=source_node.name,
+            target=target_rgb.name,
+            nodes=_node_sequence_from_edges(
+                _conversion_path_node(source_node.name),
+                edges,
+                kind_lookup={target_rgb.name: "rgb"},
+            ),
+            edges=tuple(edges),
+        )
+
+    source_node = get_colourspace_node(source_spec.name)
+    target_node = get_colourspace_node(target_spec.name)
+
+    if source_node.name == target_node.name:
+        if _parameters_equal(source_spec.parameters, target_spec.parameters):
+            return ConversionPath(
+                source=source_node.name,
+                target=target_node.name,
+                nodes=(_conversion_path_node(source_node.name),),
+                edges=(
+                    ConversionPathEdge(
+                        source=source_node.name,
+                        target=target_node.name,
+                        operation="identity",
+                        description=f"{source_node.name} to {target_node.name}; identity copy",
+                    ),
+                ),
+            )
+
+    try:
+        edges = [
+            *_describe_to_XYZ(source_node, source_spec, kwargs),
+            *_describe_from_XYZ(target_node, target_spec, kwargs),
+        ]
+    except ValueError as exc:
+        _raise_path_error_or_original_option_error(exc, source_node.name, target_node.name)
+
+    return ConversionPath(
+        source=source_node.name,
+        target=target_node.name,
+        nodes=_node_sequence_from_edges(_conversion_path_node(source_node.name), edges),
+        edges=tuple(edges),
+    )
+
+
 __all__ = [
+    "ConversionPath",
+    "ConversionPathEdge",
+    "ConversionPathNode",
     "convert_color",
+    "describe_conversion_path",
 ]
