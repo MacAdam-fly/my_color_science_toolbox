@@ -17,6 +17,18 @@ Current scope is intentionally narrow:
 
 Colour appearance models, PQ and HLG are not part of this version.
 
+The implementation is grouped by responsibility:
+
+```text
+color.spaces.rgb          RGB standards, transfer functions and RGB <-> XYZ
+color.spaces.basic        XYZ-connected spaces independent of appearance models
+color.spaces.appearance   uniform spaces built from appearance-model correlates
+```
+
+The recommended user-facing import path is still the top-level `color.spaces`
+package. The subpackages keep implementation ownership clear as the number of
+spaces grows.
+
 `color.spaces` uses CIE XYZ values on the `Y=100` reference scale. This matches
 `color.colorimetry` spectral integration results and `color.appearance`
 CIECAM02/CIECAM16 viewing conditions.
@@ -312,10 +324,11 @@ defaults.
 whitepoints, use `RGB_to_RGB(..., chromatic_adaptation=...)` or adapt XYZ
 explicitly with `color.adaptation`.
 
-Colour-space nodes are declared next to their implementation. For example,
-`color.spaces.xyy`, `color.spaces.lab`, `color.spaces.luv` and
-`color.spaces.oklab` expose `SPACE_NODES`; `color.spaces.registry` collects
-node groups, checks name and alias conflicts, and provides lookup helpers.
+Colour-space nodes are declared next to their implementation. Basic spaces
+export their grouped nodes from `color.spaces.basic`; CAM02/CAM16 uniform
+spaces export their grouped nodes from `color.spaces.appearance`.
+`color.spaces.registry` collects those groups, checks name and alias conflicts,
+and provides lookup helpers.
 
 ## CAM02-UCS, CAM02-LCD And CAM02-SCD
 

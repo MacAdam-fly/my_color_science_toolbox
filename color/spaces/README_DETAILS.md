@@ -19,6 +19,17 @@ RGB 标准空间有独立注册表
 convert_color 负责路由，不做隐式色适应
 ```
 
+目录结构也按职责拆开：
+
+```text
+color.spaces.rgb          RGB 标准、传递函数和 RGB <-> XYZ 转换
+color.spaces.basic        不依赖色貌模型的基础/经典颜色空间
+color.spaces.appearance   基于色貌模型输出构造的均匀颜色空间
+```
+
+推荐使用者仍然从顶层 `color.spaces` 导入公开 API。`basic` 和 `appearance`
+主要用于让内部实现、注册节点和后续扩展边界更清楚。
+
 ## 当前已实现内容
 
 ### RGB 空间
@@ -420,6 +431,14 @@ from color.spaces import get_colourspace_node, list_colourspace_nodes
 
 node = get_colourspace_node("LCHab")
 names = list_colourspace_nodes()
+```
+
+空间节点仍然声明在各自实现附近，但按子包聚合：
+
+```text
+color.spaces.basic       聚合 xyY、Lab、Luv、UVW、Oklab 及其派生空间节点
+color.spaces.appearance  聚合 CAM02-UCS / CAM16-UCS 系列空间节点
+color.spaces.registry    只负责收集这些节点组并检查名称和别名冲突
 ```
 
 目前注册的通用空间节点包括：

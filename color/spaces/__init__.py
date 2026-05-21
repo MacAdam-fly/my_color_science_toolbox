@@ -2,11 +2,7 @@
 
 from __future__ import annotations
 
-from ._cam_ucs import (
-    Coefficients_UCS_Luo2006,
-)
-
-from .cam02_ucs import (
+from .appearance import (
     CAM02LCD_to_JMh_CIECAM02,
     CAM02LCD_to_XYZ,
     CAM02SCD_to_JMh_CIECAM02,
@@ -17,11 +13,6 @@ from .cam02_ucs import (
     JMh_CIECAM02_to_CAM02LCD,
     JMh_CIECAM02_to_CAM02SCD,
     JMh_CIECAM02_to_CAM02UCS,
-    XYZ_to_CAM02LCD,
-    XYZ_to_CAM02SCD,
-    XYZ_to_CAM02UCS,
-)
-from .cam16_ucs import (
     CAM16LCD_to_JMh_CIECAM16,
     CAM16LCD_to_XYZ,
     CAM16SCD_to_JMh_CIECAM16,
@@ -32,22 +23,44 @@ from .cam16_ucs import (
     JMh_CIECAM16_to_CAM16LCD,
     JMh_CIECAM16_to_CAM16SCD,
     JMh_CIECAM16_to_CAM16UCS,
+    Coefficients_UCS_Luo2006,
+    XYZ_to_CAM02LCD,
+    XYZ_to_CAM02SCD,
+    XYZ_to_CAM02UCS,
     XYZ_to_CAM16LCD,
     XYZ_to_CAM16SCD,
     XYZ_to_CAM16UCS,
 )
-from .conversion import convert_color
-from .lab import (
+from .basic import (
     DEFAULT_WHITEPOINT_XYZ,
-    KAPPA,
     EPSILON,
+    KAPPA,
     Lab_to_LCHab,
     Lab_to_XYZ,
     LCHab_to_Lab,
+    LCHuv_to_Luv,
+    Luv_to_LCHuv,
+    Luv_to_XYZ,
+    Oklab_to_Oklch,
+    Oklab_to_XYZ,
+    Oklch_to_Oklab,
+    UVW_to_XYZ,
     XYZ_to_Lab,
+    XYZ_to_Luv,
+    XYZ_to_Oklab,
+    XYZ_to_UVW,
+    XYZ_to_upvp1976,
+    XYZ_to_uv1960,
+    XYZ_to_xy,
+    XYZ_to_xyY,
+    upvp1976_to_xy,
+    uv1960_to_xy,
+    xyY_to_XYZ,
+    xyY_to_xy,
+    xy_to_upvp1976,
+    xy_to_uv1960,
 )
-from .luv import LCHuv_to_Luv, Luv_to_LCHuv, Luv_to_XYZ, XYZ_to_Luv
-from .oklab import Oklab_to_Oklch, Oklab_to_XYZ, Oklch_to_Oklab, XYZ_to_Oklab
+from .conversion import convert_color
 from .registry import (
     ColorSpaceNode,
     SPACE_REGISTRY,
@@ -67,19 +80,6 @@ from .rgb import (
     sRGB_to_XYZ,
 )
 from .spec import SpaceSpec
-from .uvw import UVW_to_XYZ, XYZ_to_UVW
-from .xyy import (
-    XYZ_to_upvp1976,
-    XYZ_to_uv1960,
-    XYZ_to_xy,
-    XYZ_to_xyY,
-    upvp1976_to_xy,
-    uv1960_to_xy,
-    xyY_to_XYZ,
-    xyY_to_xy,
-    xy_to_upvp1976,
-    xy_to_uv1960,
-)
 
 # Generic colour-space graph.
 __all__ = [

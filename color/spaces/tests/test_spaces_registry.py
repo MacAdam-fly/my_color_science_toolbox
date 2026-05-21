@@ -10,7 +10,7 @@ from color.spaces import (
     get_colourspace_node,
     list_colourspace_nodes,
 )
-from color.spaces.xyy import SPACE_NODES as XYY_SPACE_NODES
+from color.spaces.basic.xyy import SPACE_NODES as XYY_SPACE_NODES
 
 
 def test_registry_resolves_xyz_and_xyy():

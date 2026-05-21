@@ -7,14 +7,9 @@ from typing import Iterable, Mapping
 
 import numpy as np
 
-from .cam02_ucs import SPACE_NODES as CAM02_SPACE_NODES
-from .cam16_ucs import SPACE_NODES as CAM16_SPACE_NODES
-from .lab import SPACE_NODES as LAB_SPACE_NODES
-from .luv import SPACE_NODES as LUV_SPACE_NODES
+from .appearance import SPACE_NODES as APPEARANCE_SPACE_NODES
+from .basic import SPACE_NODES as BASIC_SPACE_NODES
 from .node import ColorSpaceNode
-from .oklab import SPACE_NODES as OKLAB_SPACE_NODES
-from .uvw import SPACE_NODES as UVW_SPACE_NODES
-from .xyy import SPACE_NODES as XYY_SPACE_NODES
 
 
 def _identity(value, **_kwargs) -> np.ndarray:
@@ -69,13 +64,8 @@ def _build_registry(
 _NODES, _ALIASES = _build_registry(
     (
         CORE_SPACE_NODES,
-        XYY_SPACE_NODES,
-        LAB_SPACE_NODES,
-        LUV_SPACE_NODES,
-        UVW_SPACE_NODES,
-        OKLAB_SPACE_NODES,
-        CAM02_SPACE_NODES,
-        CAM16_SPACE_NODES,
+        BASIC_SPACE_NODES,
+        APPEARANCE_SPACE_NODES,
     )
 )
 

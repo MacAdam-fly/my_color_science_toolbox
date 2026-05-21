@@ -8,7 +8,7 @@ import numpy as np
 
 from color.constants import D65_XYZ
 
-from .node import ColorSpaceNode
+from ..node import ColorSpaceNode
 
 EPSILON = 216.0 / 24389.0
 KAPPA = 24389.0 / 27.0

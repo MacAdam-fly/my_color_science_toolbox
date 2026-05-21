@@ -14,7 +14,7 @@ from color.colorimetry.chromaticity import (
 )
 from color.constants import D65_XYZ
 
-from .node import ColorSpaceNode
+from ..node import ColorSpaceNode
 
 
 def _as_last_axis_triplets(value: Sequence[float] | np.ndarray, *, name: str) -> np.ndarray:

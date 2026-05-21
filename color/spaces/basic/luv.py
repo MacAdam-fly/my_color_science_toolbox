@@ -7,7 +7,7 @@ from typing import Sequence
 import numpy as np
 
 from .lab import DEFAULT_WHITEPOINT_XYZ, EPSILON, KAPPA
-from .node import ColorSpaceNode
+from ..node import ColorSpaceNode
 
 
 def _as_last_axis_triplets(value: Sequence[float] | np.ndarray, *, name: str) -> np.ndarray:

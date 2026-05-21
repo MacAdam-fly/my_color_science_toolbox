@@ -6,7 +6,7 @@ from typing import Sequence
 
 import numpy as np
 
-from .node import ColorSpaceNode
+from ..node import ColorSpaceNode
 
 MATRIX_XYZ_TO_LMS = np.array(
     [

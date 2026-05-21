@@ -18,7 +18,7 @@ from color.colorimetry.chromaticity import (
     xy_to_uv1960,
 )
 
-from .node import ColorSpaceNode
+from ..node import ColorSpaceNode
 
 
 def xyY_to_xy(xyY: Sequence[float] | np.ndarray) -> np.ndarray:

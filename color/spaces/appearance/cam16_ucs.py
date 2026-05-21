@@ -15,7 +15,7 @@ from color.appearance import (
 )
 
 from ._cam_ucs import Coefficients_UCS_Luo2006, JMh_to_UCS, UCS_to_JMh
-from .node import ColorSpaceNode
+from ..node import ColorSpaceNode
 
 
 COEFFICIENTS_UCS_LI2017 = MappingProxyType(
