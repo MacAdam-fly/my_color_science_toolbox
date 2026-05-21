@@ -1,4 +1,4 @@
-"""Reference white points and common illuminants."""
+"""Reference illuminant and whitepoint XYZ constants."""
 
 from __future__ import annotations
 

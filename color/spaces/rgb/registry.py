@@ -4,9 +4,8 @@ from __future__ import annotations
 
 from types import MappingProxyType
 
-from color.constants import RGB_COLOURSPACE_DEFINITIONS
-
 from .colourspace import RGBColorSpace
+from .display_standards import RGB_COLOURSPACE_DEFINITIONS
 
 
 def _canonical_name(name: str) -> str:

@@ -25,6 +25,9 @@ def test_registry_resolves_xyz_and_xyy():
     assert get_colourspace_node("CAM02-UCS").name == "CAM02-UCS"
     assert get_colourspace_node("CAM02-LCD").name == "CAM02-LCD"
     assert get_colourspace_node("CAM02-SCD").name == "CAM02-SCD"
+    assert get_colourspace_node("CAM16-UCS").name == "CAM16-UCS"
+    assert get_colourspace_node("CAM16-LCD").name == "CAM16-LCD"
+    assert get_colourspace_node("CAM16-SCD").name == "CAM16-SCD"
 
 
 def test_xyy_declares_its_own_space_node():
@@ -39,6 +42,8 @@ def test_registry_resolves_aliases_case_insensitively():
     assert get_colourspace_node("cie xyz").name == "XYZ"
     assert get_colourspace_node("CAM02UCS").name == "CAM02-UCS"
     assert get_colourspace_node("CAM02 LCD").name == "CAM02-LCD"
+    assert get_colourspace_node("CAM16UCS").name == "CAM16-UCS"
+    assert get_colourspace_node("CAM16 LCD").name == "CAM16-LCD"
 
 
 def test_list_colourspace_nodes():
@@ -55,6 +60,9 @@ def test_list_colourspace_nodes():
     assert "CAM02-UCS" in names
     assert "CAM02-LCD" in names
     assert "CAM02-SCD" in names
+    assert "CAM16-UCS" in names
+    assert "CAM16-LCD" in names
+    assert "CAM16-SCD" in names
 
 
 def test_registry_is_read_only_mapping():

@@ -79,6 +79,7 @@ color/colorimetry/
 ├── chromaticity.py          # XYZ / xy / xyY 转换
 ├── photometry.py            # 光视效率和光度量
 ├── lightness.py             # CIE 1976 Y <-> L*
+├── standard_observer_matrices.py # CIE 2006 LMS <-> XYZ 矩阵常量
 ├── transformations.py       # CIE 2006 LMS <-> XYZ 矩阵转换
 ├── dominant.py              # 主波长、互补波长和纯度
 └── temperature/             # CCT、Duv、日光轨迹和普朗克轨迹
@@ -175,6 +176,19 @@ fundamentals = from_dataset(
 | `XYZ_to_LMS(XYZ, observer=2)` | XYZ 转 CIE 2006 LMS |
 
 `observer` 支持 `2` 和 `10`，分别对应 CIE 2006 2° 和 10° 观察者。
+
+对应的标准观察者矩阵常量定义在：
+
+```python
+from color.constants.standard_observer_matrices import (
+    LMS_2_DEGREE_TO_XYZ_2_DEGREE,
+    XYZ_2_DEGREE_TO_LMS_2_DEGREE,
+    LMS_10_DEGREE_TO_XYZ_10_DEGREE,
+    XYZ_10_DEGREE_TO_LMS_10_DEGREE,
+)
+```
+
+`color.colorimetry.standard_observer_matrices` 只保留为 colorimetry 模块内的兼容转发入口。
 
 这组函数不是光谱积分，而是在已经得到 LMS / XYZ 数值之后做矩阵变换：
 

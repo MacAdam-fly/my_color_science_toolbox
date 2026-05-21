@@ -12,8 +12,7 @@ from typing import Any
 
 import numpy as np
 
-from color.adaptation import CAT_CAT02
-from color.constants import D65_XYZ
+from color.constants import CAT_CAT02, D65_XYZ
 
 
 MATRIX_XYZ_TO_HPE = np.array(
@@ -179,7 +178,8 @@ def _viewing_parameters(Y_b: float, Y_w: float, L_A: float) -> tuple[float, floa
 def _degree_of_adaptation(F: float, L_A: float, discount_illuminant: bool) -> float:
     if discount_illuminant:
         return 1.0
-    return F * (1.0 - (1.0 / 3.6) * np.exp((-L_A - 42.0) / 92.0))
+    D = F * (1.0 - (1.0 / 3.6) * np.exp((-L_A - 42.0) / 92.0))
+    return float(np.clip(D, 0.0, 1.0))
 
 
 def _full_chromatic_adaptation_forward(

@@ -1,4 +1,4 @@
-"""Tests for RGB colour-space constants."""
+"""Tests for RGB display and imaging standard constants."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ from types import MappingProxyType
 import numpy as np
 from colour.models import RGB_COLOURSPACES
 
-from color.constants.display_matrices import (
+from color.constants.display_standards import (
     ADOBE_RGB_TO_XYZ,
     COMMON_GAMUTS,
     DCIP3_TO_XYZ,

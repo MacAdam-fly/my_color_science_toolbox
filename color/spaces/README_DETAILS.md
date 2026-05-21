@@ -387,6 +387,12 @@ Luv
 LCHuv
 Oklab
 Oklch
+CAM02-UCS
+CAM02-LCD
+CAM02-SCD
+CAM16-UCS
+CAM16-LCD
+CAM16-SCD
 ```
 
 RGB 标准空间不直接混入 `SPACE_REGISTRY`，而是使用独立的 RGB 注册表：
@@ -436,13 +442,61 @@ convert_color(
 
 这样 source 参数和 target 参数更清楚，也更适合后续接入色貌模型这类复杂空间。
 
+## CAM02-UCS 与 CAM16-UCS 系列
+
+目前 `spaces` 已经接入两组基于色貌模型的均匀颜色空间：
+
+```text
+CAM02-UCS / CAM02-LCD / CAM02-SCD
+CAM16-UCS / CAM16-LCD / CAM16-SCD
+```
+
+它们都不是新的色貌模型，而是把色貌模型输出的 `J, M, h` 再转换成更适合度量颜色距离的 `J', a', b'` 均匀空间。
+
+CAM02 系列的链路是：
+
+```text
+XYZ -> CIECAM02(J, M, h) -> CAM02-UCS/LCD/SCD
+CAM02-UCS/LCD/SCD -> CIECAM02(J, M, h) -> XYZ
+```
+
+CAM16 系列的链路是：
+
+```text
+XYZ -> CIECAM16(J, M, h) -> CAM16-UCS/LCD/SCD
+CAM16-UCS/LCD/SCD -> CIECAM16(J, M, h) -> XYZ
+```
+
+两组空间都依赖观察条件，因此推荐用 `SpaceSpec` 显式写出参数。这里的观察条件是均匀空间定义的一部分，不是 `convert_color(...)` 在背后做了隐式色适应：
+
+```python
+from color.constants import D65_XYZ
+from color.spaces import SpaceSpec, convert_color
+
+cam16 = convert_color(
+    XYZ,
+    "XYZ",
+    SpaceSpec("CAM16-UCS", XYZ_w=D65_XYZ, L_A=318.31, Y_b=20),
+)
+XYZ_again = convert_color(
+    cam16,
+    SpaceSpec("CAM16-UCS", XYZ_w=D65_XYZ, L_A=318.31, Y_b=20),
+    "XYZ",
+)
+```
+
+`UCS` 是通用均匀空间；`LCD` 更偏向大色差；`SCD` 更偏向小色差。CAM16 系列的空间名称沿用标准写法 `CAM16-*`，但底层 JMh 辅助函数使用项目统一的 `CIECAM16` 命名，例如 `JMh_CIECAM16_to_CAM16UCS`。
+
+需要注意的是，CAM02-UCS / CAM16-UCS 并不是色貌模型本身。色貌模型位于 `color.appearance`，负责计算 `J, C, h, M, s` 等色貌相关量；这里的 `spaces` 层只是把其中的 `J, M, h` 包装为更适合做空间距离比较的 `J', a', b'` 坐标。
+
 ## 示例
 
-`examples/spaces` 中有两个主要示例：
+`examples/spaces` 中有三个主要示例：
 
 ```text
 example_01_rgb_colourspace_conversion.py
 example_02_colourspace_chain.py
+example_03_cam_uniform_spaces.py
 ```
 
 第一个示例展示 RGB 空间内部转换和 gamut 可视化。
@@ -455,11 +509,21 @@ sRGB -> XYZ -> Lab -> LCHab -> Luv -> LCHuv -> Oklab -> Oklch -> XYZ -> sRGB
 
 并演示 `SpaceSpec` 白点参数如何参与转换链路。
 
+第三个示例展示：
+
+```text
+sRGB -> XYZ -> CAM02-UCS/LCD/SCD -> XYZ -> sRGB
+sRGB -> XYZ -> CAM16-UCS/LCD/SCD -> XYZ -> sRGB
+```
+
+并绘制 CAM02-UCS 与 CAM16-UCS 的坐标差异，以及 Average / Dim surround 对两组均匀空间坐标的影响。
+
 运行：
 
 ```powershell
 .\.venv\Scripts\python.exe examples\spaces\example_01_rgb_colourspace_conversion.py
 .\.venv\Scripts\python.exe examples\spaces\example_02_colourspace_chain.py
+.\.venv\Scripts\python.exe examples\spaces\example_03_cam_uniform_spaces.py
 ```
 
 输出图像位于：
@@ -477,6 +541,7 @@ RGB
 XYZ / xyY
 Lab / Luv / Oklab
 LCHab / LCHuv / Oklch
+CAM02-UCS / CAM16-UCS
 SpaceSpec
 convert_color
 ```
@@ -486,7 +551,4 @@ convert_color
 ```text
 IPT
 Jzazbz
-CAM02-UCS / CAM16-UCS
 ```
-
-其中 CAM02-UCS / CAM16-UCS 依赖色貌模型和观察条件，建议等 appearance 层设计清楚后再接入。

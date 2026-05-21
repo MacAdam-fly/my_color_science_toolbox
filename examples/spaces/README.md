@@ -7,7 +7,7 @@ Run from the project root:
 ```powershell
 .\.venv\Scripts\python.exe examples\spaces\example_01_rgb_colourspace_conversion.py
 .\.venv\Scripts\python.exe examples\spaces\example_02_colourspace_chain.py
-.\.venv\Scripts\python.exe examples\spaces\example_03_cam02_uniform_spaces.py
+.\.venv\Scripts\python.exe examples\spaces\example_03_cam_uniform_spaces.py
 ```
 
 Plots are written to `examples/spaces/output/`.
@@ -19,6 +19,13 @@ Plots are written to `examples/spaces/output/`.
 - `example_02_colourspace_chain.py` demonstrates a full conversion chain across
   `sRGB -> XYZ -> Lab -> Luv -> Oklab -> sRGB`, including `SpaceSpec`
   whitepoint parameters and derived `LCH` nodes.
-- `example_03_cam02_uniform_spaces.py` demonstrates the long route
-  `sRGB -> XYZ -> CAM02-UCS -> CAM02-LCD -> CAM02-SCD -> XYZ -> sRGB`, and
-  visualises how CIECAM02 viewing conditions shift CAM02-UCS coordinates.
+- `example_03_cam_uniform_spaces.py` compares CAM02 and CAM16 uniform spaces,
+  demonstrates long routes through `UCS / LCD / SCD`, and visualises model
+  differences plus Average/Dim surround shifts.
+
+`example_03_cam_uniform_spaces.py` writes:
+
+- `03_cam_uniform_roundtrip_swatches.png`
+- `03_cam02_cam16_uniform_planes.png`
+- `03_cam02_vs_cam16_coordinate_delta.png`
+- `03_cam_viewing_condition_shift.png`

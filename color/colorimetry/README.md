@@ -124,6 +124,9 @@ LMS = XYZ_to_LMS(XYZ, observer=2)
 Use `observer=2` or `observer=10` to select the matching CIE 2006 observer
 matrix.
 
+The CIE 2006 LMS/XYZ matrix constants live in
+`color.constants.standard_observer_matrices`.
+
 Chromaticity helpers keep the luminance component explicit:
 
 ```python

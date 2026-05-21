@@ -1,4 +1,8 @@
-"""Display RGB colour-space constants."""
+"""RGB display and imaging standard constants.
+
+These constants are the authoritative RGB display and imaging standard data
+used by ``color.spaces.rgb``.
+"""
 
 from __future__ import annotations
 
@@ -10,7 +14,7 @@ import numpy as np
 
 def _readonly_matrix(values: list[list[float]]) -> np.ndarray:
     """Return a read-only RGB-to-XYZ matrix using the Y=100 XYZ scale."""
-    matrix = 100.0 * np.array(values, dtype=float)
+    matrix = np.array(values, dtype=float)
     matrix.setflags(write=False)
     return matrix
 
@@ -52,9 +56,9 @@ def _rgb_definition(
 # sRGB, IEC 61966-2-1, D65.
 SRGB_TO_XYZ = _readonly_matrix(
     [
-        [0.4124, 0.3576, 0.1805],
-        [0.2126, 0.7152, 0.0722],
-        [0.0193, 0.1192, 0.9505],
+        [41.24, 35.76, 18.05],
+        [21.26, 71.52, 7.22],
+        [1.93, 11.92, 95.05],
     ]
 )
 XYZ_TO_SRGB = _readonly_inverse(SRGB_TO_XYZ)
@@ -62,9 +66,9 @@ XYZ_TO_SRGB = _readonly_inverse(SRGB_TO_XYZ)
 # ITU-R BT.709, D65. Same primaries as sRGB but a different transfer function.
 REC709_TO_XYZ = _readonly_matrix(
     [
-        [0.41239079926595934, 0.357584339383878, 0.1804807884018343],
-        [0.21263900587151027, 0.715168678767756, 0.07219231536073371],
-        [0.01933081871559182, 0.11919477979462599, 0.9505321522496607],
+        [41.239079926595934, 35.7584339383878, 18.04807884018343],
+        [21.263900587151027, 71.5168678767756, 7.219231536073371],
+        [1.933081871559182, 11.919477979462599, 95.05321522496607],
     ]
 )
 XYZ_TO_REC709 = _readonly_inverse(REC709_TO_XYZ)
@@ -72,9 +76,9 @@ XYZ_TO_REC709 = _readonly_inverse(REC709_TO_XYZ)
 # ITU-R BT.2020 / Rec.2020, D65.
 REC2020_TO_XYZ = _readonly_matrix(
     [
-        [0.6369580483012914, 0.14461690358620832, 0.1688809751641721],
-        [0.2627002120112671, 0.6779980715188708, 0.05930171646986196],
-        [0.0, 0.028072693049087428, 1.060985057710791],
+        [63.69580483012914, 14.461690358620832, 16.88809751641721],
+        [26.27002120112671, 67.79980715188708, 5.930171646986196],
+        [0.0, 2.807269304908743, 106.0985057710791],
     ]
 )
 XYZ_TO_REC2020 = _readonly_inverse(REC2020_TO_XYZ)
@@ -82,9 +86,9 @@ XYZ_TO_REC2020 = _readonly_inverse(REC2020_TO_XYZ)
 # Adobe RGB (1998), D65.
 ADOBE_RGB_TO_XYZ = _readonly_matrix(
     [
-        [0.57667, 0.18556, 0.18823],
-        [0.29734, 0.62736, 0.07529],
-        [0.02703, 0.07069, 0.99134],
+        [57.667, 18.556, 18.823],
+        [29.734, 62.736, 7.529],
+        [2.703, 7.069, 99.134],
     ]
 )
 XYZ_TO_ADOBE_RGB = _readonly_inverse(ADOBE_RGB_TO_XYZ)
@@ -92,9 +96,9 @@ XYZ_TO_ADOBE_RGB = _readonly_inverse(ADOBE_RGB_TO_XYZ)
 # Display P3 / P3-D65.
 DISPLAY_P3_TO_XYZ = _readonly_matrix(
     [
-        [0.4865709486482162, 0.26566769316909306, 0.1982172852343625],
-        [0.2289745640697488, 0.6917385218365064, 0.079286914093745],
-        [0.0, 0.04511338185890264, 1.043944368900976],
+        [48.65709486482162, 26.566769316909306, 19.82172852343625],
+        [22.89745640697488, 69.17385218365064, 7.9286914093745],
+        [0.0, 4.511338185890264, 104.3944368900976],
     ]
 )
 XYZ_TO_DISPLAY_P3 = _readonly_inverse(DISPLAY_P3_TO_XYZ)
@@ -102,9 +106,9 @@ XYZ_TO_DISPLAY_P3 = _readonly_inverse(DISPLAY_P3_TO_XYZ)
 # DCI-P3, theatrical white xy=(0.314, 0.351).
 DCIP3_TO_XYZ = _readonly_matrix(
     [
-        [0.4451698155645523, 0.2771344092067778, 0.17228266981556453],
-        [0.2094916779127312, 0.7215952541610446, 0.06891306792622578],
-        [0.0, 0.04706056005398175, 0.9073553943616049],
+        [44.51698155645523, 27.71344092067778, 17.228266981556453],
+        [20.94916779127312, 72.15952541610446, 6.891306792622578],
+        [0.0, 4.706056005398175, 90.73553943616049],
     ]
 )
 XYZ_TO_DCIP3 = _readonly_inverse(DCIP3_TO_XYZ)
@@ -112,9 +116,9 @@ XYZ_TO_DCIP3 = _readonly_inverse(DCIP3_TO_XYZ)
 # NTSC (1953), Illuminant C.
 NTSC_1953_TO_XYZ = _readonly_matrix(
     [
-        [0.6068638092693974, 0.17350728093347247, 0.20033488079528077],
-        [0.2989030695782824, 0.5866198546593291, 0.11447707576238854],
-        [0.0, 0.06609801177817278, 1.116151484519807],
+        [60.68638092693974, 17.350728093347247, 20.033488079528077],
+        [29.89030695782824, 58.66198546593291, 11.447707576238854],
+        [0.0, 6.609801177817278, 111.6151484519807],
     ]
 )
 XYZ_TO_NTSC_1953 = _readonly_inverse(NTSC_1953_TO_XYZ)

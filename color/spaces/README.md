@@ -11,14 +11,15 @@ Current scope is intentionally narrow:
 - sRGB convenience wrappers.
 - CIE `XYZ <-> xyY` conversions re-exported from `color.colorimetry`.
 - CIE `Lab / Luv`, `Oklab`, and cylindrical `LCHab / LCHuv / Oklch`.
-- `CAM02-UCS / CAM02-LCD / CAM02-SCD` uniform colour spaces.
+- `CAM02-UCS / CAM02-LCD / CAM02-SCD` and
+  `CAM16-UCS / CAM16-LCD / CAM16-SCD` uniform colour spaces.
 - A lightweight colour-space node registry for `XYZ`-centred routing.
 
 Colour appearance models, PQ and HLG are not part of this version.
 
 `color.spaces` uses CIE XYZ values on the `Y=100` reference scale. This matches
 `color.colorimetry` spectral integration results and `color.appearance`
-CIECAM02 viewing conditions.
+CIECAM02/CIECAM16 viewing conditions.
 
 ## Quick Start
 
@@ -40,6 +41,7 @@ xyY_from_router = convert_color(XYZ, source="XYZ", target="xyY")
 Lab = convert_color(XYZ, "XYZ", "Lab")
 Oklch = convert_color(XYZ, "XYZ", "Oklch")
 CAM02UCS = convert_color(XYZ, "XYZ", "CAM02-UCS")
+CAM16UCS = convert_color(XYZ, "XYZ", "CAM16-UCS")
 xyY_with_fallback = convert_color(
     [0.0, 0.0, 0.0],
     source="XYZ",
@@ -110,7 +112,9 @@ from color.spaces import (
 )
 ```
 
-Registered RGB spaces are created from `color.constants.RGB_COLOURSPACE_DEFINITIONS`.
+Registered RGB spaces are created from
+`color.spaces.rgb.display_standards.RGB_COLOURSPACE_DEFINITIONS`, which
+re-exports the authoritative constants from `color.constants.display_standards`.
 The first set includes:
 
 - `sRGB`
@@ -321,4 +325,39 @@ XYZ_again = convert_color(
 
 `CAM02-UCS` is the general uniform space, while `CAM02-LCD` and `CAM02-SCD`
 use Luo et al. 2006 coefficients tuned for larger and smaller colour
+differences respectively.
+
+## CAM16-UCS, CAM16-LCD And CAM16-SCD
+
+The CAM16 spaces mirror the CAM02 uniform-space structure, but use CIECAM16
+appearance correlates:
+
+```text
+XYZ -> CIECAM16 J, M, h -> CAM16 J'a'b'
+CAM16 J'a'b' -> CIECAM16 J, M, h -> XYZ
+```
+
+The public colour-space names follow common usage and colour-science naming:
+`CAM16-UCS`, `CAM16-LCD` and `CAM16-SCD`. The lower-level JMh helpers use the
+project's appearance-model naming style, for example
+`JMh_CIECAM16_to_CAM16UCS`.
+
+```python
+from color.constants import D65_XYZ
+from color.spaces import SpaceSpec, convert_color
+
+cam = convert_color(
+    XYZ,
+    "XYZ",
+    SpaceSpec("CAM16-UCS", XYZ_w=D65_XYZ, L_A=318.31, Y_b=20),
+)
+XYZ_again = convert_color(
+    cam,
+    SpaceSpec("CAM16-UCS", XYZ_w=D65_XYZ, L_A=318.31, Y_b=20),
+    "XYZ",
+)
+```
+
+`CAM16-UCS` is the general uniform space, while `CAM16-LCD` and `CAM16-SCD`
+use Li et al. 2017 / Luo-style coefficients for larger and smaller colour
 differences respectively.

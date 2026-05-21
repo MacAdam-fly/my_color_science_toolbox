@@ -65,7 +65,9 @@ relative luminance samples.
 
 `example_08_lms_xyz_transformations.py` shows direct CIE 2006 LMS and XYZ matrix
 round-trips after tristimulus or cone-response values have already been
-computed.
+computed. The underlying matrix constants are defined in
+`color.colorimetry.standard_observer_matrices`; `color.constants` only
+re-exports them as a convenience index.
 
 `example_09_dominant_wavelength.py` computes and plots dominant wavelength,
 complementary wavelength, excitation purity and colorimetric purity for several

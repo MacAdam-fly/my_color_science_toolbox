@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+from ._cam_ucs import (
+    Coefficients_UCS_Luo2006,
+)
+
 from .cam02_ucs import (
     CAM02LCD_to_JMh_CIECAM02,
     CAM02LCD_to_XYZ,
@@ -10,13 +14,27 @@ from .cam02_ucs import (
     CAM02UCS_to_JMh_CIECAM02,
     CAM02UCS_to_XYZ,
     COEFFICIENTS_UCS_LUO2006,
-    Coefficients_UCS_Luo2006,
     JMh_CIECAM02_to_CAM02LCD,
     JMh_CIECAM02_to_CAM02SCD,
     JMh_CIECAM02_to_CAM02UCS,
     XYZ_to_CAM02LCD,
     XYZ_to_CAM02SCD,
     XYZ_to_CAM02UCS,
+)
+from .cam16_ucs import (
+    CAM16LCD_to_JMh_CIECAM16,
+    CAM16LCD_to_XYZ,
+    CAM16SCD_to_JMh_CIECAM16,
+    CAM16SCD_to_XYZ,
+    CAM16UCS_to_JMh_CIECAM16,
+    CAM16UCS_to_XYZ,
+    COEFFICIENTS_UCS_LI2017,
+    JMh_CIECAM16_to_CAM16LCD,
+    JMh_CIECAM16_to_CAM16SCD,
+    JMh_CIECAM16_to_CAM16UCS,
+    XYZ_to_CAM16LCD,
+    XYZ_to_CAM16SCD,
+    XYZ_to_CAM16UCS,
 )
 from .conversion import convert_color
 from .lab import (
@@ -39,6 +57,7 @@ from .registry import (
 from .rgb import (
     RGBColorSpace,
     RGB_COLORSPACES,
+    RGB_COLOURSPACE_DEFINITIONS,
     RGB_to_RGB,
     RGB_to_XYZ,
     XYZ_to_RGB,
@@ -70,6 +89,7 @@ __all__ += [
 # RGB colour spaces.
 __all__ += [
     "RGBColorSpace",  # RGB colour-space definition object
+    "RGB_COLOURSPACE_DEFINITIONS",  # RGB colour-space standard definitions
     "RGB_COLORSPACES",  # registered RGB colour spaces
     "get_RGB_colourspace",  # resolve an RGB colour space by name or alias
     "list_RGB_colourspaces",  # list registered RGB colour-space names
@@ -120,4 +140,21 @@ __all__ += [
     "CAM02LCD_to_XYZ",  # convert CAM02-LCD values to XYZ
     "XYZ_to_CAM02SCD",  # convert XYZ values to CAM02-SCD
     "CAM02SCD_to_XYZ",  # convert CAM02-SCD values to XYZ
+]
+
+# CAM16 uniform colour spaces.
+__all__ += [
+    "COEFFICIENTS_UCS_LI2017",  # registered CAM16-UCS / LCD / SCD coefficient presets
+    "JMh_CIECAM16_to_CAM16UCS",  # convert CIECAM16 JMh correlates to CAM16-UCS
+    "CAM16UCS_to_JMh_CIECAM16",  # convert CAM16-UCS coordinates to CIECAM16 JMh
+    "JMh_CIECAM16_to_CAM16LCD",  # convert CIECAM16 JMh correlates to CAM16-LCD
+    "CAM16LCD_to_JMh_CIECAM16",  # convert CAM16-LCD coordinates to CIECAM16 JMh
+    "JMh_CIECAM16_to_CAM16SCD",  # convert CIECAM16 JMh correlates to CAM16-SCD
+    "CAM16SCD_to_JMh_CIECAM16",  # convert CAM16-SCD coordinates to CIECAM16 JMh
+    "XYZ_to_CAM16UCS",  # convert XYZ values to CAM16-UCS
+    "CAM16UCS_to_XYZ",  # convert CAM16-UCS values to XYZ
+    "XYZ_to_CAM16LCD",  # convert XYZ values to CAM16-LCD
+    "CAM16LCD_to_XYZ",  # convert CAM16-LCD values to XYZ
+    "XYZ_to_CAM16SCD",  # convert XYZ values to CAM16-SCD
+    "CAM16SCD_to_XYZ",  # convert CAM16-SCD values to XYZ
 ]
