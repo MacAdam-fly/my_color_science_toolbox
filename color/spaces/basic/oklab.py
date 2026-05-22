@@ -100,6 +100,7 @@ SPACE_NODES = (
         to_XYZ=Oklab_to_XYZ,
         from_XYZ=XYZ_to_Oklab,
         family="Oklab",
+        requires_D65_referred_XYZ=True,
     ),
     ColorSpaceNode(
         name="Oklch",

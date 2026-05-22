@@ -33,6 +33,7 @@ def test_colorimetry_examples_run():
         _SPACES_EXAMPLES / "example_03_cam_uniform_spaces.py",
         _SPACES_EXAMPLES / "example_04_reference_accuracy.py",
         _SPACES_EXAMPLES / "example_05_conversion_paths.py",
+        _SPACES_EXAMPLES / "example_06_image_lchab_edit.py",
     ]
 
     for path in example_paths:

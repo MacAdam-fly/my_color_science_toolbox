@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 import inspect
+import warnings
 from collections.abc import Mapping
 from dataclasses import dataclass
 
 import numpy as np
+
+from color.constants.illuminants_XYZ import D65_XYZ
 
 from .registry import ColorSpaceNode, get_colourspace_node
 from .rgb import (
@@ -17,6 +20,12 @@ from .rgb import (
     get_RGB_colourspace,
 )
 from .spec import SpaceSpec, as_space_spec
+
+
+_D65_XYZ = np.asarray(D65_XYZ, dtype=np.float64)
+_D65_XY = _D65_XYZ[:2] / np.sum(_D65_XYZ)
+_D65_XYZ_ATOL = 5e-2
+_D65_XY_ATOL = 5e-4
 
 
 @dataclass(frozen=True)
@@ -142,6 +151,217 @@ def _require_no_options(options: Mapping[str, object]) -> None:
         raise ValueError(f"unsupported conversion option(s): {names}")
 
 
+def _validate_reference_whitepoint_XYZ(value: object, *, name: str) -> np.ndarray:
+    """Return *value* as a valid reference whitepoint XYZ triplet."""
+    whitepoint = np.asarray(value, dtype=np.float64)
+    if whitepoint.shape != (3,):
+        raise ValueError(f"{name} must have shape (3,), got {whitepoint.shape}")
+    if not np.all(np.isfinite(whitepoint)):
+        raise ValueError(f"{name} must be finite")
+    if np.any(whitepoint <= 0):
+        raise ValueError(f"{name} values must be positive")
+    return whitepoint
+
+
+def _validate_reference_whitepoint_xy(value: object, *, name: str) -> np.ndarray:
+    """Return *value* as a valid reference whitepoint xy pair."""
+    whitepoint = np.asarray(value, dtype=np.float64)
+    if whitepoint.shape != (2,):
+        raise ValueError(f"{name} must have shape (2,), got {whitepoint.shape}")
+    if not np.all(np.isfinite(whitepoint)):
+        raise ValueError(f"{name} must be finite")
+    if np.any(whitepoint <= 0):
+        raise ValueError(f"{name} values must be positive")
+    return whitepoint
+
+
+def _is_D65_XYZ(value: object) -> bool:
+    """Return whether *value* is the project D65 reference whitepoint."""
+    whitepoint = _validate_reference_whitepoint_XYZ(value, name="whitepoint_XYZ")
+    return bool(np.allclose(whitepoint, _D65_XYZ, rtol=1e-7, atol=_D65_XYZ_ATOL))
+
+
+def _is_D65_xy(value: object) -> bool:
+    """Return whether *value* is the project D65 chromaticity."""
+    whitepoint = _validate_reference_whitepoint_xy(value, name="whitepoint_xy")
+    return bool(np.allclose(whitepoint, _D65_XY, rtol=1e-7, atol=_D65_XY_ATOL))
+
+
+def _XYZ_whitepoint_to_xy(whitepoint: np.ndarray) -> np.ndarray:
+    """Return xy chromaticity for a validated whitepoint XYZ triplet."""
+    return whitepoint[:2] / np.sum(whitepoint)
+
+
+def _validate_XYZ_metadata_options(options: Mapping[str, object]) -> None:
+    """Validate metadata-only options accepted by the XYZ hub node."""
+    allowed = {"whitepoint_XYZ"}
+    unsupported = set(options) - allowed
+    if unsupported:
+        names = ", ".join(sorted(unsupported))
+        raise ValueError(f"unsupported conversion option(s): {names}")
+    if "whitepoint_XYZ" in options:
+        _validate_reference_whitepoint_XYZ(
+            options["whitepoint_XYZ"],
+            name="whitepoint_XYZ",
+        )
+
+
+def _node_requires_D65_referred_XYZ(node: ColorSpaceNode) -> bool:
+    """Return whether *node* or one of its parents requires D65-referred XYZ."""
+    current = node
+    while True:
+        if current.requires_D65_referred_XYZ:
+            return True
+        if current.parent is None:
+            return False
+        current = get_colourspace_node(current.parent)
+
+
+def _spec_D65_reference_issue(endpoint_spec: SpaceSpec) -> str | None:
+    """Return a human-readable D65 reference-domain issue, if any."""
+    parameters = endpoint_spec.parameters
+    if "whitepoint_XYZ" in parameters:
+        whitepoint = _validate_reference_whitepoint_XYZ(
+            parameters["whitepoint_XYZ"],
+            name="whitepoint_XYZ",
+        )
+        if np.allclose(whitepoint, _D65_XYZ, rtol=1e-7, atol=_D65_XYZ_ATOL):
+            return None
+        if np.allclose(
+            _XYZ_whitepoint_to_xy(whitepoint),
+            _D65_XY,
+            rtol=1e-7,
+            atol=_D65_XY_ATOL,
+        ):
+            return (
+                "declares D65 chromaticity but not the project D65_XYZ "
+                "reference domain on the Y=100 scale"
+            )
+        return "declares a non-D65 reference whitepoint chromaticity"
+    if "XYZ_w" in parameters:
+        whitepoint = _validate_reference_whitepoint_XYZ(
+            parameters["XYZ_w"],
+            name="XYZ_w",
+        )
+        if np.allclose(whitepoint, _D65_XYZ, rtol=1e-7, atol=_D65_XYZ_ATOL):
+            return None
+        if np.allclose(
+            _XYZ_whitepoint_to_xy(whitepoint),
+            _D65_XY,
+            rtol=1e-7,
+            atol=_D65_XY_ATOL,
+        ):
+            return (
+                "declares D65 chromaticity but not the project D65_XYZ "
+                "reference domain on the Y=100 scale"
+            )
+        return "declares a non-D65 reference whitepoint chromaticity"
+    if "whitepoint_xy" in parameters:
+        if _is_D65_xy(parameters["whitepoint_xy"]):
+            return None
+        return "declares a non-D65 reference whitepoint chromaticity"
+    return None
+
+
+def _spec_has_unknown_XYZ_reference(endpoint_spec: SpaceSpec, node: ColorSpaceNode) -> bool:
+    """Return whether *endpoint_spec* leaves an XYZ-like reference unstated."""
+    if endpoint_spec.parameters:
+        return False
+    return node.name in {"XYZ", "xyY"}
+
+
+def _warn_D65_reference_risk(message: str) -> None:
+    """Emit a warning for routes crossing a D65-referred space boundary."""
+    warnings.warn(message, UserWarning, stacklevel=3)
+
+
+def _warn_if_source_may_not_be_D65_referred(
+    source_spec: SpaceSpec,
+    source_node: ColorSpaceNode,
+    target_node: ColorSpaceNode,
+) -> None:
+    """Warn if a route feeds a possibly non-D65 source into a D65-only target."""
+    if not _node_requires_D65_referred_XYZ(target_node):
+        return
+    if _node_requires_D65_referred_XYZ(source_node):
+        return
+
+    issue = _spec_D65_reference_issue(source_spec)
+    if issue is not None:
+        _warn_D65_reference_risk(
+            f"{target_node.name} requires D65-referred XYZ, but the source "
+            f"{source_node.name} SpaceSpec {issue}. "
+            "convert_color(...) does not adapt automatically; use "
+            "color.adaptation.adapt_to_D65(...) and keep the spaces XYZ reference "
+            "domain on the Y=100 scale when colour appearance must be preserved."
+        )
+        return
+
+    if _spec_has_unknown_XYZ_reference(source_spec, source_node):
+        _warn_D65_reference_risk(
+            f"{target_node.name} requires D65-referred XYZ, but the source "
+            f"{source_node.name} route does not declare a reference whitepoint. "
+            "convert_color(...) assumes the XYZ values are already D65-referred; "
+            "use SpaceSpec('XYZ', whitepoint_XYZ=...) or adapt_to_D65(...) when needed."
+        )
+
+
+def _warn_if_target_may_not_be_D65_referred(
+    source_node: ColorSpaceNode,
+    target_spec: SpaceSpec,
+    target_node: ColorSpaceNode,
+) -> None:
+    """Warn if a D65-only source is routed into an explicitly non-D65 target."""
+    if not _node_requires_D65_referred_XYZ(source_node):
+        return
+    if _node_requires_D65_referred_XYZ(target_node):
+        return
+
+    issue = _spec_D65_reference_issue(target_spec)
+    if issue is not None:
+        _warn_D65_reference_risk(
+            f"{source_node.name} converts back to D65-referred XYZ, but the target "
+            f"{target_node.name} SpaceSpec {issue}. "
+            "convert_color(...) does not adapt automatically; convert to XYZ, call "
+            "color.adaptation.adapt_from_D65(...), and use a target reference domain "
+            "consistent with the spaces Y=100 scale when colour appearance must be preserved."
+        )
+
+
+def _warn_if_rgb_source_may_not_be_D65_referred(
+    source_rgb: RGBColorSpace,
+    target_node: ColorSpaceNode,
+) -> None:
+    """Warn if a non-D65 RGB source feeds a D65-only target."""
+    if not _node_requires_D65_referred_XYZ(target_node):
+        return
+    if np.allclose(source_rgb.white_xy, _D65_XY, rtol=1e-7, atol=_D65_XY_ATOL):
+        return
+    _warn_D65_reference_risk(
+        f"{target_node.name} requires D65-referred XYZ, but {source_rgb.name} has "
+        f"a {source_rgb.white_name} whitepoint. convert_color(...) does not adapt "
+        "automatically; use RGB_to_RGB(..., chromatic_adaptation=...) or "
+        "color.adaptation.adapt_to_D65(...) when colour appearance must be preserved."
+    )
+
+
+def _warn_if_rgb_target_may_not_be_D65_referred(
+    source_node: ColorSpaceNode,
+    target_rgb: RGBColorSpace,
+) -> None:
+    """Warn if a D65-only source feeds a non-D65 RGB target."""
+    if not _node_requires_D65_referred_XYZ(source_node):
+        return
+    if np.allclose(target_rgb.white_xy, _D65_XY, rtol=1e-7, atol=_D65_XY_ATOL):
+        return
+    _warn_D65_reference_risk(
+        f"{source_node.name} converts back to D65-referred XYZ, but {target_rgb.name} "
+        f"has a {target_rgb.white_name} whitepoint. convert_color(...) does not adapt "
+        "automatically; use color.adaptation.adapt_from_D65(...) or RGB_to_RGB(..., "
+        "chromatic_adaptation=...) when colour appearance must be preserved."
+    )
+
+
 def _parameters_equal(
     left: Mapping[str, object],
     right: Mapping[str, object],
@@ -223,7 +443,7 @@ def _describe_to_XYZ(
 ) -> list[ConversionPathEdge]:
     """Describe conversion from *node* to XYZ, following parent links."""
     if node.name == "XYZ":
-        _require_no_options(endpoint_spec.parameters)
+        _validate_XYZ_metadata_options(endpoint_spec.parameters)
         return []
 
     if node.to_XYZ is not None:
@@ -260,7 +480,7 @@ def _describe_from_XYZ(
 ) -> list[ConversionPathEdge]:
     """Describe conversion from XYZ to *node*, following parent links."""
     if node.name == "XYZ":
-        _require_no_options(endpoint_spec.parameters)
+        _validate_XYZ_metadata_options(endpoint_spec.parameters)
         return []
 
     if node.from_XYZ is not None:
@@ -298,7 +518,7 @@ def _to_XYZ(
 ) -> np.ndarray:
     """Convert *value* from *node* to XYZ, following parent links if needed."""
     if node.name == "XYZ":
-        _require_no_options(endpoint_spec.parameters)
+        _validate_XYZ_metadata_options(endpoint_spec.parameters)
         return np.array(value, dtype=np.float64, copy=True)
 
     if node.to_XYZ is not None:
@@ -324,7 +544,7 @@ def _from_XYZ(
 ) -> np.ndarray:
     """Convert *XYZ* to *node*, following parent links if needed."""
     if node.name == "XYZ":
-        _require_no_options(endpoint_spec.parameters)
+        _validate_XYZ_metadata_options(endpoint_spec.parameters)
         return np.array(XYZ, dtype=np.float64, copy=True)
 
     if node.from_XYZ is not None:
@@ -383,6 +603,7 @@ def convert_color(
         source_options = _rgb_source_options(options, source_spec)
         apply_decoding = _pop_rgb_option(source_options, "apply_decoding", True)
         _require_no_options(source_options)
+        _warn_if_rgb_source_may_not_be_D65_referred(source_rgb, target_node)
         XYZ = RGB_to_XYZ(value, colourspace=source_rgb, apply_decoding=apply_decoding)
         try:
             return _from_XYZ(XYZ, target_node, target_spec, options)
@@ -395,6 +616,7 @@ def convert_color(
         target_options = _rgb_target_options(options, target_spec)
         apply_encoding = _pop_rgb_option(target_options, "apply_encoding", True)
         _require_no_options(target_options)
+        _warn_if_rgb_target_may_not_be_D65_referred(source_node, target_rgb)
         try:
             XYZ = _to_XYZ(value, source_node, source_spec, options)
         except ValueError as exc:
@@ -403,6 +625,9 @@ def convert_color(
 
     source_node = get_colourspace_node(source_spec.name)
     target_node = get_colourspace_node(target_spec.name)
+
+    _warn_if_source_may_not_be_D65_referred(source_spec, source_node, target_node)
+    _warn_if_target_may_not_be_D65_referred(source_node, target_spec, target_node)
 
     if source_node.name == target_node.name:
         if _parameters_equal(source_spec.parameters, target_spec.parameters):
@@ -473,6 +698,7 @@ def describe_conversion_path(
         source_options = _rgb_source_options(options, source_spec)
         apply_decoding = _pop_rgb_option(source_options, "apply_decoding", True)
         _require_no_options(source_options)
+        _warn_if_rgb_source_may_not_be_D65_referred(source_rgb, target_node)
         edges = [
             ConversionPathEdge(
                 source=source_rgb.name,
@@ -499,6 +725,7 @@ def describe_conversion_path(
         target_options = _rgb_target_options(options, target_spec)
         apply_encoding = _pop_rgb_option(target_options, "apply_encoding", True)
         _require_no_options(target_options)
+        _warn_if_rgb_target_may_not_be_D65_referred(source_node, target_rgb)
         edges = [
             *_describe_to_XYZ(source_node, source_spec, options),
             ConversionPathEdge(
@@ -521,6 +748,9 @@ def describe_conversion_path(
 
     source_node = get_colourspace_node(source_spec.name)
     target_node = get_colourspace_node(target_spec.name)
+
+    _warn_if_source_may_not_be_D65_referred(source_spec, source_node, target_node)
+    _warn_if_target_may_not_be_D65_referred(source_node, target_spec, target_node)
 
     if source_node.name == target_node.name:
         if _parameters_equal(source_spec.parameters, target_spec.parameters):

@@ -164,11 +164,12 @@ def test_convert_color_derived_to_derived_path():
         SpaceSpec("LCHab", whitepoint_XYZ=D50_XYZ),
     )
 
-    Oklch = convert_color(
-        LCHab,
-        SpaceSpec("LCHab", whitepoint_XYZ=D50_XYZ),
-        "Oklch",
-    )
+    with pytest.warns(UserWarning, match="non-D65 reference whitepoint"):
+        Oklch = convert_color(
+            LCHab,
+            SpaceSpec("LCHab", whitepoint_XYZ=D50_XYZ),
+            "Oklch",
+        )
     recovered = convert_color(Oklch, "Oklch", "XYZ")
 
     np.testing.assert_allclose(recovered, XYZ, atol=1e-5)

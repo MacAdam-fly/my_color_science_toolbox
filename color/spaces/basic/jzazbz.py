@@ -150,6 +150,7 @@ SPACE_NODES = (
         to_XYZ=Jzazbz_to_XYZ,
         from_XYZ=XYZ_to_Jzazbz,
         family="Jzazbz",
+        requires_D65_referred_XYZ=True,
     ),
     ColorSpaceNode(
         name="JzCzhz",

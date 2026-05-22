@@ -5,6 +5,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
+from color.constants import D65_XYZ
 from color.spaces import (
     IPT_hue_angle,
     IPT_to_XYZ,
@@ -13,6 +14,7 @@ from color.spaces import (
     Jzazbz_to_XYZ,
     XYZ_to_IPT,
     XYZ_to_Jzazbz,
+    SpaceSpec,
     convert_color,
 )
 
@@ -98,7 +100,7 @@ def test_IPT_hue_angle_returns_degrees():
 def test_convert_color_routes_IPT_and_Jzazbz():
     XYZ = REFERENCE_XYZ
 
-    IPT = convert_color(XYZ, "XYZ", "IPT")
+    IPT = convert_color(XYZ, SpaceSpec("XYZ", whitepoint_XYZ=D65_XYZ), "IPT")
     np.testing.assert_allclose(convert_color(IPT, "IPT", "XYZ"), XYZ, atol=1e-5)
 
     Jzazbz = convert_color([0.25, 0.5, 0.75], "sRGB", "Jzazbz")

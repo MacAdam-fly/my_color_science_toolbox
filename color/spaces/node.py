@@ -24,6 +24,7 @@ class ColorSpaceNode:
     from_parent: ConversionFunction | None = None
     family: str | None = None
     is_rgb_family: bool = False
+    requires_D65_referred_XYZ: bool = False
 
 
 __all__ = [

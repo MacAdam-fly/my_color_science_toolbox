@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import warnings
+
 import numpy as np
 import pytest
 
@@ -121,6 +123,89 @@ def test_convert_rejects_chromatic_adaptation_option():
 def test_convert_rejects_unregistered_paths():
     with pytest.raises(ValueError, match="unknown colour-space node"):
         convert_color([1.0, 1.0, 1.0], "unknown", "xyY")
+
+
+def test_convert_warns_when_XYZ_reference_is_unknown_for_D65_referred_target():
+    XYZ = np.array([20.0, 30.0, 40.0])
+
+    with pytest.warns(UserWarning, match="D65-referred XYZ"):
+        result = convert_color(XYZ, "XYZ", "Oklab")
+
+    assert result.shape == (3,)
+    assert np.all(np.isfinite(result))
+
+
+def test_convert_warns_when_explicit_non_D65_source_feeds_D65_referred_target():
+    XYZ = np.array([20.0, 30.0, 40.0])
+
+    with pytest.warns(UserWarning, match="non-D65 reference whitepoint"):
+        result = convert_color(
+            XYZ,
+            SpaceSpec("XYZ", whitepoint_XYZ=D50_XYZ),
+            "Oklab",
+        )
+
+    assert result.shape == (3,)
+
+
+def test_convert_warns_when_D65_chromaticity_uses_nonstandard_Y_scale():
+    Lab = np.array([50.0, 20.0, -10.0])
+
+    with pytest.warns(UserWarning, match="D65 chromaticity.*Y=100"):
+        result = convert_color(
+            Lab,
+            SpaceSpec("Lab", whitepoint_XYZ=D65_XYZ / 10.0),
+            "Oklab",
+        )
+
+    assert result.shape == (3,)
+
+
+def test_convert_accepts_explicit_D65_source_for_D65_referred_target_without_warning():
+    XYZ = np.array([20.0, 30.0, 40.0])
+
+    with warnings.catch_warnings(record=True) as record:
+        warnings.simplefilter("always")
+        result = convert_color(
+            XYZ,
+            SpaceSpec("XYZ", whitepoint_XYZ=D65_XYZ),
+            "Oklab",
+        )
+
+    assert result.shape == (3,)
+    assert len(record) == 0
+
+
+def test_convert_warns_when_non_D65_RGB_feeds_D65_referred_target():
+    RGB = np.array([0.2, 0.4, 0.6])
+
+    with pytest.warns(UserWarning, match="DCI-P3"):
+        result = convert_color(RGB, "DCI-P3", "Oklab")
+
+    assert result.shape == (3,)
+
+
+def test_convert_warns_when_D65_referred_source_feeds_non_D65_target():
+    Oklab = np.array([0.5, 0.1, -0.2])
+
+    with pytest.warns(UserWarning, match="non-D65 reference whitepoint"):
+        result = convert_color(
+            Oklab,
+            "Oklab",
+            SpaceSpec("Lab", whitepoint_XYZ=D50_XYZ),
+        )
+
+    assert result.shape == (3,)
+
+
+def test_describe_conversion_path_warns_for_D65_reference_risk():
+    with pytest.warns(UserWarning, match="non-D65 reference whitepoint"):
+        path = describe_conversion_path(
+            SpaceSpec("LCHab", whitepoint_XYZ=D50_XYZ),
+            "Oklch",
+        )
+
+    assert [node.name for node in path.nodes] == ["LCHab", "Lab", "XYZ", "Oklab", "Oklch"]
 
 
 def test_describe_conversion_path_RGB_to_RGB():

@@ -83,6 +83,7 @@ SPACE_NODES = (
         to_XYZ=IPT_to_XYZ,
         from_XYZ=XYZ_to_IPT,
         family="IPT",
+        requires_D65_referred_XYZ=True,
     ),
 )
 

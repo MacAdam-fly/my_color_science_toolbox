@@ -49,6 +49,24 @@ Oklab = XYZ_to_Oklab(XYZ_D65_referred)
 XYZ_D50 = adapt_from_D65(Oklab_to_XYZ(Oklab), target_white_XYZ=D50_XYZ)
 ```
 
+`convert_color(...)` does not adapt automatically. When a route is known to
+cross a reference whitepoint that is not the project D65 reference domain into
+or out of a D65-referred space, it emits a warning and continues. The check is
+about both chromaticity and scale: `D65_XYZ / 10` has D65 chromaticity, but it
+is not the spaces `Y=100` reference domain. You can attach whitepoint metadata
+to the XYZ hub when you want this validation:
+
+```python
+from color.constants import D50_XYZ
+from color.spaces import SpaceSpec, convert_color
+
+Oklab = convert_color(
+    XYZ_D50,
+    SpaceSpec("XYZ", whitepoint_XYZ=D50_XYZ),  # warns: not D65-referred
+    "Oklab",
+)
+```
+
 ## RGB
 
 Registered RGB standards:

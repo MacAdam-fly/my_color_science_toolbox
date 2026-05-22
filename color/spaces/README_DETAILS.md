@@ -70,6 +70,23 @@ XYZ_D50 = adapt_from_D65(Oklab_to_XYZ(Oklab), target_white_XYZ=D50_XYZ)
 
 这里的适应是调用者显式写出的步骤，不是 `convert_color(...)` 的隐式行为。
 
+为了降低误用风险，`convert_color(...)` 会在已知风险路径上发出 `UserWarning`，但不会中断计算。例如：
+
+```python
+from color.constants import D50_XYZ
+from color.spaces import SpaceSpec, convert_color
+
+Oklab = convert_color(
+    XYZ_D50,
+    SpaceSpec("XYZ", whitepoint_XYZ=D50_XYZ),
+    "Oklab",
+)
+```
+
+这条路径会提示：目标空间要求 D65-referred XYZ，但输入显式声明为 D50 参考白点。这里选择警告而不是报错，是为了保留探索性计算的灵活性；真正需要颜色外观一致时，仍然应该先显式调用 `adapt_to_D65(...)`。
+
+这里的 `D65-referred` 不只表示 xy 色品是 D65，也包含当前工程的参考域标度：`D65_XYZ` 的 `Y=100`。例如 `D65_XYZ / 10` 的色品仍然是 D65，但它不是 `spaces` 层约定的 `Y=100` 参考白点，因此进入 Oklab / IPT / Jzazbz 时也会触发更具体的标度警告。
+
 ## RGB 空间
 
 已注册的 RGB 标准包括：
@@ -382,6 +399,18 @@ XYZ_target = chromatic_adaptation_XYZ(
 Luv = convert_color(XYZ_target, "XYZ", SpaceSpec("Luv", whitepoint_XYZ=D65_XYZ))
 ```
 
+如果直接把 D50 参数空间路由到 Oklab/IPT/Jzazbz 这类 D65-referred 空间，`convert_color(...)` 会给出警告并继续计算：
+
+```python
+Oklch = convert_color(
+    Lab,
+    SpaceSpec("Lab", whitepoint_XYZ=D50_XYZ),
+    "Oklch",
+)
+```
+
+这个警告的含义是：路由层不会替你完成 `D50 -> D65` 的色适应。警告只提醒语义风险，数值计算仍按当前路径执行。
+
 原因是：
 
 ```text
@@ -493,16 +522,18 @@ example_02_colourspace_chain.py
 example_03_cam_uniform_spaces.py
 example_04_reference_accuracy.py
 example_05_conversion_paths.py
+example_06_image_lchab_edit.py
 ```
 
 它们分别覆盖：
 
 ```text
 01 RGB 标准、gamut 三角形、RGB-to-RGB 预览
-02 sRGB -> XYZ -> Lab/Luv/Oklab/Oklch -> sRGB 长链路
+02 覆盖 RGB、xyY、Lab/Luv/UVW、Oklab/IPT/Jzazbz、CAM02/CAM16 的长闭合链路
 03 CAM02/CAM16 uniform spaces 与观察条件影响
-04 与 colour 库的基础空间数值对照
+04 D65 白点精度、Y=100 参考域和 D65-referred warning 行为
 05 单条转换路径图与完整 conversion graph
+06 sRGB 图像级转换到 LCHab(D65)，提升 L* 和 C_ab 后导出 JPG
 ```
 
 运行：
@@ -513,6 +544,7 @@ example_05_conversion_paths.py
 .\.venv\Scripts\python.exe examples\spaces\example_03_cam_uniform_spaces.py
 .\.venv\Scripts\python.exe examples\spaces\example_04_reference_accuracy.py
 .\.venv\Scripts\python.exe examples\spaces\example_05_conversion_paths.py
+.\.venv\Scripts\python.exe examples\spaces\example_06_image_lchab_edit.py
 ```
 
 输出图像位于：
