@@ -47,7 +47,7 @@ def _plot_single_distribution() -> None:
 
 def _plot_cmfs() -> None:
     cmfs = from_dataset("standard_observers.cmfs", "CIE 1931 XYZ 5 nm")
-    cmfs_1nm = cmfs.reshape(SpectralShape(380, 780, 1), method="linear")
+    cmfs_1nm = cmfs.reshape(SpectralShape(380, 780, 1), method="auto")
 
     fig, axes = plt.subplots(1, 2, figsize=(13.0, 4.8), sharey=True)
     for ax, data, title in (

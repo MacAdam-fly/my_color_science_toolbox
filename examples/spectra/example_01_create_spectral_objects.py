@@ -49,8 +49,10 @@ def main() -> None:
     )
     direct_msd = MultiSpectralDistribution(
         [400, 500, 600],
-        [[0.1, 0.0], [0.8, 0.4], [0.2, 0.9]],
-        ("A", "B"),
+        [[0.1, 0.0], 
+         [0.8, 0.4], 
+         [0.2, 0.9]],
+        ("line_A", "line_B"),
         name="direct multi-channel signal",
     )
 
