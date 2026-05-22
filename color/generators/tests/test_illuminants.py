@@ -23,7 +23,7 @@ class TestListBlackbodyGenerators:
     """Tests for list_blackbody_generators()."""
 
     def test_contains_expected_names(self):
-        assert "planck" in list_blackbody_generators()
+        assert "blackbody_spd" in list_blackbody_generators()
 
 
 class TestListIlluminantGenerators:
@@ -44,7 +44,7 @@ class TestBlackbody:
         assert "radiance" in data
 
     def test_registry_generate(self):
-        data = generate("blackbody", "planck", temperature=6500)
+        data = generate("blackbody", "blackbody_spd", temperature=6500)
         assert "radiance" in data
         assert "spd" not in data
 

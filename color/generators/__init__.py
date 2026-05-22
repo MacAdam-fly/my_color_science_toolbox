@@ -55,6 +55,7 @@ __all__ = [
 # Blackbody and Planck-family generators.
 __all__ += [
     "blackbody_spd",  # generate a blackbody spectral power distribution
+    
     "generate_blackbody",  # generate a registered blackbody dataset
     "list_blackbody_generators",  # list blackbody generator names
 ]
@@ -63,6 +64,7 @@ __all__ += [
 __all__ += [
     "illuminant_a_spd",  # generate CIE Illuminant A SPD
     "daylight_spd",  # generate CIE daylight SPD
+
     "generate_illuminant",  # generate a registered illuminant dataset
     "list_illuminant_generators",  # list illuminant generator names
 ]
@@ -73,6 +75,7 @@ __all__ += [
     "zero_spd",  # generate a zero-valued ideal spectrum
     "equal_energy_spd",  # generate an equal-energy ideal spectrum
     "gaussian_spd",  # generate a Gaussian ideal spectrum
+
     "generate_ideal",  # generate a registered ideal spectrum
     "list_ideal_generators",  # list ideal generator names
 ]
@@ -81,6 +84,7 @@ __all__ += [
 __all__ += [
     "single_led_spd",  # generate a single LED spectrum
     "multi_led_spd",  # generate a multi-channel LED mixture spectrum
+
     "generate_led",  # generate a registered LED spectrum
     "list_led_generators",  # list LED generator names
 ]

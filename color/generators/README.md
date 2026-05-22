@@ -20,7 +20,7 @@ from color.generators.ideal import gaussian_spd
 from color.generators.illuminants import daylight_spd
 from color.generators.leds import single_led_spd
 
-bb = generate("blackbody", "planck", temperature=6500)
+bb = generate("blackbody", "blackbody_spd", temperature=6500)
 d50 = daylight_spd(cct=5000)
 gaussian = gaussian_spd(peak_wavelength=555, width=25)
 led = single_led_spd(peak_wavelength=630, half_spectral_width=20)
@@ -30,7 +30,7 @@ led = single_led_spd(peak_wavelength=630, half_spectral_width=20)
 
 | Category | Registered names | Purpose |
 | --- | --- | --- |
-| `blackbody` | `planck` | Planck blackbody spectral radiance |
+| `blackbody` | `blackbody_spd` | Planck blackbody spectral radiance |
 | `illuminants` | `A`, `cie_d_daylight` | CIE illuminant generation formulas |
 | `ideal` | `constant`, `zero`, `equal_energy`, `gaussian` | Idealised spectral distributions |
 | `leds` | `single`, `multi` | LED source models |
@@ -42,7 +42,7 @@ The `blackbody` category contains physically based blackbody radiation models:
 ```python
 from color.generators import generate
 
-blackbody = generate("blackbody", "planck", temperature=6500)
+blackbody = generate("blackbody", "blackbody_spd", temperature=6500)
 ```
 
 ## Illuminant Generators

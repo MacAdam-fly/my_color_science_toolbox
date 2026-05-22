@@ -37,7 +37,7 @@ def blackbody_spd(
 
 register(GeneratorEntry(
     category="blackbody",
-    name="planck",
+    name="blackbody_spd",
     description="Planck blackbody spectral radiance at arbitrary temperature",
     generate_fn=blackbody_spd,
     parameters=("temperature", "wavelength_nm"),
@@ -49,7 +49,7 @@ register(GeneratorEntry(
 ))
 
 
-def generate_blackbody(name: str = "planck", **kwargs) -> GeneratedDict:
+def generate_blackbody(name: str = "blackbody_spd", **kwargs) -> GeneratedDict:
     """Generate blackbody radiation spectral data."""
     return generate("blackbody", name, **kwargs)
 

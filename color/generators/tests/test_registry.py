@@ -97,10 +97,10 @@ def test_cache_key_includes_parameters():
 
 
 def test_describe_and_list():
-    entry = describe("blackbody", "planck")
-    assert entry.name == "planck"
+    entry = describe("blackbody", "blackbody_spd")
+    assert entry.name == "blackbody_spd"
     assert "blackbody" in list_categories()
-    assert "planck" in list_generators("blackbody")
+    assert "blackbody_spd" in list_generators("blackbody")
 
 
 def test_missing_generator_raises():
@@ -142,7 +142,7 @@ def test_register_rejects_canonical_collision():
 
 
 def test_registry_contains_expected_builtin():
-    assert ("blackbody", "planck") in _REGISTRY
+    assert ("blackbody", "blackbody_spd") in _REGISTRY
     assert ("illuminants", "A") in _REGISTRY
     assert ("ideal", "gaussian") in _REGISTRY
     assert ("leds", "single") in _REGISTRY

@@ -22,12 +22,12 @@ from _plot_helpers import (
 )
 from color.colorimetry import emission_to_XYZ, reflectance_to_XYZ
 from color.generators.ideal import gaussian_spd
-from color.spectra import SpectralDistribution, SpectralShape, from_columns
+from color.spectra import SpectralDistribution, SpectralShape, from_columns, from_dataset
 
 
 def main() -> None:
     output_dir = example_output_dir()
-    shape = SpectralShape(400, 700, 5)
+    shape = SpectralShape(400, 700, 1)
 
     reflector = SpectralDistribution(
         shape.wavelengths,
@@ -40,8 +40,13 @@ def main() -> None:
         name="Gaussian emitter 555 nm",
     ).align(shape)
 
-    xyz_reflectance = reflectance_to_XYZ(reflector, shape=shape)
-    xyz_emission = emission_to_XYZ(green_emitter, shape=shape)
+    # create the XYZ CMFs and D65 illuminant aligned to the same shape as the spectra (they are defaults, but this makes it explicit)
+    xyz_cmfs = from_dataset("standard_observers.cmfs", "cie1931 xyz_1nm").align(shape)
+    illuminant = from_dataset("illuminants", "D65").align(shape)
+
+
+    xyz_reflectance = reflectance_to_XYZ(reflectance=reflector, cmfs=xyz_cmfs, illuminant=illuminant, shape=shape)
+    xyz_emission = emission_to_XYZ(emission=green_emitter, cmfs=xyz_cmfs, shape=shape)
     xyz_rows = np.vstack([xyz_reflectance, xyz_emission])
     labels = ["Perfect reflector", "Gaussian emitter"]
 

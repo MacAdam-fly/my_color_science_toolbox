@@ -10,10 +10,11 @@ from pathlib import Path
 _ROOT = Path(__file__).resolve().parents[3]
 _COLORIMETRY_EXAMPLES = _ROOT / "examples" / "colorimetry"
 _SPACES_EXAMPLES = _ROOT / "examples" / "spaces"
+_DIFFERENCE_EXAMPLES = _ROOT / "examples" / "difference"
 
 
 def test_colorimetry_examples_run():
-    for directory in (_COLORIMETRY_EXAMPLES, _SPACES_EXAMPLES):
+    for directory in (_COLORIMETRY_EXAMPLES, _SPACES_EXAMPLES, _DIFFERENCE_EXAMPLES):
         if str(directory) not in sys.path:
             sys.path.insert(0, str(directory))
 
@@ -34,6 +35,9 @@ def test_colorimetry_examples_run():
         _SPACES_EXAMPLES / "example_04_reference_accuracy.py",
         _SPACES_EXAMPLES / "example_05_conversion_paths.py",
         _SPACES_EXAMPLES / "example_06_image_lchab_edit.py",
+        _DIFFERENCE_EXAMPLES / "example_01_lab_delta_e.py",
+        _DIFFERENCE_EXAMPLES / "example_02_appearance_delta_e.py",
+        _DIFFERENCE_EXAMPLES / "example_03_modern_space_delta_e.py",
     ]
 
     for path in example_paths:
