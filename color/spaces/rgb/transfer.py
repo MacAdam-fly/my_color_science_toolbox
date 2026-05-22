@@ -6,13 +6,7 @@ from collections.abc import Callable
 
 import numpy as np
 
-
-def _as_float_array(value) -> np.ndarray:
-    """Return a finite float array."""
-    arr = np.asarray(value, dtype=np.float64)
-    if not np.all(np.isfinite(arr)):
-        raise ValueError("RGB values must be finite")
-    return arr
+from color.utils.arrays import as_float_array
 
 
 def _signed_power(value: np.ndarray, exponent: float) -> np.ndarray:
@@ -121,7 +115,7 @@ _TRANSFER_FUNCTIONS: dict[str, tuple[Callable[[np.ndarray], np.ndarray], Callabl
 
 def decode_transfer(value, transfer: str) -> np.ndarray:
     """Decode encoded RGB values to linear RGB."""
-    arr = _as_float_array(value)
+    arr = as_float_array(value, name="RGB values")
     try:
         decode, _encode = _TRANSFER_FUNCTIONS[transfer]
     except KeyError as exc:
@@ -131,7 +125,7 @@ def decode_transfer(value, transfer: str) -> np.ndarray:
 
 def encode_transfer(value, transfer: str) -> np.ndarray:
     """Encode linear RGB values."""
-    arr = _as_float_array(value)
+    arr = as_float_array(value, name="RGB values")
     try:
         _decode, encode = _TRANSFER_FUNCTIONS[transfer]
     except KeyError as exc:

@@ -7,18 +7,10 @@ from typing import Sequence
 import numpy as np
 
 from color.constants.illuminants_XYZ import D65_XYZ
+from color.utils.arrays import as_last_axis_triplets
+from color.utils.methods import canonical_method_name
 
 from .matrices import CHROMATIC_ADAPTATION_TRANSFORMS
-
-
-def _as_xyz_triplets(value: Sequence[float] | np.ndarray, *, name: str) -> np.ndarray:
-    """Return *value* as a finite float array with three values on the last axis."""
-    arr = np.asarray(value, dtype=np.float64)
-    if arr.shape == () or arr.shape[-1] != 3:
-        raise ValueError(f"{name} must have 3 values on the last axis")
-    if not np.all(np.isfinite(arr)):
-        raise ValueError(f"{name} must be finite")
-    return arr
 
 
 def _as_whitepoint(value: Sequence[float] | np.ndarray, *, name: str) -> np.ndarray:
@@ -40,7 +32,7 @@ def _canonical_transform(transform: str | None) -> str | None:
     if not isinstance(transform, str):
         raise TypeError("transform must be a string or None")
 
-    key = "".join(character for character in transform.casefold() if character.isalnum())
+    key = canonical_method_name(transform)
     aliases = {
         "vonkries": "Von Kries",
         "bradford": "Bradford",
@@ -86,7 +78,7 @@ def chromatic_adaptation_XYZ(
     transform: str | None = "Bradford",
 ) -> np.ndarray:
     """Adapt XYZ values from a source whitepoint to a target whitepoint."""
-    xyz = _as_xyz_triplets(XYZ, name="XYZ")
+    xyz = as_last_axis_triplets(XYZ, name="XYZ")
     matrix = matrix_chromatic_adaptation_von_kries(
         source_white_XYZ,
         target_white_XYZ,

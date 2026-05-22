@@ -6,18 +6,10 @@ from typing import Sequence
 
 import numpy as np
 
+from color.utils.arrays import as_last_axis_triplets
+
 from .lab import DEFAULT_WHITEPOINT_XYZ, EPSILON, KAPPA
 from ..node import ColorSpaceNode
-
-
-def _as_last_axis_triplets(value: Sequence[float] | np.ndarray, *, name: str) -> np.ndarray:
-    """Return *value* as a finite float array with three values on the last axis."""
-    arr = np.asarray(value, dtype=np.float64)
-    if arr.shape == () or arr.shape[-1] != 3:
-        raise ValueError(f"{name} must have 3 values on the last axis")
-    if not np.all(np.isfinite(arr)):
-        raise ValueError(f"{name} must be finite")
-    return arr
 
 
 def _as_whitepoint(whitepoint_XYZ: Sequence[float] | np.ndarray) -> np.ndarray:
@@ -49,7 +41,7 @@ def XYZ_to_Luv(
     whitepoint_XYZ: Sequence[float] | np.ndarray = DEFAULT_WHITEPOINT_XYZ,
 ) -> np.ndarray:
     """Convert CIE XYZ values to CIE 1976 Luv values."""
-    xyz = _as_last_axis_triplets(XYZ, name="XYZ")
+    xyz = as_last_axis_triplets(XYZ, name="XYZ")
     whitepoint = _as_whitepoint(whitepoint_XYZ)
 
     y_r = xyz[..., 1] / whitepoint[1]
@@ -68,7 +60,7 @@ def Luv_to_XYZ(
     whitepoint_XYZ: Sequence[float] | np.ndarray = DEFAULT_WHITEPOINT_XYZ,
 ) -> np.ndarray:
     """Convert CIE 1976 Luv values to CIE XYZ values."""
-    luv = _as_last_axis_triplets(Luv, name="Luv")
+    luv = as_last_axis_triplets(Luv, name="Luv")
     whitepoint = _as_whitepoint(whitepoint_XYZ)
 
     L = luv[..., 0]
@@ -102,7 +94,7 @@ def Luv_to_XYZ(
 
 def Luv_to_LCHuv(Luv: Sequence[float] | np.ndarray) -> np.ndarray:
     """Convert CIE 1976 Luv values to cylindrical LCHuv values."""
-    luv = _as_last_axis_triplets(Luv, name="Luv")
+    luv = as_last_axis_triplets(Luv, name="Luv")
     C = np.hypot(luv[..., 1], luv[..., 2])
     h = np.mod(np.degrees(np.arctan2(luv[..., 2], luv[..., 1])), 360.0)
     return np.stack((luv[..., 0], C, h), axis=-1)
@@ -110,7 +102,7 @@ def Luv_to_LCHuv(Luv: Sequence[float] | np.ndarray) -> np.ndarray:
 
 def LCHuv_to_Luv(LCHuv: Sequence[float] | np.ndarray) -> np.ndarray:
     """Convert cylindrical LCHuv values to CIE 1976 Luv values."""
-    lch = _as_last_axis_triplets(LCHuv, name="LCHuv")
+    lch = as_last_axis_triplets(LCHuv, name="LCHuv")
     h = np.radians(lch[..., 2])
     u = lch[..., 1] * np.cos(h)
     v = lch[..., 1] * np.sin(h)

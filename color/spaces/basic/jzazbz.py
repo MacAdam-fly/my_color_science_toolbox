@@ -6,6 +6,9 @@ from typing import Sequence
 
 import numpy as np
 
+from color.utils.arrays import as_last_axis_triplets
+from color.utils.scale import to_domain_1, to_domain_100
+
 from ..node import ColorSpaceNode
 
 JZAZBZ_B = 1.15
@@ -46,17 +49,6 @@ for _matrix in (
     MATRIX_JZAZBZ_IZAZBZ_TO_LMS_P,
 ):
     _matrix.setflags(write=False)
-
-
-def _as_last_axis_triplets(value: Sequence[float] | np.ndarray, *, name: str) -> np.ndarray:
-    """Return *value* as a finite float array with three values on the last axis."""
-    arr = np.asarray(value, dtype=np.float64)
-    if arr.shape == () or arr.shape[-1] != 3:
-        raise ValueError(f"{name} must have 3 values on the last axis")
-    if not np.all(np.isfinite(arr)):
-        raise ValueError(f"{name} must be finite")
-    return arr
-
 
 def _eotf_inverse_ST2084(value: np.ndarray) -> np.ndarray:
     """Return ST 2084 inverse EOTF values for absolute luminance-like input."""
@@ -105,10 +97,10 @@ def _Izazbz_to_XYZ(Izazbz: np.ndarray) -> np.ndarray:
 
 def XYZ_to_Jzazbz(XYZ_D65_referred: Sequence[float] | np.ndarray) -> np.ndarray:
     """Convert D65-referred CIE XYZ values on the Y=100 scale to Jzazbz values."""
-    xyz = _as_last_axis_triplets(
-        XYZ_D65_referred,
-        name="XYZ_D65_referred",
-    ) / 100.0
+    xyz = to_domain_1(
+        as_last_axis_triplets(XYZ_D65_referred, name="XYZ_D65_referred"),
+        source_scale="100",
+    )
     Izazbz = _XYZ_to_Izazbz(xyz)
     I_z = Izazbz[..., 0]
     J_z = ((1.0 + JZAZBZ_D) * I_z) / (1.0 + JZAZBZ_D * I_z) - JZAZBZ_D0
@@ -117,18 +109,18 @@ def XYZ_to_Jzazbz(XYZ_D65_referred: Sequence[float] | np.ndarray) -> np.ndarray:
 
 def Jzazbz_to_XYZ(Jzazbz: Sequence[float] | np.ndarray) -> np.ndarray:
     """Convert Jzazbz values to D65-referred CIE XYZ values on the Y=100 scale."""
-    jzazbz = _as_last_axis_triplets(Jzazbz, name="Jzazbz")
+    jzazbz = as_last_axis_triplets(Jzazbz, name="Jzazbz")
     J_z = jzazbz[..., 0]
     I_z = (J_z + JZAZBZ_D0) / (
         1.0 + JZAZBZ_D - JZAZBZ_D * (J_z + JZAZBZ_D0)
     )
     Izazbz = np.stack((I_z, jzazbz[..., 1], jzazbz[..., 2]), axis=-1)
-    return 100.0 * _Izazbz_to_XYZ(Izazbz)
+    return to_domain_100(_Izazbz_to_XYZ(Izazbz), source_scale="1")
 
 
 def Jzazbz_to_JzCzhz(Jzazbz: Sequence[float] | np.ndarray) -> np.ndarray:
     """Convert Jzazbz values to cylindrical JzCzhz values."""
-    jzazbz = _as_last_axis_triplets(Jzazbz, name="Jzazbz")
+    jzazbz = as_last_axis_triplets(Jzazbz, name="Jzazbz")
     C_z = np.hypot(jzazbz[..., 1], jzazbz[..., 2])
     h_z = np.mod(np.degrees(np.arctan2(jzazbz[..., 2], jzazbz[..., 1])), 360.0)
     return np.stack((jzazbz[..., 0], C_z, h_z), axis=-1)
@@ -136,7 +128,7 @@ def Jzazbz_to_JzCzhz(Jzazbz: Sequence[float] | np.ndarray) -> np.ndarray:
 
 def JzCzhz_to_Jzazbz(JzCzhz: Sequence[float] | np.ndarray) -> np.ndarray:
     """Convert cylindrical JzCzhz values to Jzazbz values."""
-    jzczhz = _as_last_axis_triplets(JzCzhz, name="JzCzhz")
+    jzczhz = as_last_axis_triplets(JzCzhz, name="JzCzhz")
     h_z = np.radians(jzczhz[..., 2])
     a_z = jzczhz[..., 1] * np.cos(h_z)
     b_z = jzczhz[..., 1] * np.sin(h_z)

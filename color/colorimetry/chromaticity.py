@@ -6,25 +6,7 @@ from typing import Sequence
 
 import numpy as np
 
-
-def _as_last_axis_triplets(value: Sequence[float] | np.ndarray, *, name: str) -> np.ndarray:
-    """Return *value* as a float array with three values on the last axis."""
-    arr = np.asarray(value, dtype=np.float64)
-    if arr.shape == () or arr.shape[-1] != 3:
-        raise ValueError(f"{name} must have 3 values on the last axis")
-    if not np.all(np.isfinite(arr)):
-        raise ValueError(f"{name} must be finite")
-    return arr
-
-
-def _as_last_axis_pairs(value: Sequence[float] | np.ndarray, *, name: str) -> np.ndarray:
-    """Return *value* as a finite float array with two values on the last axis."""
-    arr = np.asarray(value, dtype=np.float64)
-    if arr.shape == () or arr.shape[-1] != 2:
-        raise ValueError(f"{name} must have 2 values on the last axis")
-    if not np.all(np.isfinite(arr)):
-        raise ValueError(f"{name} must be finite")
-    return arr
+from color.utils.arrays import as_last_axis_pairs, as_last_axis_triplets
 
 
 def _fallback_xy_array(
@@ -50,7 +32,7 @@ def XYZ_to_xyY(
     When ``X + Y + Z == 0``, ``fallback_xy`` is used for the chromaticity
     coordinates and the original ``Y`` value is preserved.
     """
-    xyz = _as_last_axis_triplets(XYZ, name="XYZ")
+    xyz = as_last_axis_triplets(XYZ, name="XYZ")
     denominator = np.sum(xyz, axis=-1)
     fallback = _fallback_xy_array(fallback_xy, denominator.shape)
 
@@ -65,7 +47,7 @@ def XYZ_to_xyY(
 
 def xyY_to_XYZ(xyY: Sequence[float] | np.ndarray) -> np.ndarray:
     """Convert CIE xyY values to CIE XYZ tristimulus values."""
-    xyy = _as_last_axis_triplets(xyY, name="xyY")
+    xyy = as_last_axis_triplets(xyY, name="xyY")
     x = xyy[..., 0]
     y = xyy[..., 1]
     Y = xyy[..., 2]
@@ -89,7 +71,7 @@ def XYZ_to_xy(
 
 def xy_to_uv1960(xy: Sequence[float] | np.ndarray) -> np.ndarray:
     """Convert CIE xy chromaticity coordinates to CIE 1960 UCS uv."""
-    xy_arr = _as_last_axis_pairs(xy, name="xy")
+    xy_arr = as_last_axis_pairs(xy, name="xy")
     x = xy_arr[..., 0]
     y = xy_arr[..., 1]
     denominator = -2.0 * x + 12.0 * y + 3.0
@@ -102,7 +84,7 @@ def xy_to_uv1960(xy: Sequence[float] | np.ndarray) -> np.ndarray:
 
 def XYZ_to_uv1960(XYZ: Sequence[float] | np.ndarray) -> np.ndarray:
     """Convert CIE XYZ tristimulus values to CIE 1960 UCS uv."""
-    xyz = _as_last_axis_triplets(XYZ, name="XYZ")
+    xyz = as_last_axis_triplets(XYZ, name="XYZ")
     X = xyz[..., 0]
     Y = xyz[..., 1]
     Z = xyz[..., 2]
@@ -116,7 +98,7 @@ def XYZ_to_uv1960(XYZ: Sequence[float] | np.ndarray) -> np.ndarray:
 
 def uv1960_to_xy(uv: Sequence[float] | np.ndarray) -> np.ndarray:
     """Convert CIE 1960 UCS uv coordinates to CIE xy chromaticity coordinates."""
-    uv_arr = _as_last_axis_pairs(uv, name="uv")
+    uv_arr = as_last_axis_pairs(uv, name="uv")
     u = uv_arr[..., 0]
     v = uv_arr[..., 1]
     denominator = 2.0 * u - 8.0 * v + 4.0
@@ -135,7 +117,7 @@ def xy_to_upvp1976(xy: Sequence[float] | np.ndarray) -> np.ndarray:
 
 def XYZ_to_upvp1976(XYZ: Sequence[float] | np.ndarray) -> np.ndarray:
     """Convert CIE XYZ tristimulus values to CIE 1976 UCS u'v'."""
-    xyz = _as_last_axis_triplets(XYZ, name="XYZ")
+    xyz = as_last_axis_triplets(XYZ, name="XYZ")
     X = xyz[..., 0]
     Y = xyz[..., 1]
     Z = xyz[..., 2]
@@ -149,7 +131,7 @@ def XYZ_to_upvp1976(XYZ: Sequence[float] | np.ndarray) -> np.ndarray:
 
 def upvp1976_to_xy(upvp: Sequence[float] | np.ndarray) -> np.ndarray:
     """Convert CIE 1976 UCS u'v' coordinates to CIE xy chromaticity coordinates."""
-    upvp_arr = _as_last_axis_pairs(upvp, name="upvp")
+    upvp_arr = as_last_axis_pairs(upvp, name="upvp")
     u_p = upvp_arr[..., 0]
     v_p = upvp_arr[..., 1]
     denominator = 6.0 * u_p - 16.0 * v_p + 12.0

@@ -6,6 +6,9 @@ from typing import Sequence
 
 import numpy as np
 
+from color.utils.arrays import as_last_axis_triplets
+from color.utils.scale import to_domain_1, to_domain_100
+
 from ..node import ColorSpaceNode
 
 MATRIX_IPT_XYZ_TO_LMS = np.array(
@@ -35,17 +38,6 @@ for _matrix in (
 ):
     _matrix.setflags(write=False)
 
-
-def _as_last_axis_triplets(value: Sequence[float] | np.ndarray, *, name: str) -> np.ndarray:
-    """Return *value* as a finite float array with three values on the last axis."""
-    arr = np.asarray(value, dtype=np.float64)
-    if arr.shape == () or arr.shape[-1] != 3:
-        raise ValueError(f"{name} must have 3 values on the last axis")
-    if not np.all(np.isfinite(arr)):
-        raise ValueError(f"{name} must be finite")
-    return arr
-
-
 def _spow(value: np.ndarray, exponent: float) -> np.ndarray:
     """Return sign-preserving power for IPT nonlinear response compression."""
     return np.sign(value) * np.abs(value) ** exponent
@@ -53,10 +45,10 @@ def _spow(value: np.ndarray, exponent: float) -> np.ndarray:
 
 def XYZ_to_IPT(XYZ_D65_referred: Sequence[float] | np.ndarray) -> np.ndarray:
     """Convert D65-referred CIE XYZ values on the Y=100 scale to IPT values."""
-    xyz = _as_last_axis_triplets(
-        XYZ_D65_referred,
-        name="XYZ_D65_referred",
-    ) / 100.0
+    xyz = to_domain_1(
+        as_last_axis_triplets(XYZ_D65_referred, name="XYZ_D65_referred"),
+        source_scale="100",
+    )
     LMS = xyz @ MATRIX_IPT_XYZ_TO_LMS.T
     LMS_p = _spow(LMS, 0.43)
     return LMS_p @ MATRIX_IPT_LMS_P_TO_IPT.T
@@ -64,15 +56,15 @@ def XYZ_to_IPT(XYZ_D65_referred: Sequence[float] | np.ndarray) -> np.ndarray:
 
 def IPT_to_XYZ(IPT: Sequence[float] | np.ndarray) -> np.ndarray:
     """Convert IPT values to D65-referred CIE XYZ values on the Y=100 scale."""
-    ipt = _as_last_axis_triplets(IPT, name="IPT")
+    ipt = as_last_axis_triplets(IPT, name="IPT")
     LMS_p = ipt @ MATRIX_IPT_IPT_TO_LMS_P.T
     LMS = _spow(LMS_p, 1.0 / 0.43)
-    return 100.0 * (LMS @ MATRIX_IPT_LMS_TO_XYZ.T)
+    return to_domain_100(LMS @ MATRIX_IPT_LMS_TO_XYZ.T, source_scale="1")
 
 
 def IPT_hue_angle(IPT: Sequence[float] | np.ndarray) -> np.ndarray:
     """Return the IPT hue angle in degrees in the [0, 360) interval."""
-    ipt = _as_last_axis_triplets(IPT, name="IPT")
+    ipt = as_last_axis_triplets(IPT, name="IPT")
     return np.mod(np.degrees(np.arctan2(ipt[..., 2], ipt[..., 1])), 360.0)
 
 

@@ -108,6 +108,17 @@ reflectance_to_LMS(
 `illuminants`. Pass preloaded spectral objects when you need a custom observer,
 illuminant, shape or NaN policy.
 
+Self-luminous and reflectance spectra use different default scaling rules:
+
+- `emission_to_XYZ(...)` / `emission_to_LMS(...)` do not normalise by default.
+  If `k` is omitted, `k=1`, so the result scale is determined by the spectral
+  values, response functions, and wavelength interval.
+- `reflectance_to_XYZ(...)` / `reflectance_to_LMS(...)` normalise the final
+  integrated values by default. The normalisation factor is chosen from the
+  illuminant and response function so that a perfect reflecting diffuser
+  (`reflectance = 1`) gives `Y=100` for XYZ, or the selected middle/default
+  response channel for LMS. The reflectance spectrum itself is not modified.
+
 XYZ and LMS use the same numerical integration core. The difference is the
 three-channel response function passed in:
 

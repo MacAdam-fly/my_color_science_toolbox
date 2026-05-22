@@ -7,6 +7,8 @@ from typing import Iterable, Mapping
 
 import numpy as np
 
+from color.utils.methods import canonical_method_name
+
 from .appearance import SPACE_NODES as APPEARANCE_SPACE_NODES
 from .basic import SPACE_NODES as BASIC_SPACE_NODES
 from .node import ColorSpaceNode
@@ -28,11 +30,6 @@ CORE_SPACE_NODES = (
 )
 
 
-def _canonical_name(name: str) -> str:
-    """Return a normalized name for matching colour-space nodes."""
-    return "".join(character for character in name.casefold() if character.isalnum())
-
-
 def _build_registry(
     node_groups: Iterable[Iterable[ColorSpaceNode]],
 ) -> tuple[dict[str, ColorSpaceNode], dict[str, str]]:
@@ -47,7 +44,7 @@ def _build_registry(
             nodes[node.name] = node
 
             for alias in (node.name, *node.aliases):
-                key = _canonical_name(alias)
+                key = canonical_method_name(alias)
                 if key in aliases:
                     other = aliases[key]
                     if other == node.name:
@@ -78,7 +75,7 @@ def get_colourspace_node(name: str | ColorSpaceNode) -> ColorSpaceNode:
         return name
     if not isinstance(name, str):
         raise TypeError("colour-space node name must be a string or ColorSpaceNode")
-    key = _canonical_name(name)
+    key = canonical_method_name(name)
     if key not in _ALIASES:
         raise ValueError(f"unknown colour-space node {name!r}")
     return SPACE_REGISTRY[_ALIASES[key]]

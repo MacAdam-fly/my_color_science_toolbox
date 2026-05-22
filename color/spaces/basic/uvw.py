@@ -13,28 +13,9 @@ from color.colorimetry.chromaticity import (
     xy_to_uv1960,
 )
 from color.constants import D65_XYZ
+from color.utils.arrays import as_last_axis_pairs, as_last_axis_triplets
 
 from ..node import ColorSpaceNode
-
-
-def _as_last_axis_triplets(value: Sequence[float] | np.ndarray, *, name: str) -> np.ndarray:
-    """Return *value* as a finite float array with three values on the last axis."""
-    arr = np.asarray(value, dtype=np.float64)
-    if arr.shape == () or arr.shape[-1] != 3:
-        raise ValueError(f"{name} must have 3 values on the last axis")
-    if not np.all(np.isfinite(arr)):
-        raise ValueError(f"{name} must be finite")
-    return arr
-
-
-def _as_last_axis_pairs(value: Sequence[float] | np.ndarray, *, name: str) -> np.ndarray:
-    """Return *value* as a finite float array with two values on the last axis."""
-    arr = np.asarray(value, dtype=np.float64)
-    if arr.shape == () or arr.shape[-1] != 2:
-        raise ValueError(f"{name} must have 2 values on the last axis")
-    if not np.all(np.isfinite(arr)):
-        raise ValueError(f"{name} must be finite")
-    return arr
 
 
 def _resolve_whitepoint_xy(
@@ -45,10 +26,10 @@ def _resolve_whitepoint_xy(
     if whitepoint_XYZ is not None and whitepoint_xy is not None:
         raise ValueError("whitepoint_XYZ and whitepoint_xy cannot both be provided")
     if whitepoint_xy is not None:
-        return _as_last_axis_pairs(whitepoint_xy, name="whitepoint_xy")
+        return as_last_axis_pairs(whitepoint_xy, name="whitepoint_xy")
 
     whitepoint = D65_XYZ if whitepoint_XYZ is None else whitepoint_XYZ
-    return XYZ_to_xy(_as_last_axis_triplets(whitepoint, name="whitepoint_XYZ"))
+    return XYZ_to_xy(as_last_axis_triplets(whitepoint, name="whitepoint_XYZ"))
 
 
 def XYZ_to_UVW(
@@ -58,7 +39,7 @@ def XYZ_to_UVW(
     whitepoint_xy: Sequence[float] | np.ndarray | None = None,
 ) -> np.ndarray:
     """Convert CIE XYZ tristimulus values to CIE 1964 U*V*W* coordinates."""
-    xyz = _as_last_axis_triplets(XYZ, name="XYZ")
+    xyz = as_last_axis_triplets(XYZ, name="XYZ")
     xy_n = _resolve_whitepoint_xy(whitepoint_XYZ, whitepoint_xy)
 
     uv = xy_to_uv1960(XYZ_to_xy(xyz))
@@ -76,7 +57,7 @@ def UVW_to_XYZ(
     whitepoint_xy: Sequence[float] | np.ndarray | None = None,
 ) -> np.ndarray:
     """Convert CIE 1964 U*V*W* coordinates to CIE XYZ tristimulus values."""
-    uvw = _as_last_axis_triplets(UVW, name="UVW")
+    uvw = as_last_axis_triplets(UVW, name="UVW")
     xy_n = _resolve_whitepoint_xy(whitepoint_XYZ, whitepoint_xy)
     uv_n = xy_to_uv1960(xy_n)
 

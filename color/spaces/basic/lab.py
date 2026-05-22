@@ -7,6 +7,7 @@ from typing import Sequence
 import numpy as np
 
 from color.constants import D65_XYZ
+from color.utils.arrays import as_last_axis_triplets
 
 from ..node import ColorSpaceNode
 
@@ -14,17 +15,6 @@ EPSILON = 216.0 / 24389.0
 KAPPA = 24389.0 / 27.0
 DEFAULT_WHITEPOINT_XYZ = np.array(D65_XYZ, dtype=np.float64)
 DEFAULT_WHITEPOINT_XYZ.setflags(write=False)
-
-
-def _as_last_axis_triplets(value: Sequence[float] | np.ndarray, *, name: str) -> np.ndarray:
-    """Return *value* as a finite float array with three values on the last axis."""
-    arr = np.asarray(value, dtype=np.float64)
-    if arr.shape == () or arr.shape[-1] != 3:
-        raise ValueError(f"{name} must have 3 values on the last axis")
-    if not np.all(np.isfinite(arr)):
-        raise ValueError(f"{name} must be finite")
-    return arr
-
 
 def _as_whitepoint(whitepoint_XYZ: Sequence[float] | np.ndarray) -> np.ndarray:
     """Return a valid reference whitepoint XYZ triplet."""
@@ -55,7 +45,7 @@ def XYZ_to_Lab(
     whitepoint_XYZ: Sequence[float] | np.ndarray = DEFAULT_WHITEPOINT_XYZ,
 ) -> np.ndarray:
     """Convert CIE XYZ values to CIE 1976 Lab values."""
-    xyz = _as_last_axis_triplets(XYZ, name="XYZ")
+    xyz = as_last_axis_triplets(XYZ, name="XYZ")
     whitepoint = _as_whitepoint(whitepoint_XYZ)
     f_xyz = _f(xyz / whitepoint)
 
@@ -71,7 +61,7 @@ def Lab_to_XYZ(
     whitepoint_XYZ: Sequence[float] | np.ndarray = DEFAULT_WHITEPOINT_XYZ,
 ) -> np.ndarray:
     """Convert CIE 1976 Lab values to CIE XYZ values."""
-    lab = _as_last_axis_triplets(Lab, name="Lab")
+    lab = as_last_axis_triplets(Lab, name="Lab")
     whitepoint = _as_whitepoint(whitepoint_XYZ)
 
     f_y = (lab[..., 0] + 16.0) / 116.0
@@ -87,7 +77,7 @@ def Lab_to_XYZ(
 
 def Lab_to_LCHab(Lab: Sequence[float] | np.ndarray) -> np.ndarray:
     """Convert CIE 1976 Lab values to cylindrical LCHab values."""
-    lab = _as_last_axis_triplets(Lab, name="Lab")
+    lab = as_last_axis_triplets(Lab, name="Lab")
     C = np.hypot(lab[..., 1], lab[..., 2])
     h = np.mod(np.degrees(np.arctan2(lab[..., 2], lab[..., 1])), 360.0)
     return np.stack((lab[..., 0], C, h), axis=-1)
@@ -95,7 +85,7 @@ def Lab_to_LCHab(Lab: Sequence[float] | np.ndarray) -> np.ndarray:
 
 def LCHab_to_Lab(LCHab: Sequence[float] | np.ndarray) -> np.ndarray:
     """Convert cylindrical LCHab values to CIE 1976 Lab values."""
-    lch = _as_last_axis_triplets(LCHab, name="LCHab")
+    lch = as_last_axis_triplets(LCHab, name="LCHab")
     h = np.radians(lch[..., 2])
     a = lch[..., 1] * np.cos(h)
     b = lch[..., 1] * np.sin(h)

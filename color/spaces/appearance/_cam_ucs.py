@@ -7,6 +7,8 @@ from typing import Sequence
 
 import numpy as np
 
+from color.utils.arrays import as_last_axis_triplets
+
 
 @dataclass(frozen=True)
 class Coefficients_UCS_Luo2006:
@@ -15,16 +17,6 @@ class Coefficients_UCS_Luo2006:
     K_L: float
     c_1: float
     c_2: float
-
-
-def as_last_axis_triplets(value: Sequence[float] | np.ndarray, *, name: str) -> np.ndarray:
-    """Return *value* as a finite float array with three values on the last axis."""
-    arr = np.asarray(value, dtype=np.float64)
-    if arr.shape == () or arr.shape[-1] != 3:
-        raise ValueError(f"{name} must have 3 values on the last axis")
-    if not np.all(np.isfinite(arr)):
-        raise ValueError(f"{name} must be finite")
-    return arr
 
 
 def JMh_to_UCS(

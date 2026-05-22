@@ -10,6 +10,7 @@ from dataclasses import dataclass
 import numpy as np
 
 from color.constants.illuminants_XYZ import D65_XYZ
+from color.utils.methods import filter_kwargs
 
 from .registry import ColorSpaceNode, get_colourspace_node
 from .rgb import (
@@ -66,11 +67,7 @@ def _call_conversion(function, value, options: dict[str, object]) -> np.ndarray:
     if accepts_var_kwargs:
         return function(value, **options)
 
-    supported = {
-        key: option
-        for key, option in options.items()
-        if key in signature.parameters
-    }
+    supported = filter_kwargs(function, options)
     unused = set(options) - set(supported)
     if unused:
         names = ", ".join(sorted(unused))
@@ -409,7 +406,7 @@ def _validate_conversion_options(function, options: Mapping[str, object]) -> Non
     if accepts_var_kwargs:
         return
 
-    unused = set(options) - set(signature.parameters)
+    unused = set(options) - set(filter_kwargs(function, options))
     if unused:
         names = ", ".join(sorted(unused))
         raise ValueError(f"unsupported conversion option(s): {names}")

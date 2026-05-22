@@ -7,20 +7,11 @@ from typing import Sequence
 import numpy as np
 
 from color.adaptation import chromatic_adaptation_XYZ
+from color.utils.arrays import as_last_axis_triplets
 
 from .colourspace import RGBColorSpace
 from .registry import get_RGB_colourspace
 from .transfer import decode_transfer, encode_transfer
-
-
-def _as_last_axis_triplets(value: Sequence[float] | np.ndarray, *, name: str) -> np.ndarray:
-    """Return *value* as a finite float array with three values on the last axis."""
-    arr = np.asarray(value, dtype=np.float64)
-    if arr.shape == () or arr.shape[-1] != 3:
-        raise ValueError(f"{name} must have 3 values on the last axis")
-    if not np.all(np.isfinite(arr)):
-        raise ValueError(f"{name} must be finite")
-    return arr
 
 
 def _white_xy_to_XYZ(white_xy: np.ndarray) -> np.ndarray:
@@ -39,7 +30,7 @@ def RGB_to_XYZ(
 ) -> np.ndarray:
     """Convert RGB values to CIE XYZ tristimulus values."""
     rgb_space = get_RGB_colourspace(colourspace)
-    rgb = _as_last_axis_triplets(RGB, name="RGB")
+    rgb = as_last_axis_triplets(RGB, name="RGB")
     linear = decode_transfer(rgb, rgb_space.transfer) if apply_decoding else rgb
     return linear @ rgb_space.matrix_RGB_to_XYZ.T
 
@@ -52,7 +43,7 @@ def XYZ_to_RGB(
 ) -> np.ndarray:
     """Convert CIE XYZ tristimulus values to RGB values."""
     rgb_space = get_RGB_colourspace(colourspace)
-    xyz = _as_last_axis_triplets(XYZ, name="XYZ")
+    xyz = as_last_axis_triplets(XYZ, name="XYZ")
     linear = xyz @ rgb_space.matrix_XYZ_to_RGB.T
     return encode_transfer(linear, rgb_space.transfer) if apply_encoding else linear
 

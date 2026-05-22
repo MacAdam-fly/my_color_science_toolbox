@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import inspect
 from collections.abc import Callable, Mapping
 from types import MappingProxyType
 from typing import Any, Sequence
@@ -25,14 +24,10 @@ from .lab_delta_e import (
 )
 from .jzazbz_delta_e import delta_E_Jzazbz
 from .oklab_delta_e import delta_E_Oklab
+from color.utils.methods import build_method_index, filter_kwargs, resolve_method
 
 
 DeltaEFunction = Callable[..., Any]
-
-
-def _canonical_method(name: str) -> str:
-    """Return a normalized method key."""
-    return "".join(character for character in name.casefold() if character.isalnum())
 
 
 _METHOD_ALIASES = {
@@ -65,18 +60,9 @@ _METHOD_FUNCTIONS: dict[str, DeltaEFunction] = {
     "Jzazbz": delta_E_Jzazbz,
 }
 
-_METHOD_INDEX: dict[str, str] = {}
-for _name, _aliases in _METHOD_ALIASES.items():
-    for _alias in (_name, *_aliases):
-        _METHOD_INDEX[_canonical_method(_alias)] = _name
+_METHOD_INDEX = build_method_index(_METHOD_ALIASES)
 
 DELTA_E_METHODS: Mapping[str, DeltaEFunction] = MappingProxyType(_METHOD_FUNCTIONS)
-
-
-def _filter_kwargs(function: DeltaEFunction, kwargs: Mapping[str, Any]) -> dict[str, Any]:
-    """Return kwargs accepted by *function*, matching colour's dispatch style."""
-    signature = inspect.signature(function)
-    return {key: value for key, value in kwargs.items() if key in signature.parameters}
 
 
 def delta_E(
@@ -86,14 +72,12 @@ def delta_E(
     **kwargs: Any,
 ) -> np.ndarray | np.float64:
     """Return Delta E between two arrays using a registered method."""
-    key = _canonical_method(method)
-    if key not in _METHOD_INDEX:
+    try:
+        _, function = resolve_method(method, _METHOD_INDEX, DELTA_E_METHODS)
+    except ValueError as exc:
         available = ", ".join(DELTA_E_METHODS)
-        raise ValueError(f"unknown delta E method {method!r}. Available: {available}")
-
-    canonical_name = _METHOD_INDEX[key]
-    function = DELTA_E_METHODS[canonical_name]
-    return function(a, b, **_filter_kwargs(function, kwargs))
+        raise ValueError(f"unknown delta E method {method!r}. Available: {available}") from exc
+    return function(a, b, **filter_kwargs(function, kwargs))
 
 
 __all__ = [

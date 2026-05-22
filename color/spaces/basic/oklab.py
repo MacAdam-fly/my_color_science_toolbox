@@ -6,6 +6,9 @@ from typing import Sequence
 
 import numpy as np
 
+from color.utils.arrays import as_last_axis_triplets
+from color.utils.scale import to_domain_1, to_domain_100
+
 from ..node import ColorSpaceNode
 
 MATRIX_XYZ_TO_LMS = np.array(
@@ -48,37 +51,26 @@ for _matrix in (
 ):
     _matrix.setflags(write=False)
 
-
-def _as_last_axis_triplets(value: Sequence[float] | np.ndarray, *, name: str) -> np.ndarray:
-    """Return *value* as a finite float array with three values on the last axis."""
-    arr = np.asarray(value, dtype=np.float64)
-    if arr.shape == () or arr.shape[-1] != 3:
-        raise ValueError(f"{name} must have 3 values on the last axis")
-    if not np.all(np.isfinite(arr)):
-        raise ValueError(f"{name} must be finite")
-    return arr
-
-
 def XYZ_to_Oklab(XYZ_D65_referred: Sequence[float] | np.ndarray) -> np.ndarray:
     """Convert D65-referred CIE XYZ values to Oklab values."""
-    xyz = _as_last_axis_triplets(
-        XYZ_D65_referred,
-        name="XYZ_D65_referred",
-    ) / 100.0
+    xyz = to_domain_1(
+        as_last_axis_triplets(XYZ_D65_referred, name="XYZ_D65_referred"),
+        source_scale="100",
+    )
     LMS = xyz @ MATRIX_XYZ_TO_LMS.T
     return np.cbrt(LMS) @ MATRIX_LMS_TO_OKLAB.T
 
 
 def Oklab_to_XYZ(Oklab: Sequence[float] | np.ndarray) -> np.ndarray:
     """Convert Oklab values to D65-referred CIE XYZ values."""
-    oklab = _as_last_axis_triplets(Oklab, name="Oklab")
+    oklab = as_last_axis_triplets(Oklab, name="Oklab")
     LMS_cbrt = oklab @ MATRIX_OKLAB_TO_LMS.T
-    return 100.0 * ((LMS_cbrt**3) @ MATRIX_LMS_TO_XYZ.T)
+    return to_domain_100((LMS_cbrt**3) @ MATRIX_LMS_TO_XYZ.T, source_scale="1")
 
 
 def Oklab_to_Oklch(Oklab: Sequence[float] | np.ndarray) -> np.ndarray:
     """Convert Oklab values to cylindrical Oklch values."""
-    oklab = _as_last_axis_triplets(Oklab, name="Oklab")
+    oklab = as_last_axis_triplets(Oklab, name="Oklab")
     C = np.hypot(oklab[..., 1], oklab[..., 2])
     h = np.mod(np.degrees(np.arctan2(oklab[..., 2], oklab[..., 1])), 360.0)
     return np.stack((oklab[..., 0], C, h), axis=-1)
@@ -86,7 +78,7 @@ def Oklab_to_Oklch(Oklab: Sequence[float] | np.ndarray) -> np.ndarray:
 
 def Oklch_to_Oklab(Oklch: Sequence[float] | np.ndarray) -> np.ndarray:
     """Convert cylindrical Oklch values to Oklab values."""
-    oklch = _as_last_axis_triplets(Oklch, name="Oklch")
+    oklch = as_last_axis_triplets(Oklch, name="Oklch")
     h = np.radians(oklch[..., 2])
     a = oklch[..., 1] * np.cos(h)
     b = oklch[..., 1] * np.sin(h)

@@ -6,6 +6,10 @@ from typing import Sequence
 
 import numpy as np
 
+from color.utils.arrays import as_float_array as _as_float_array
+from color.utils.arrays import as_last_axis_pairs as _as_last_axis_pairs
+from color.utils.methods import canonical_method_name
+
 
 def as_finite_array(
     value: float | Sequence[float] | np.ndarray,
@@ -13,10 +17,7 @@ def as_finite_array(
     name: str,
 ) -> np.ndarray:
     """Return *value* as a finite float array."""
-    arr = np.asarray(value, dtype=np.float64)
-    if not np.all(np.isfinite(arr)):
-        raise ValueError(f"{name} must be finite")
-    return arr
+    return _as_float_array(value, name=name)
 
 
 def as_last_axis_pairs(
@@ -25,10 +26,7 @@ def as_last_axis_pairs(
     name: str,
 ) -> np.ndarray:
     """Return *value* as a finite float array with two values on the last axis."""
-    arr = as_finite_array(value, name=name)
-    if arr.shape == () or arr.shape[-1] != 2:
-        raise ValueError(f"{name} must have 2 values on the last axis")
-    return arr
+    return _as_last_axis_pairs(value, name=name)
 
 
 def scalar_or_array(value: np.ndarray) -> float | np.ndarray:
@@ -40,4 +38,4 @@ def scalar_or_array(value: np.ndarray) -> float | np.ndarray:
 
 def normalize_method(method: str) -> str:
     """Return a compact method key."""
-    return method.lower().replace(" ", "").replace("_", "").replace("-", "")
+    return canonical_method_name(method)

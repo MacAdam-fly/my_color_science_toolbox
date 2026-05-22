@@ -8,6 +8,7 @@ from typing import NamedTuple, Sequence, Union
 import numpy as np
 
 from color.spectra import MultiSpectralDistribution, from_dataset
+from color.utils.arrays import as_last_axis_pairs
 
 
 LocusSource = Union[str, MultiSpectralDistribution]
@@ -35,20 +36,6 @@ class ChromaticityAnalysis:
     complementary_region: str | np.ndarray
     excitation_purity: float | np.ndarray
     colorimetric_purity: float | np.ndarray
-
-
-def _as_last_axis_pairs(
-    value: Sequence[float] | np.ndarray,
-    *,
-    name: str,
-) -> np.ndarray:
-    """Return *value* as a finite float array with two values on the last axis."""
-    arr = np.asarray(value, dtype=np.float64)
-    if arr.shape == () or arr.shape[-1] != 2:
-        raise ValueError(f"{name} must have 2 values on the last axis")
-    if not np.all(np.isfinite(arr)):
-        raise ValueError(f"{name} must be finite")
-    return arr
 
 
 def _load_locus(
@@ -184,8 +171,8 @@ def _dominant_array(
     inverse: bool,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, bool]:
     """Vectorise dominant-wavelength computation over the last xy axis."""
-    xy_arr = _as_last_axis_pairs(xy, name="xy")
-    xy_n_arr = _as_last_axis_pairs(xy_n, name="xy_n")
+    xy_arr = as_last_axis_pairs(xy, name="xy")
+    xy_n_arr = as_last_axis_pairs(xy_n, name="xy_n")
     xy_n_broadcast = np.broadcast_to(xy_n_arr, xy_arr.shape)
     wavelengths, locus_xy = _load_locus(locus)
 
@@ -310,7 +297,7 @@ def _boundary_xy_from_wavelength(
     if not np.all(np.isfinite(wavelength_arr)):
         raise ValueError("wavelength must be finite")
 
-    xy_n_arr = _as_last_axis_pairs(xy_n, name="xy_n")
+    xy_n_arr = as_last_axis_pairs(xy_n, name="xy_n")
     wavelengths, locus_xy = _load_locus(locus)
     abs_wavelength = np.abs(wavelength_arr)
     spectral_xy = _interpolate_locus_xy(abs_wavelength, wavelengths, locus_xy)
@@ -409,7 +396,7 @@ def is_inside_chromaticity_locus(
     locus: LocusSource = DEFAULT_LOCUS,
 ) -> bool | np.ndarray:
     """Return whether CIE xy coordinates are inside the closed chromaticity locus."""
-    xy_arr = _as_last_axis_pairs(xy, name="xy")
+    xy_arr = as_last_axis_pairs(xy, name="xy")
     _wavelengths, locus_xy = _load_locus(locus)
     input_was_single = xy_arr.shape == (2,)
     inside = _points_in_closed_locus(xy_arr.reshape(-1, 2), locus_xy).reshape(
@@ -460,8 +447,8 @@ def excitation_purity(
     locus: LocusSource = DEFAULT_LOCUS,
 ) -> float | np.ndarray:
     """Return excitation purity for CIE xy coordinates."""
-    xy_arr = _as_last_axis_pairs(xy, name="xy")
-    xy_n_arr = np.broadcast_to(_as_last_axis_pairs(xy_n, name="xy_n"), xy_arr.shape)
+    xy_arr = as_last_axis_pairs(xy, name="xy")
+    xy_n_arr = np.broadcast_to(as_last_axis_pairs(xy_n, name="xy_n"), xy_arr.shape)
     _wavelength, xy_wl = dominant_wavelength(xy_arr, xy_n_arr, locus)
 
     numerator = np.linalg.norm(xy_arr - xy_n_arr, axis=-1)
@@ -483,7 +470,7 @@ def colorimetric_purity(
     locus: LocusSource = DEFAULT_LOCUS,
 ) -> float | np.ndarray:
     """Return colorimetric purity for CIE xy coordinates."""
-    xy_arr = _as_last_axis_pairs(xy, name="xy")
+    xy_arr = as_last_axis_pairs(xy, name="xy")
     _wavelength, xy_wl = dominant_wavelength(xy_arr, xy_n, locus)
     purity_e = np.asarray(excitation_purity(xy_arr, xy_n, locus), dtype=np.float64)
     numerator = purity_e * xy_wl[..., 1]

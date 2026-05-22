@@ -12,19 +12,10 @@ from color.constants.standard_observer_matrices import (
     XYZ_2_DEGREE_TO_LMS_2_DEGREE,
     XYZ_10_DEGREE_TO_LMS_10_DEGREE,
 )
+from color.utils.arrays import as_last_axis_triplets
 
 
 Observer = Literal[2, 10]
-
-
-def _as_last_axis_triplets(value: Sequence[float] | np.ndarray, *, name: str) -> np.ndarray:
-    """Return *value* as a float array with three values on the last axis."""
-    arr = np.asarray(value, dtype=np.float64)
-    if arr.shape == () or arr.shape[-1] != 3:
-        raise ValueError(f"{name} must have 3 values on the last axis")
-    if not np.all(np.isfinite(arr)):
-        raise ValueError(f"{name} must be finite")
-    return arr
 
 
 def _matrix_for_observer(observer: Observer, *, inverse: bool) -> np.ndarray:
@@ -42,7 +33,7 @@ def LMS_to_XYZ(
     observer: Observer = 2,
 ) -> np.ndarray:
     """Convert LMS values to XYZ values for a CIE 2006 standard observer."""
-    lms = _as_last_axis_triplets(LMS, name="LMS")
+    lms = as_last_axis_triplets(LMS, name="LMS")
     matrix = _matrix_for_observer(observer, inverse=False)
     return lms @ matrix.T
 
@@ -53,7 +44,7 @@ def XYZ_to_LMS(
     observer: Observer = 2,
 ) -> np.ndarray:
     """Convert XYZ values to LMS values for a CIE 2006 standard observer."""
-    xyz = _as_last_axis_triplets(XYZ, name="XYZ")
+    xyz = as_last_axis_triplets(XYZ, name="XYZ")
     matrix = _matrix_for_observer(observer, inverse=True)
     return xyz @ matrix.T
 

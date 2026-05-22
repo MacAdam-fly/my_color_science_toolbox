@@ -170,6 +170,13 @@ XYZ_again = convert_color(
 )
 ```
 
+CAM02/CAM16 uniform spaces inherit the reference-domain rules of the
+underlying appearance model. `XYZ`, `XYZ_w`, and `Y_b` must use the same
+luminance scale. The project default is `Y=100`; using a whitepoint such as
+`XYZ_w=D65_XYZ * 2` is allowed, but then the input `XYZ` and background `Y_b`
+should be in the same `Y_w=200` reference domain. `convert_color(...)` does
+not rescale these viewing-condition parameters automatically.
+
 `UCS` is the general-purpose uniform space. `LCD` and `SCD` use coefficients
 tuned for larger and smaller colour differences.
 
