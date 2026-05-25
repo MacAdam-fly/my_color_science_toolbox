@@ -14,10 +14,7 @@ from .chromaticity import (
     plot_cie1960_ucs_diagram,
     plot_cie1976_ucs_diagram,
     plot_chromaticity_background,
-    plot_upvp1976_locus,
-    plot_uv1960_locus,
     plot_xy_chromaticity_background,
-    plot_xy_locus,
     plot_xy_points,
 )
 from .common import as_2d_points, as_rgb_rows, finish_figure, get_figure_axes
@@ -29,6 +26,14 @@ from .spectra import (
     style_spectral_axis,
 )
 from .swatches import preview_sRGB_from_XYZ, plot_swatch_grid, plot_swatch_strip
+from .temperature import (
+    daylight_locus_uv1960,
+    duv_offset_grid_uv1960,
+    planckian_locus_uv1960,
+    plot_duv_offsets_uv1960,
+    plot_mired_curve,
+    plot_temperature_loci_uv1960,
+)
 
 __all__ = [
     "D65_UPVP1976",  # rounded D65 u'v'1976 whitepoint used for plotting
@@ -37,6 +42,8 @@ __all__ = [
     "as_2d_points",  # validate row-wise plotting points
     "as_rgb_rows",  # validate RGB rows for plotting
     "chromaticity_background_image",  # compute chromaticity background RGB image
+    "daylight_locus_uv1960",  # compute CIE D daylight locus in CIE 1960 uv
+    "duv_offset_grid_uv1960",  # compute CCT and Duv offset grid in CIE 1960 uv
     "finish_figure",  # apply final figure layout
     "get_figure_axes",  # create or reuse matplotlib axes
     "load_cie1931_locus_upvp1976",  # load CIE 1931 spectral locus u'v' coordinates
@@ -46,14 +53,15 @@ __all__ = [
     "plot_cie1931_diagram",  # plot CIE 1931 xy chromaticity diagram
     "plot_cie1960_ucs_diagram",  # plot CIE 1960 uv chromaticity diagram
     "plot_cie1976_ucs_diagram",  # plot CIE 1976 u'v' chromaticity diagram
-    "plot_upvp1976_locus",  # compatibility alias for plot_cie1976_ucs_diagram
-    "plot_uv1960_locus",  # compatibility alias for plot_cie1960_ucs_diagram
     "plot_xy_chromaticity_background",  # plot the CIE 1931 xy background
-    "plot_xy_locus",  # compatibility alias for plot_cie1931_diagram
     "plot_xy_points",  # plot labelled xy chromaticity points
     "plot_conversion_graph",  # plot the registered colour-space conversion graph
     "plot_conversion_path",  # plot one conversion path
+    "planckian_locus_uv1960",  # compute Planckian locus in CIE 1960 uv
+    "plot_duv_offsets_uv1960",  # plot Duv offsets in CIE 1960 uv
+    "plot_mired_curve",  # plot CCT to mired relationship
     "plot_rgb_gamuts",  # plot RGB colourspace primary triangles
+    "plot_temperature_loci_uv1960",  # plot Planckian and daylight loci in uv
     "plot_multi_spectral_distribution",  # plot multi-channel spectral data
     "plot_spectral_distribution",  # plot single-channel spectral data
     "style_spectral_axis",  # apply common spectral axis styling

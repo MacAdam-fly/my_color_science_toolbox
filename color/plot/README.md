@@ -27,6 +27,12 @@ from color.plot import (
     plot_swatch_strip,
     plot_swatch_grid,
     plot_rgb_gamuts,
+    planckian_locus_uv1960,
+    daylight_locus_uv1960,
+    duv_offset_grid_uv1960,
+    plot_temperature_loci_uv1960,
+    plot_duv_offsets_uv1960,
+    plot_mired_curve,
     plot_conversion_path,
     plot_conversion_graph,
 )
@@ -35,7 +41,12 @@ from color.plot import (
 ## Quick Start
 
 ```python
-from color.plot import plot_spectral_distribution, plot_cie1931_diagram, plot_cie1960_ucs_diagram
+from color.plot import (
+    plot_spectral_distribution,
+    plot_cie1931_diagram,
+    plot_cie1960_ucs_diagram,
+    plot_temperature_loci_uv1960,
+)
 from color.spectra import from_D65_illuminant
 
 d65 = from_D65_illuminant()
@@ -51,6 +62,9 @@ fig.savefig("cie1931_xy_background.png", dpi=150)
 
 fig, ax = plot_cie1960_ucs_diagram(show_background=True)
 fig.savefig("cie1960_uv_background.png", dpi=150)
+
+fig, ax = plot_temperature_loci_uv1960()
+fig.savefig("temperature_loci_uv.png", dpi=150)
 ```
 
 All plotting functions accept `ax=None` and return `(fig, ax)`.
@@ -74,8 +88,12 @@ spectral locus in CIE 1960 UCS `uv` and CIE 1976 UCS `u'v'` coordinates. The
 `uv1960` view is the natural plotting space for CCT and Duv visualisations;
 `u'v'1976` is useful for Luv-related chromaticity diagrams.
 
-Legacy names `plot_xy_locus(...)`, `plot_uv1960_locus(...)` and
-`plot_upvp1976_locus(...)` remain available as compatibility aliases.
+## Temperature Plots
+
+`plot_temperature_loci_uv1960(...)` and `plot_duv_offsets_uv1960(...)` use CIE
+1960 UCS `uv`, because Duv is defined as an offset from the Planckian locus in
+that diagram. CIE 1931 `xy` plots remain useful for general chromaticity
+inspection, but they are not the preferred view for Duv.
 
 `preview_sRGB_from_XYZ(...)`, `plot_swatch_strip(...)` and
 `plot_swatch_grid(...)` are visualisation helpers. They clip RGB values to

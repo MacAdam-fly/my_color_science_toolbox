@@ -29,10 +29,7 @@ from color.plot import (
     plot_spectral_distribution,
     plot_swatch_grid,
     plot_swatch_strip,
-    plot_upvp1976_locus,
-    plot_uv1960_locus,
     plot_xy_chromaticity_background,
-    plot_xy_locus,
     plot_xy_points,
     preview_sRGB_from_XYZ,
 )
@@ -132,7 +129,7 @@ def test_plot_xy_chromaticity_background() -> None:
     _close(fig)
 
 
-def test_plot_xy_locus_and_points() -> None:
+def test_plot_cie1931_diagram_and_points() -> None:
     fig, ax = plot_cie1931_diagram()
     plot_xy_points([[0.3127, 0.3290], [0.4, 0.3]], ax=ax, labels=("D65", "P"))
     assert fig is ax.figure
@@ -141,7 +138,7 @@ def test_plot_xy_locus_and_points() -> None:
     _close(fig)
 
 
-def test_plot_xy_locus_with_background() -> None:
+def test_plot_cie1931_diagram_with_background() -> None:
     fig, ax = plot_cie1931_diagram(show_background=True, background_samples=32)
     assert fig is ax.figure
     assert len(ax.images) == 1
@@ -149,7 +146,7 @@ def test_plot_xy_locus_with_background() -> None:
     _close(fig)
 
 
-def test_plot_uv1960_locus() -> None:
+def test_plot_cie1960_ucs_diagram() -> None:
     fig, ax = plot_cie1960_ucs_diagram()
     assert fig is ax.figure
     assert len(ax.lines) >= 1
@@ -157,7 +154,7 @@ def test_plot_uv1960_locus() -> None:
     _close(fig)
 
 
-def test_plot_upvp1976_locus() -> None:
+def test_plot_cie1976_ucs_diagram() -> None:
     fig, ax = plot_cie1976_ucs_diagram()
     assert fig is ax.figure
     assert len(ax.lines) >= 1
@@ -195,19 +192,6 @@ def test_plot_uv_locus_rejects_invalid_whitepoint_shape() -> None:
     with pytest.raises(ValueError):
         plot_cie1976_ucs_diagram(whitepoint_upvp=[0.1])
 
-
-def test_legacy_locus_names_remain_available() -> None:
-    fig, ax = plot_xy_locus()
-    assert fig is ax.figure
-    _close(fig)
-
-    fig, ax = plot_uv1960_locus()
-    assert fig is ax.figure
-    _close(fig)
-
-    fig, ax = plot_upvp1976_locus()
-    assert fig is ax.figure
-    _close(fig)
 
 
 def test_preview_srgb_from_XYZ_clips_to_display_range() -> None:

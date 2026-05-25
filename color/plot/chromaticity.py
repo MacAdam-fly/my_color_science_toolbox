@@ -386,10 +386,6 @@ def plot_xy_points(
     return fig, ax
 
 
-plot_xy_locus = plot_cie1931_diagram
-plot_uv1960_locus = plot_cie1960_ucs_diagram
-plot_upvp1976_locus = plot_cie1976_ucs_diagram
-
 
 __all__ = [
     "D65_XY",
@@ -403,9 +399,6 @@ __all__ = [
     "plot_cie1931_diagram",
     "plot_cie1960_ucs_diagram",
     "plot_cie1976_ucs_diagram",
-    "plot_upvp1976_locus",
-    "plot_uv1960_locus",
     "plot_xy_chromaticity_background",
-    "plot_xy_locus",
     "plot_xy_points",
 ]
