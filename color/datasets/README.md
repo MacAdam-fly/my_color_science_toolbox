@@ -57,7 +57,9 @@ from color.datasets.standard_observers import (
     get_cie1931_xyz_cmfs,
     get_cie2006_lms_2degree_fundamentals,
 )
+from color.datasets.illuminants import get_D65_illuminant
 
+d65 = get_D65_illuminant()
 cmfs = get_cie1931_xyz_cmfs(interval_nm=1)
 lms = get_cie2006_lms_2degree_fundamentals(interval_nm=1, energy="linE")
 ```

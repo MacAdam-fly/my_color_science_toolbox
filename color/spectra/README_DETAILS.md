@@ -1,33 +1,101 @@
 # spectra - 详细指南
 
-`color.spectra` 是离散光谱信号的对象封装层。它把原始的波长和值数组包装成不可变对象，并提供采样、插值、reshape、对齐、导出和基础算术操作。
+`color.spectra` 是离散光谱信号的对象封装层。它不读取文件，也不直接做
+XYZ/LMS 积分，而是把已经得到的波长列和值列包装成可采样、可插值、可对齐的对象。
 
-它不负责数据读取，也不负责色度积分：
+当前分层关系是：
 
 ```text
-color.datasets     静态数据文件 -> dict[str, ndarray]
+color.datasets     静态标准数据读取 -> dict[str, ndarray]
 color.generators   公式/过程生成数据 -> dict[str, ndarray]
-color.spectra      光谱对象与信号域操作
-color.colorimetry  XYZ/LMS 积分和色度计算结果
+color.spectra      光谱对象封装、采样、插值、对齐、导出、算术
+color.colorimetry  XYZ/LMS 积分、色度、色温、主波长等计算
 ```
+
+也就是说，`datasets` 和 `generators` 负责给出原始列字典，`spectra` 负责把这些列变成信号对象，`colorimetry` 再使用这些对象进行积分和色度计算。
 
 ## 核心对象
 
 | 对象 | 含义 |
 | --- | --- |
-| `SpectralShape` | 规则波长域：start、end、interval |
+| `SpectralShape` | 规则波长域：`start`、`end`、`interval` |
 | `SpectralDistribution` | 单通道光谱信号 |
 | `MultiSpectralDistribution` | 多个通道共享同一个波长域的光谱信号 |
 
-单通道对象可以表示一个照明体 SPD、一条反射率曲线，或者一个发光效率函数。多通道对象可以表示 CMFs（`X/Y/Z`），也可以表示色卡数据，其中每个色块是一个通道。
+单通道对象可以表示一个照明体 SPD、一条反射率曲线、一个发光效率函数，或者任意只有一个值列的光谱信号。
 
-对象构造时会复制输入数组，并把内部数组设为只读。这意味着使用者无法通过 `values` 或 `wavelengths` 意外修改对象内部状态。所有操作都会返回新对象，而不是原地修改原对象。
+多通道对象可以表示：
 
-## 创建对象
+```text
+CMFs：X、Y、Z
+LMS fundamentals：l、m、s
+色卡：每个色块一个通道
+相机灵敏度：R、G、B
+```
 
-### 1. 从已注册的静态数据集创建
+对象构造时会复制输入数组，并把内部数组设为只读。所有重采样、对齐和算术操作都会返回新对象，不会原地修改源对象。
 
-当数据来源已经注册在 `color.datasets` 中时，使用 `from_dataset(...)`：
+## 创建对象的入口
+
+### 1. 从列字典创建：from_columns
+
+当数据已经在内存中，且形式类似：
+
+```python
+raw = {
+    "wavelength": wavelength,
+    "spd": values,
+}
+```
+
+使用：
+
+```python
+from color.spectra import from_columns
+
+sd = from_columns(raw, x="wavelength", y="spd")
+```
+
+其中：
+
+```text
+x  -> 波长列名
+y  -> 单通道值列名
+ys -> 多通道值列名
+```
+
+多通道示例：
+
+```python
+cmfs = from_columns(raw, x="wavelength", ys=("X", "Y", "Z"))
+```
+
+色卡数据也是同样逻辑：
+
+```python
+from color.datasets.color_cards import get_color_card
+from color.spectra import from_columns
+
+raw = get_color_card("macbeth")
+card = from_columns(raw, ys=("Dark Skin", "Blue Sky", "White"))
+```
+
+因为 `raw` 本身就是列映射：
+
+```python
+{
+    "wavelength": ...,
+    "Dark Skin": ...,
+    "Blue Sky": ...,
+    "White": ...,
+}
+```
+
+所以不需要先手动把每一列取出来再包装。
+
+### 2. 从注册数据集创建：from_dataset
+
+当数据已经注册在 `color.datasets` 里时，可以使用：
 
 ```python
 from color.spectra import from_dataset
@@ -37,17 +105,104 @@ cmfs = from_dataset("standard_observers.cmfs", "cie1931_xyz_1nm")
 pmc = from_dataset("color_cards", "pmc")
 ```
 
-`from_dataset(...)` 内部会调用 `datasets.get(...)` 和 `datasets.describe(...)`，然后根据返回列判断对象类型：
+`from_dataset(...)` 内部会调用：
 
 ```text
-wavelength + 一个非 wavelength 列  -> SpectralDistribution
-wavelength + 多个非 wavelength 列 -> MultiSpectralDistribution
-没有 wavelength 列                -> ValueError
+color.datasets.get(...)
+color.datasets.describe(...)
 ```
 
-这个入口适合标准静态数据，但它仍然只是一个包装入口。`color.datasets.get(...)` 本身依然返回原始字典。
+然后根据列结构自动判断对象类型：
 
-默认情况下，包装层会保留 `NaN`。如果某些数据源用空白单元格表示明确的零响应，可以在包装时显式填充：
+```text
+wavelength + 一个值列   -> SpectralDistribution
+wavelength + 多个值列   -> MultiSpectralDistribution
+没有 wavelength 列      -> ValueError
+没有光谱值列            -> ValueError
+```
+
+注意：`from_dataset(...)` 只是包装入口。`color.datasets.get(...)` 本身仍然返回原始字典。
+
+### 3. 常用标准数据快捷入口
+
+为了避免常用标准观察者和 D65 需要记文件名，`spectra` 提供了一组语义化入口：
+
+```python
+from color.spectra import (
+    from_D65_illuminant,
+    from_cie1931_xyz_cmfs,
+    from_cie1964_xyz_cmfs,
+    from_cie2012_xyz_2degree_cmfs,
+    from_cie2012_xyz_10degree_cmfs,
+    from_cie2006_lms_2degree_fundamentals,
+    from_cie2006_lms_10degree_fundamentals,
+)
+```
+
+对应含义：
+
+| 函数 | 含义 |
+| --- | --- |
+| `from_D65_illuminant()` | CIE 标准照明体 D65 |
+| `from_cie1931_xyz_cmfs(interval_nm=1)` | CIE 1931 2 度 XYZ CMFs |
+| `from_cie1964_xyz_cmfs(interval_nm=1)` | CIE 1964 10 度 XYZ CMFs |
+| `from_cie2012_xyz_2degree_cmfs(interval_nm=1)` | CIE 2012 2 度 XYZ CMFs |
+| `from_cie2012_xyz_10degree_cmfs(interval_nm=1)` | CIE 2012 10 度 XYZ CMFs |
+| `from_cie2006_lms_2degree_fundamentals(interval_nm=1, energy="linE")` | CIE 2006 2 度 LMS fundamentals |
+| `from_cie2006_lms_10degree_fundamentals(interval_nm=1, energy="linE")` | CIE 2006 10 度 LMS fundamentals |
+
+`interval_nm` 的含义是“选择已有原始数据文件的采样间隔”，不是插值间隔。例如：
+
+```python
+cmfs_1nm = from_cie1931_xyz_cmfs(interval_nm=1)
+cmfs_5nm = from_cie1931_xyz_cmfs(interval_nm=5)
+```
+
+如果需要新的采样间隔，应在对象创建后使用：
+
+```python
+cmfs_2nm = cmfs_1nm.reshape(SpectralShape(360, 830, 2))
+```
+
+CIE 2006 LMS fundamentals 额外有 `energy` 参数：
+
+```python
+lms = from_cie2006_lms_2degree_fundamentals(
+    interval_nm=1,
+    energy="linE",
+)
+```
+
+当前支持的 `energy` 取值来自已有数据文件，例如：
+
+```text
+linE
+logE
+logQ
+```
+
+### 4. 直接构造
+
+当你已经有数组时，也可以直接使用构造函数：
+
+```python
+from color.spectra import SpectralDistribution, MultiSpectralDistribution
+
+sd = SpectralDistribution(wavelengths, values, name="sample")
+msd = MultiSpectralDistribution(
+    wavelengths,
+    values_2d,
+    labels=("X", "Y", "Z"),
+)
+```
+
+直接构造函数是最低层入口，会做长度、维度、波长递增和标签数量校验。
+
+## NaN 与 fill_nan
+
+默认情况下，`spectra` 会保留原始数据中的 `NaN`。这和 `datasets` 的忠实读取原则一致。
+
+如果某些数据源中的空白值在计算语境下明确表示零响应，可以在包装时显式声明：
 
 ```python
 lms = from_dataset(
@@ -57,114 +212,117 @@ lms = from_dataset(
 )
 ```
 
-这样生成对象的 `metadata` 会记录：
-
-```python
-{"nan_policy": "fill", "nan_fill_value": 0.0}
-```
-
-这个策略只属于计算准备阶段，不改变 `datasets` 对原始文件的忠实读取行为。
-
-### 2. 从列字典创建
-
-当数据已经在内存中时，使用 `from_columns(...)`：
-
-```python
-from color.spectra import from_columns
-
-raw = {
-    "wavelength": wavelength,
-    "spd": values,
-}
-
-sd = from_columns(raw, x="wavelength", y="spd")
-```
-
-`x` 指定波长列，`y` 指定单通道值列。
-
-对于多通道数据，使用 `ys`：
-
-```python
-cmfs = from_columns(raw, x="wavelength", ys=("X", "Y", "Z"))
-```
-
-这也是色卡示例可以直接传入色块名称的原因：
-
-```python
-raw = get_color_card("pmc")
-patch_names = ("Caucasian", "Carrot", "Blue Sky")
-pmc = from_columns(raw, x="wavelength", ys=patch_names)
-```
-
-因为 `raw` 已经是列映射：
+对象 metadata 会记录：
 
 ```python
 {
-    "wavelength": ...,
-    "Caucasian": ...,
-    "Carrot": ...,
-    "Blue Sky": ...,
-    ...
+    "nan_policy": "fill",
+    "nan_fill_value": 0.0,
 }
 ```
 
-`from_columns(..., ys=patch_names)` 会在内部提取这些列，并把它们堆叠成多通道对象。只有在需要重命名、筛选、归一化或提前变换列数据时，才需要手动把列取出来再包装。
-
-`from_columns(...)` 同样支持显式 NaN 填充：
+常用 CIE 2006 LMS 快捷入口默认 `fill_nan=0.0`，因为它们通常作为响应函数用于数值积分，空白长波端更自然地按零响应处理：
 
 ```python
-sd = from_columns(raw, x="wavelength", y="spd", fill_nan=0.0)
+lms = from_cie2006_lms_2degree_fundamentals()
 ```
 
-### 3. 直接使用构造函数
-
-当你已经有数组时，可以直接使用构造函数：
+如果你想保留 NaN，可以显式传入：
 
 ```python
-from color.spectra import SpectralDistribution, MultiSpectralDistribution
-
-sd = SpectralDistribution(wavelengths, values, name="sample")
-msd = MultiSpectralDistribution(wavelengths, values_2d, labels=("X", "Y", "Z"))
+lms = from_cie2006_lms_2degree_fundamentals(fill_nan=None)
 ```
 
-直接构造函数是最低层的入口。它们会做 shape 和长度校验，复制数组，并把内部数组设为只读。
+## 属性、keys 与字典式访问
 
-## 命名：wavelengths/values 与 domain/range
+光谱对象不是字典，但提供了和原始列字典接近的访问方式。
 
-面向光谱语义的命名是：
+### 基本属性
 
 ```python
 sd.wavelengths
 sd.values
+sd.domain  # wavelengths 的只读别名
+sd.range   # values 的只读别名
 ```
 
-面向数学直觉的别名是：
+多通道对象还有：
 
 ```python
-sd.domain  # 等同于 sd.wavelengths
-sd.range   # 等同于 sd.values
+msd.labels
 ```
 
-这两组属性暴露的都是只读数组。
+### keys()
+
+`keys()` 返回和 `to_dict()` 对齐的列名：
+
+```python
+sd.keys()
+# ("wavelength", "value")
+
+cmfs.keys()
+# ("wavelength", "X", "Y", "Z")
+```
+
+这样从 `datasets` 的原始字典迁移到 `spectra` 对象时，查看列名的方式保持一致。
+
+### [] 访问
+
+单通道对象：
+
+```python
+sd["wavelength"]  # 波长数组
+sd["value"]       # 数值数组
+```
+
+多通道对象：
+
+```python
+cmfs["wavelength"]  # 波长数组
+cmfs["Y"]           # Y 通道 SpectralDistribution
+```
+
+注意，多通道对象中 `cmfs["Y"]` 返回的是单通道 `SpectralDistribution`，不是裸数组。这样可以保留波长域、名称和 metadata，并继续支持：
+
+```python
+cmfs["Y"].sample([450, 550])
+cmfs["Y"].reshape(shape)
+cmfs["Y"].align(shape)
+```
+
+如果只想要裸数组副本，可以导出字典：
+
+```python
+y_values = cmfs.to_dict()["Y"]
+```
+
+`channel(label)` 与 `obj[label]` 等价，语义更显式：
+
+```python
+y_bar = cmfs.channel("Y")
+```
 
 ## sample、__call__ 与 interpolate
 
-当你只想得到数值结果时，使用 `sample(...)`：
+当只需要数值时，使用 `sample(...)`：
 
 ```python
 values = sd.sample([450, 550], method="linear")
+```
+
+`__call__(...)` 是 `sample(...)` 的快捷写法：
+
+```python
 values = sd([450, 550], method="linear")
 ```
 
-`__call__(...)` 只是 `sample(...)` 的快捷写法。
-
-当你想得到一个新的光谱对象时，使用 `interpolate(...)`：
+当需要新的光谱对象时，使用 `interpolate(...)`：
 
 ```python
-sd_450_550 = sd.interpolate([450, 550], method="linear")
+sampled = sd.interpolate([450, 550], method="linear")
 ```
 
-三者区别是：
+区别是：
 
 ```text
 sample(...)      -> numpy.ndarray
@@ -172,91 +330,88 @@ __call__(...)    -> numpy.ndarray
 interpolate(...) -> SpectralDistribution 或 MultiSpectralDistribution
 ```
 
-默认情况下，插值会拒绝超出原始波长范围的目标波长：
+默认情况下，插值拒绝超出原始波长范围：
 
 ```python
-sd.interpolate([350, 450])  # 如果 sd 从 400 nm 开始，这里会抛错
+sd.interpolate([350, 450])
 ```
 
-如果明确希望对范围外的值进行填充：
+如果确实需要范围外填充值：
 
 ```python
 sd.interpolate([350, 450], bounds_error=False, fill_value=0.0)
 ```
 
-如果需要真正的外推行为，优先使用 `align(...)` 或 `extrapolate(...)`。
-
-## reshape、trim、extrapolate 与 align
+## reshape、trim、extrapolate、align
 
 ### reshape
 
-`reshape(shape)` 会在 `shape.wavelengths` 上重新采样，并返回新对象：
+`reshape(shape)` 会在 `shape.wavelengths` 上重采样：
 
 ```python
-from color.spectra import SpectralShape
-
 d65_5nm = d65.reshape(SpectralShape(400, 700, 5))
 ```
 
-`reshape(...)` 适合原始数据范围内部的重采样。如果目标 shape 超出了原始波长范围，应该使用 `align(...)`。
+它适合目标波长域仍在原始范围内的情况。
 
 ### trim
 
-`trim(shape)` 会保留落在 shape 范围内的原始采样点：
+`trim(shape)` 保留落在范围内的原始采样点：
 
 ```python
 visible = sd.trim(SpectralShape(400, 700, 10))
 ```
 
-它不会创建新的边界采样点。它是裁剪/过滤操作，不是插值操作。
+它不会创建新的边界点，因此是裁剪/过滤，不是插值。
 
 ### extrapolate
 
-`extrapolate(shape)` 会在目标 shape 上采样，并对原始范围外的部分进行填充或外推：
+`extrapolate(shape)` 会采样目标 shape，并处理原始范围外的值：
 
 ```python
 filled = sd.extrapolate(shape, method="fill", fill_value=0.0)
 linear = sd.extrapolate(shape, method="linear")
 ```
 
-默认行为是：
+支持的外推方式：
 
-```python
-sd.extrapolate(shape)
-# method="fill", fill_value=np.nan
-```
+| 方法 | 行为 |
+| --- | --- |
+| `constant` | 范围外使用边界值 |
+| `linear` | 沿边界斜率线性延伸 |
+| `fill` | 范围外写入 `fill_value` |
 
 ### align
 
-当多个光谱需要统一到同一个波长域时，`align(shape)` 是主要的便捷入口：
+`align(shape)` 是最常用的对齐入口：
 
 ```python
 aligned = sd.align(SpectralShape(360, 830, 5))
 ```
 
-默认行为是：
+默认行为：
 
 ```python
 sd.align(shape)
 # interpolator="auto", extrapolator="constant"
 ```
 
-也就是说，`align(...)` 会在原始范围内插值，在原始范围外使用边界值常数外推。
+也就是说，在原始范围内插值，在范围外使用边界值常数外推。
 
 ## 插值方法
 
-当前支持的插值方法：
+当前支持：
 
-| 方法 | 适用场景 |
+| 方法 | 说明 |
 | --- | --- |
-| `auto` | 默认通用选择 |
-| `linear` | 保守、可预测 |
-| `pchip` | 平滑且保形，常适合反射率/SPD 曲线 |
-| `sprague` | CIE 风格的规则采样光谱插值 |
-| `cubic` | 样本足够时的平滑三次插值 |
-| `nearest` | 离散最近邻采样行为 |
+| `auto` | 默认选择 |
+| `linear` | 线性插值，保守稳定 |
+| `nearest` | 最近邻 |
+| `cubic` | 三次插值 |
+| `pchip` | 保形插值，常适合反射率曲线 |
+| `sprague` | CIE 风格规则采样光谱插值 |
 
-`method="auto"` 的选择规则是：
+`method="auto"` 的选择规则：
 
 ```text
 波长均匀且至少 6 个采样点 -> sprague
@@ -264,98 +419,40 @@ sd.align(shape)
 否则                       -> linear
 ```
 
-Sprague 插值当前委托给 `colour.algebra.SpragueInterpolator`，这样可以尽量贴近参考库的行为。
-
-对于颜色科学中的常见光谱曲线，比较实用的选择是：
-
-```text
-标准规则表格   -> auto 或 sprague
-反射率曲线     -> pchip 或 linear
-小规模数据     -> linear
-调试/对比      -> nearest
-```
-
-## 外推方法
-
-当前支持的外推方法：
-
-| 方法 | 行为 |
-| --- | --- |
-| `constant` | 范围外使用第一个/最后一个边界值 |
-| `linear` | 沿边界斜率线性延伸 |
-| `fill` | 范围外写入 `fill_value` |
-
-也可以显式覆盖左右两侧：
-
-```python
-aligned = sd.align(shape, left=0.0, right=0.0)
-```
-
 实用建议：
 
 ```text
-constant -> 对齐时最安全的默认选择
-linear   -> 对平滑物理趋势有用，但可能过冲
-fill     -> 当范围外的值应该明确无效或置零时使用
-```
-
-## 多通道对象
-
-`MultiSpectralDistribution` 的值数组形状是：
-
-```text
-(n_wavelengths, n_channels)
-```
-
-并且带有通道标签：
-
-```python
-cmfs.labels  # ("X", "Y", "Z")
-```
-
-使用 `channel(label)` 可以提取单个通道：
-
-```python
-y_bar = cmfs.channel("Y")
-```
-
-它会返回一个共享相同波长域的 `SpectralDistribution`。
-
-当多个通道必须保持对齐时，应使用多通道对象，例如：
-
-```text
-CMFs：X、Y、Z
-色卡：每个色块作为一个通道
-相机灵敏度：R、G、B
+标准规则表格 -> auto 或 sprague
+反射率曲线   -> pchip 或 linear
+少量点       -> linear
+调试/离散值  -> nearest
 ```
 
 ## 导出
 
-可以使用：
-
 ```python
-sd.to_dict()
-sd.to_numpy()
-sd.to_pandas()
+raw = sd.to_dict()
+array = sd.to_numpy()
+frame = sd.to_pandas()
 ```
 
-对于 `SpectralDistribution`，`to_numpy()` 返回：
+单通道 `to_numpy()`：
 
 ```text
 (n, 2) -> wavelength, value
 ```
 
-对于 `MultiSpectralDistribution`，`to_numpy()` 返回：
+多通道 `to_numpy()`：
 
 ```text
 (n, 1 + channels) -> wavelength, channel_1, channel_2, ...
 ```
 
-`to_dict()` 返回的是可写副本，因此下游代码可以安全修改。
+`to_dict()` 返回的是可写副本，因此下游代码可以安全修改，不会影响光谱对象内部状态。
 
 ## 算术操作
 
-光谱对象支持标量算术：
+支持标量算术：
 
 ```python
 scaled = sd * 0.5
@@ -365,20 +462,18 @@ offset = sd + 1.0
 也支持同类型对象之间的算术：
 
 ```python
-combined = sd1 + sd2
 product = illuminant * reflectance
+combined = sd1 + sd2
 ```
 
-对象之间做算术时，要求波长采样完全一致：
+要求：
 
 ```text
-相同波长采样 -> 允许
-不同波长采样 -> ValueError
+单通道对象之间：波长采样必须完全一致
+多通道对象之间：波长采样和 labels 都必须完全一致
 ```
 
-对于多通道算术，通道标签也必须完全一致。
-
-算术操作不会自动执行对齐。应该先显式对齐：
+算术操作不会自动对齐。应该显式写出对齐策略：
 
 ```python
 shape = SpectralShape(400, 700, 5)
@@ -387,20 +482,33 @@ right = right.align(shape)
 result = left * right
 ```
 
-这样可以让插值和外推选择保持可见，而不是被隐藏在算术运算符内部。
+这能避免插值和外推策略被隐藏在运算符内部。
 
 ## 常见工作流
 
-### 静态照明体转对象
+### D65 与 CIE 1931 CMFs
 
 ```python
-from color.spectra import from_dataset, SpectralShape
+from color.spectra import from_D65_illuminant, from_cie1931_xyz_cmfs
 
-d65 = from_dataset("illuminants", "D65")
-d65_5nm = d65.reshape(SpectralShape(400, 700, 5))
+d65 = from_D65_illuminant()
+cmfs = from_cie1931_xyz_cmfs(interval_nm=1)
 ```
 
-### 生成黑体光谱后转对象
+### 色卡反射谱
+
+```python
+from color.datasets.color_cards import get_color_card
+from color.spectra import from_columns
+
+raw = get_color_card("macbeth")
+card = from_columns(raw, ys=("Blue Sky", "White", "Black"))
+
+blue_sky = card["Blue Sky"]
+reflectance_values = blue_sky.values
+```
+
+### 生成数据转对象
 
 ```python
 from color.generators.blackbody import blackbody_spd
@@ -410,28 +518,19 @@ raw = blackbody_spd(temperature=6500)
 bb = from_columns(raw, y="radiance", name="blackbody 6500 K")
 ```
 
-### 色卡色块转多通道对象
+### 为 colorimetry 积分准备
 
 ```python
-from color.datasets import get_color_card
-from color.spectra import from_columns, SpectralShape
+from color.colorimetry import reflectance_to_XYZ
 
-raw = get_color_card("pmc")
-patches = ("Caucasian", "Carrot", "Blue Sky")
-pmc = from_columns(raw, ys=patches, name="PMC selected patches")
-pmc_05nm = pmc.reshape(SpectralShape(400, 700, 0.5), method="pchip")
+XYZ = reflectance_to_XYZ(
+    blue_sky,
+    illuminant=d65,
+    cmfs=cmfs,
+)
 ```
 
-### 为色度计算准备信号
-
-```python
-shape = SpectralShape(400, 700, 5)
-spd = spd.align(shape)
-reflectance = reflectance.align(shape)
-weighted = spd * reflectance
-```
-
-XYZ/LMS 转换由 `color.colorimetry` 提供；本模块只负责光谱对象准备、重采样和对齐。
+`spectra` 只负责对象准备；真正的 XYZ/LMS 积分由 `color.colorimetry` 完成。
 
 ## 示例
 
@@ -439,19 +538,21 @@ XYZ/LMS 转换由 `color.colorimetry` 提供；本模块只负责光谱对象准
 
 | 示例 | 重点 |
 | --- | --- |
-| `example_01_create_spectral_objects.py` | `from_dataset`、`from_columns` 和直接构造对象 |
-| `example_02_sampling_interpolation_alignment.py` | sample、插值、reshape、trim、外推和 align |
-| `example_03_multi_channel_workflow.py` | CMFs 和 PMC 色卡这类多通道对象工作流 |
-| `example_04_export_and_arithmetic.py` | 导出格式、标量算术和显式对齐后的对象算术 |
-| `example_05_visualization_cases.py` | 单通道、CMFs 和 PMC 色卡的重点可视化案例 |
+| `example_01_create_spectral_objects.py` | `from_dataset`、`from_columns`、直接构造和常用入口 |
+| `example_02_sampling_interpolation_alignment.py` | sample、`__call__`、插值、reshape、trim、外推、align |
+| `example_03_multi_channel_workflow.py` | CMFs、色卡、多通道标签和通道提取 |
+| `example_04_export_and_arithmetic.py` | `to_dict`、`to_numpy`、`to_pandas`、算术和显式对齐 |
+| `example_05_visualization_cases.py` | 单通道、CMFs、色卡插值与可视化 |
 
 ## 模块边界
 
 `color.spectra` 不直接实现：
 
 - 光谱积分
-- `area()`
-- SPD x 响应函数到 XYZ/LMS
+- SPD 到 XYZ/LMS
 - 反射率 x 照明体 x 响应函数到 XYZ/LMS
+- 色度坐标、色温、主波长、色差
 
-其中 XYZ/LMS 响应积分已经由 `color.colorimetry` 承接
+这些由 `color.colorimetry`、`color.spaces` 和 `color.difference` 承接。
+
+这个边界的好处是：数据读取、光谱信号准备、色度计算和颜色空间转换各自保持干净。

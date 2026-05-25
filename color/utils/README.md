@@ -1,23 +1,38 @@
 # color.utils
 
-`color.utils` contains small, dependency-light helpers shared by multiple
-modules. It is a foundation layer and should not depend on higher-level colour
-science modules such as `spaces`, `colorimetry`, `appearance`, or `difference`.
+`color.utils` is the shared foundation layer for small, dependency-light
+helpers used across the package. It should stay below the scientific modules:
 
-## Current Entry Points
+```text
+color.utils
+  -> arrays, names, method dispatch, numeric scale helpers
 
-- `color.utils.arrays`: NumPy input validation, fixed-size last-axis arrays,
-  broadcasting helpers, scalar/array result handling.
-- `color.utils.methods`: method alias indexes, dispatch resolution, and
-  keyword filtering.
-- `color.utils.names`: name canonicalisation for general aliases and resource
-  identifiers, including resource-specific degree and lambda symbols.
-- `color.utils.scale`: explicit numeric scale conversion between `[0, 1]`,
-  `[0, 100]`, and degree-style angle domains.
+color.datasets / generators / spectra / colorimetry / spaces / appearance / difference
+  -> domain logic and colour-science algorithms
+```
 
-## Array Helpers
+The rule of thumb is:
 
-Use `arrays.py` when a function needs consistent NumPy input handling.
+```text
+utils handles mechanics, not colour-science meaning.
+```
+
+Do not put spectral, colorimetric, colour-space, appearance, whitepoint, or
+physical-parameter formulae here.
+
+## Modules
+
+| Module | Responsibility |
+| --- | --- |
+| `arrays.py` | NumPy float conversion, fixed-size last-axis validation, broadcasting, channel splitting |
+| `names.py` | General, method, and resource-name canonicalisation |
+| `methods.py` | Method alias indexes, dispatch resolution, and keyword filtering |
+| `scale.py` | Explicit numeric scale conversion between domain/range conventions |
+
+## arrays.py
+
+Use these helpers at function boundaries when a public API accepts scalar,
+single-point, or batch NumPy-like inputs.
 
 ```python
 from color.utils.arrays import as_last_axis_triplets, broadcast_triplets
@@ -26,7 +41,7 @@ XYZ = as_last_axis_triplets(XYZ, name="XYZ")
 Lab_1, Lab_2 = broadcast_triplets(Lab_1, Lab_2, name_1="Lab_1", name_2="Lab_2")
 ```
 
-Available helpers:
+Public helpers:
 
 ```python
 as_float_array(value, name="value", finite=True)
@@ -35,66 +50,71 @@ as_last_axis(value, size, name="value", finite=True)
 as_last_axis_triplets(value, name="value", finite=True)
 as_last_axis_pairs(value, name="value", finite=True)
 broadcast_last_axis(value_1, value_2, size, name_1="value_1", name_2="value_2", finite=True)
-broadcast_triplets(...)
-broadcast_pairs(...)
+broadcast_triplets(value_1, value_2, ...)
+broadcast_pairs(value_1, value_2, ...)
 split_last_axis(value)
 ```
 
-## Method Helpers
+These helpers validate array mechanics only. Domain-specific checks such as
+positive whitepoints, increasing wavelengths, valid CCT ranges, or valid
+observer conditions belong in the calling module.
 
-Use `methods.py` when a public function accepts a `method=...` style option.
+## names.py
+
+All string canonicalisation lives in `names.py`.
+
+```python
+from color.utils.names import (
+    canonical_method_name,
+    canonicalize_name,
+    canonicalize_resource_name,
+)
+
+canonicalize_name("CAM16-UCS")          # "cam16ucs"
+canonical_method_name("CIE 2000")       # "cie2000"
+canonicalize_resource_name("0.1 nm")    # "0p1nm"
+canonicalize_resource_name("V(\u03bb)")      # "vlambda"
+canonicalize_resource_name("10\u00b0 observer")  # "10degreeobserver"
+```
+
+Use `canonicalize_name(...)` or `canonical_method_name(...)` for methods,
+options, transforms, and colour-space aliases.
+
+Use `canonicalize_resource_name(...)` for dataset/generator resource names,
+because resources may need to preserve decimal sampling intervals and symbols
+such as `λ` and `°`.
+
+## methods.py
+
+Use `methods.py` when a public function accepts `method="..."`.
 
 ```python
 from color.utils.methods import build_method_index, filter_kwargs, resolve_method
 
 METHODS = {"CIE 2000": delta_E_CIE2000}
 ALIASES = {"CIE 2000": ("cie2000", "CIEDE2000")}
-INDEX = build_method_index(ALIASES)
+METHOD_INDEX = build_method_index(ALIASES)
 
-_, function = resolve_method("CIEDE2000", INDEX, METHODS)
+name, function = resolve_method("CIEDE2000", METHOD_INDEX, METHODS)
 result = function(a, b, **filter_kwargs(function, kwargs))
 ```
 
-Available helpers:
+`methods.py` re-exports `canonical_method_name(...)` for compatibility, but the
+canonicalisation rule itself is defined in `names.py`.
 
-```python
-canonical_method_name(name)
-build_method_index(method_aliases)
-resolve_method(method, method_index, methods)
-filter_kwargs(function, kwargs)
-```
+## scale.py
 
-## Name Helpers
-
-Use `names.py` for all string canonicalisation. General aliases use
-`canonicalize_name(...)`; dataset and generator resources use
-`canonicalize_resource_name(...)` to preserve decimal and colour-science symbol
-semantics.
-
-```python
-from color.utils.names import canonical_method_name, canonicalize_name, canonicalize_resource_name
-
-canonicalize_name("CAM16-UCS")                 # "cam16ucs"
-canonical_method_name("0.1 nm")                # "01nm"
-canonicalize_resource_name("0.1 nm")           # "0p1nm"
-canonicalize_resource_name("V(\u03bb)")             # "vlambda"
-canonicalize_resource_name("10\u00b0 observer")     # "10degreeobserver"
-```
-
-## Scale Helpers
-
-Use `scale.py` when a module needs to make numeric scale changes explicit.
-Unlike `colour-science`, this package does not use a global domain/range scale
-state: callers declare the source or target scale directly.
+Use `scale.py` when a module needs to make numeric scale changes explicit. This
+package does not use a global scale state.
 
 ```python
 from color.utils.scale import to_domain_1, to_domain_100
 
-XYZ_relative = to_domain_1(XYZ_Y100)
-XYZ_Y100 = to_domain_100(XYZ_relative)
+XYZ_relative = to_domain_1(XYZ_Y100, source_scale="100")
+XYZ_Y100 = to_domain_100(XYZ_relative, source_scale="1")
 ```
 
-Available helpers:
+Public helpers:
 
 ```python
 to_domain_1(value, source_scale="100", scale_factor=100.0)
@@ -105,20 +125,26 @@ to_domain_degrees(value, source_scale="1", scale_factor=360.0)
 from_range_degrees(value, target_scale="1", scale_factor=360.0)
 ```
 
-`source_scale="reference"` and `target_scale="reference"` are no-op copy
-paths. They are useful when a function wants to accept a scale option without
-performing hidden conversion.
+`scale.py` only expresses numeric scaling. It does not perform chromatic
+adaptation, choose whitepoints, normalise spectral integrations, or interpret
+appearance viewing conditions.
 
 ## Boundary Rules
 
-Keep this package narrow.
+Good candidates for `utils`:
 
-- Do add helpers used by more than one module.
-- Do keep helpers NumPy-only or standard-library-only.
-- Do not add colour-science formulae here.
-- Do not add high-level colour-space conversion logic here.
-- Do not add objects that belong to `spaces`, `spectra`, `appearance`, or
-  `difference`.
+- array shape and finite-value checks reused by multiple modules
+- method alias/dispatch mechanics
+- reusable string canonicalisation
+- explicit numeric scale conversion
 
-`color.difference` is currently the first migrated user of these helpers. Other
-modules can migrate gradually when they are next touched.
+Poor candidates for `utils`:
+
+- colour-space conversion formulae
+- colour-difference formulae
+- spectral interpolation or integration
+- CCT, whitepoint, wavelength, or viewing-condition validation
+- dataset registry behaviour beyond generic name canonicalisation
+
+When in doubt, keep domain-specific behaviour local to the module that owns the
+scientific meaning.

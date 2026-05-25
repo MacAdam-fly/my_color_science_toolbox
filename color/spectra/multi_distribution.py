@@ -127,6 +127,18 @@ class MultiSpectralDistribution:
             metadata=self.metadata,
         )
 
+    def keys(self) -> tuple[str, ...]:
+        """Return raw column keys matching :meth:`to_dict`."""
+        return ("wavelength", *self.labels)
+
+    def __getitem__(self, key: str) -> np.ndarray | SpectralDistribution:
+        """Return a raw column or one channel by key."""
+        if key == "wavelength":
+            return self.wavelengths
+        if key in self.labels:
+            return self.channel(key)
+        raise KeyError(f"unknown spectral column {key!r}")
+
     def to_dict(self) -> dict[str, np.ndarray]:
         """Return a raw column mapping."""
         result = {"wavelength": np.array(self.wavelengths, copy=True)}

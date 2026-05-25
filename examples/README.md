@@ -24,3 +24,9 @@ python examples/database/example_illuminants.py
 ```
 
 Each plotting example saves a PNG to `examples/database/`.
+
+## Integration Examples (`integration/`)
+
+- `example_01_long_colour_pipeline.py` — Generated LED spectrum and sRGB signal
+  through XYZ/LMS, Luv, CAM02-UCS with D50 viewing white, explicit chromatic
+  adaptation for Oklab, final Lab, and CIEDE2000.

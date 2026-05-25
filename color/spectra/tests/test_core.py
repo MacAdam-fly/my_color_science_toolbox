@@ -9,6 +9,7 @@ from color.spectra import (
     MultiSpectralDistribution,
     SpectralDistribution,
     SpectralShape,
+    from_D65_illuminant,
     from_cie1931_xyz_cmfs,
     from_cie1964_xyz_cmfs,
     from_cie2006_lms_2degree_fundamentals,
@@ -93,6 +94,17 @@ class TestSpectralDistribution:
         assert list(raw.keys()) == ["wavelength", "value"]
         np.testing.assert_array_equal(raw["wavelength"], [400, 500])
         np.testing.assert_array_equal(raw["value"], [0.1, 0.2])
+
+    def test_keys_returns_raw_column_keys(self):
+        sd = SpectralDistribution([400, 500], [0.1, 0.2])
+        assert sd.keys() == ("wavelength", "value")
+
+    def test_getitem_returns_columns(self):
+        sd = SpectralDistribution([400, 500], [0.1, 0.2])
+        assert sd["wavelength"] is sd.wavelengths
+        assert sd["value"] is sd.values
+        with pytest.raises(KeyError, match="unknown spectral column"):
+            sd["spd"]
 
     def test_interpolate(self):
         sd = SpectralDistribution([400, 500], [0.0, 1.0])
@@ -269,6 +281,29 @@ class TestMultiSpectralDistribution:
         assert list(raw.keys()) == ["wavelength", "X", "Y"]
         np.testing.assert_array_equal(raw["X"], [0.1, 0.3])
 
+    def test_keys_returns_raw_column_keys(self):
+        msd = MultiSpectralDistribution(
+            [400, 500],
+            [[0.1, 0.2], [0.3, 0.4]],
+            ("X", "Y"),
+        )
+        assert msd.keys() == ("wavelength", "X", "Y")
+
+    def test_getitem_returns_wavelength_or_channel(self):
+        msd = MultiSpectralDistribution(
+            [400, 500],
+            [[0.1, 0.2], [0.3, 0.4]],
+            ("X", "Y"),
+            name="cmfs",
+        )
+        assert msd["wavelength"] is msd.wavelengths
+        channel = msd["Y"]
+        assert isinstance(channel, SpectralDistribution)
+        assert channel.name == "cmfs:Y"
+        np.testing.assert_array_equal(channel.values, [0.2, 0.4])
+        with pytest.raises(KeyError, match="unknown spectral column"):
+            msd["Z"]
+
     def test_channel(self):
         msd = MultiSpectralDistribution(
             [400, 500],
@@ -436,6 +471,17 @@ class TestFromDataset:
         assert result.name == "D65"
         assert result.metadata["dataset_category"] == "illuminants"
 
+    def test_D65_illuminant_entrypoint(self):
+        result = from_D65_illuminant()
+        expected = from_dataset("illuminants", "D65")
+        assert isinstance(result, SpectralDistribution)
+        assert result.name == "CIE Standard Illuminant D65"
+        assert result.metadata["dataset_category"] == "illuminants"
+        assert result.metadata["dataset_name"] == "D65"
+        assert result.metadata["standard"] == "CIE Standard Illuminant D65"
+        np.testing.assert_allclose(result.wavelengths, expected.wavelengths)
+        np.testing.assert_allclose(result.values, expected.values)
+
     def test_standard_observer_cmfs(self):
         result = from_dataset("standard_observers.cmfs", "cie1931_xyz_1nm")
         assert isinstance(result, MultiSpectralDistribution)
@@ -495,12 +541,10 @@ class TestCommonStandardObserverEntrypoints:
         result_2 = from_cie2006_lms_2degree_fundamentals(
             interval_nm=1,
             energy="linE",
-            fill_nan=0.0,
         )
         result_10 = from_cie2006_lms_10degree_fundamentals(
             interval_nm=5,
             energy="LOG E",
-            fill_nan=0.0,
         )
 
         for result in (result_2, result_10):

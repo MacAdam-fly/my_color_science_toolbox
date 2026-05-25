@@ -11,10 +11,16 @@ _ROOT = Path(__file__).resolve().parents[3]
 _COLORIMETRY_EXAMPLES = _ROOT / "examples" / "colorimetry"
 _SPACES_EXAMPLES = _ROOT / "examples" / "spaces"
 _DIFFERENCE_EXAMPLES = _ROOT / "examples" / "difference"
+_INTEGRATION_EXAMPLES = _ROOT / "examples" / "integration"
 
 
 def test_colorimetry_examples_run():
-    for directory in (_COLORIMETRY_EXAMPLES, _SPACES_EXAMPLES, _DIFFERENCE_EXAMPLES):
+    for directory in (
+        _COLORIMETRY_EXAMPLES,
+        _SPACES_EXAMPLES,
+        _DIFFERENCE_EXAMPLES,
+        _INTEGRATION_EXAMPLES,
+    ):
         if str(directory) not in sys.path:
             sys.path.insert(0, str(directory))
 
@@ -38,6 +44,7 @@ def test_colorimetry_examples_run():
         _DIFFERENCE_EXAMPLES / "example_01_lab_delta_e.py",
         _DIFFERENCE_EXAMPLES / "example_02_appearance_delta_e.py",
         _DIFFERENCE_EXAMPLES / "example_03_modern_space_delta_e.py",
+        _INTEGRATION_EXAMPLES / "example_01_long_colour_pipeline.py",
     ]
 
     for path in example_paths:

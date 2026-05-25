@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from .convert import (
+    from_D65_illuminant,
     from_cie1931_xyz_cmfs,
     from_cie1964_xyz_cmfs,
     from_cie2006_lms_2degree_fundamentals,
@@ -22,6 +23,7 @@ __all__ = [
     "MultiSpectralDistribution",
     "from_columns",
     "from_dataset",
+    "from_D65_illuminant",
     "from_cie1931_xyz_cmfs",
     "from_cie1964_xyz_cmfs",
     "from_cie2012_xyz_2degree_cmfs",

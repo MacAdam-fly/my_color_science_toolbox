@@ -78,6 +78,11 @@ def get_illuminant(name: str, **kwargs: Any) -> SpectralDict:
     return get("illuminants", name, **kwargs)
 
 
+def get_D65_illuminant() -> SpectralDict:
+    """Return the CIE standard illuminant D65 spectral power distribution."""
+    return get_illuminant("D65")
+
+
 def list_illuminants() -> List[str]:
     """List all registered static illuminant names."""
     from ._registry import list_datasets

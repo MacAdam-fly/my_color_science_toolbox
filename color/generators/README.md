@@ -3,6 +3,8 @@
 `color.generators` contains data generated from formulas or procedural models.
 It is separate from `color.datasets`, which only loads static data files.
 
+中文详细说明见 [`README_DETAILS.md`](README_DETAILS.md).
+
 Generators return raw column dictionaries:
 
 ```python

@@ -81,13 +81,22 @@ delta_E_CAM16SCD
 
 这些函数的输入是 `J'a'b'` 坐标，不是 CIECAM02 / CIECAM16 的完整 appearance specification，也不是 XYZ。
 
-观察条件应该在 `spaces` 转换阶段指定：
+观察条件应该在 `spaces` 转换阶段指定。真实使用色貌均匀空间时，建议显式写出 `SpaceSpec(...)`，
 
 ```python
+from color.constants import D65_XYZ
 from color.spaces import SpaceSpec, convert_color
 
-spec = SpaceSpec("CAM16-UCS", surround="Dim")
-cam16 = convert_color(rgb, "sRGB", spec)
+cam16_spec = SpaceSpec(
+    "CAM16-UCS",
+    XYZ_w=D65_XYZ,
+    L_A=318.31,
+    Y_b=20.0,
+    surround="Average",
+    discount_illuminant=False,
+)
+
+cam16 = convert_color(rgb, "sRGB", cam16_spec)
 ```
 
 然后再计算：
@@ -154,12 +163,25 @@ Lab_2 = convert_color(rgb_2, "sRGB", SpaceSpec("Lab", whitepoint_XYZ=D65_XYZ))
 delta_E_CIE2000(Lab_1, Lab_2)
 ```
 
-如果要使用 CAM16-UCS：
+如果要使用 CAM16-UCS，推荐把观察条件写清楚：
 
 ```python
-cam16_1 = convert_color(rgb_1, "sRGB", "CAM16-UCS")
-cam16_2 = convert_color(rgb_2, "sRGB", "CAM16-UCS")
+from color.constants import D65_XYZ
+from color.spaces import SpaceSpec, convert_color
+
+cam16_spec = SpaceSpec(
+    "CAM16-UCS",
+    XYZ_w=D65_XYZ,
+    L_A=318.31,
+    Y_b=20.0,
+    surround="Average",
+    discount_illuminant=False,
+)
+
+cam16_1 = convert_color(rgb_1, "sRGB", cam16_spec)
+cam16_2 = convert_color(rgb_2, "sRGB", cam16_spec)
+
 delta_E_CAM16UCS(cam16_1, cam16_2)
 ```
 
-核心原则是：先用 `spaces` 明确得到目标空间坐标，再用 `difference` 计算差异。
+如果要比较不同观察环境，例如 `Average` 和 `Dim`，也应该在 `SpaceSpec(...)` 层面创建不同坐标，而不是把 `surround` 传给 `delta_E_CAM16UCS(...)`。核心原则是：先用 `spaces` 明确得到目标空间坐标，再用 `difference` 计算差异。

@@ -4,7 +4,11 @@ from __future__ import annotations
 
 import numpy as np
 
-from color.datasets.illuminants import get_illuminant, list_illuminants
+from color.datasets.illuminants import (
+    get_D65_illuminant,
+    get_illuminant,
+    list_illuminants,
+)
 
 
 class TestListIlluminants:
@@ -66,6 +70,12 @@ class TestGetIlluminantD65:
     def test_spd_values_non_negative(self):
         data = get_illuminant("D65")
         assert np.all(data["spd"] >= 0)
+
+    def test_common_entrypoint_matches_generic_loader(self):
+        data = get_D65_illuminant()
+        expected = get_illuminant("D65")
+        np.testing.assert_allclose(data["wavelength"], expected["wavelength"])
+        np.testing.assert_allclose(data["spd"], expected["spd"])
 
 
 class TestIlluminantFieldNames:

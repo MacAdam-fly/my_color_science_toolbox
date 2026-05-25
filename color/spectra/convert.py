@@ -45,6 +45,17 @@ def _standard_observer_metadata(
     return metadata
 
 
+def _dataset_metadata(category: str, name: str) -> dict[str, Any]:
+    """Build spectral object metadata from a registered dataset entry."""
+    from color.datasets import describe
+
+    entry = describe(category, name)
+    metadata = dict(entry.metadata)
+    metadata.setdefault("dataset_category", entry.category)
+    metadata.setdefault("dataset_name", entry.name)
+    return metadata
+
+
 def from_columns(
     raw: SpectralData,
     *,
@@ -124,6 +135,22 @@ def from_dataset(
         name=object_name,
         metadata=metadata,
         fill_nan=fill_nan,
+    )
+
+
+def from_D65_illuminant() -> SpectralDistribution:
+    """Return CIE standard illuminant D65 as a spectral distribution."""
+    from color.datasets.illuminants import get_D65_illuminant
+
+    raw = get_D65_illuminant()
+    metadata = _dataset_metadata("illuminants", "D65")
+    metadata["standard"] = "CIE Standard Illuminant D65"
+    return SpectralDistribution.from_columns(
+        raw,
+        x="wavelength",
+        y="spd",
+        name="CIE Standard Illuminant D65",
+        metadata=metadata,
     )
 
 
@@ -234,7 +261,7 @@ def from_cie2012_xyz_10degree_cmfs(
 def from_cie2006_lms_2degree_fundamentals(
     interval_nm: float = 1,
     energy: str = "linE",
-    fill_nan: float | None = None,
+    fill_nan: float | None = 0.0,
 ) -> MultiSpectralDistribution:
     """Return CIE 2006 2-degree LMS fundamentals as a multispectral object."""
     from color.datasets.standard_observers import (
@@ -270,7 +297,7 @@ def from_cie2006_lms_2degree_fundamentals(
 def from_cie2006_lms_10degree_fundamentals(
     interval_nm: float = 1,
     energy: str = "linE",
-    fill_nan: float | None = None,
+    fill_nan: float | None = 0.0,
 ) -> MultiSpectralDistribution:
     """Return CIE 2006 10-degree LMS fundamentals as a multispectral object."""
     from color.datasets.standard_observers import (

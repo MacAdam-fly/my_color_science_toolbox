@@ -106,14 +106,30 @@ The dispatcher does not guess the input space. For example,
 ## Appearance Conditions
 
 CAM02/CAM16 viewing conditions are not parameters of `difference`. Choose them
-when converting into CAM02/CAM16 uniform spaces:
+when converting into CAM02/CAM16 uniform spaces. In real appearance-uniform
+workflows, prefer an explicit `SpaceSpec(...)` so the viewing environment is
+visible at the conversion step:
 
 ```python
+from color.constants import D65_XYZ
+from color.difference import delta_E_CAM16UCS
 from color.spaces import SpaceSpec, convert_color
 
-cam16_spec = SpaceSpec("CAM16-UCS", surround="Dim")
+cam16_spec = SpaceSpec(
+    "CAM16-UCS",
+    XYZ_w=D65_XYZ,
+    L_A=318.31,
+    Y_b=20.0,
+    surround="Average",
+    discount_illuminant=False,
+)
+
 cam16_1 = convert_color(rgb_1, "sRGB", cam16_spec)
 cam16_2 = convert_color(rgb_2, "sRGB", cam16_spec)
+
+de = delta_E_CAM16UCS(cam16_1, cam16_2)
 ```
 
-Then pass those coordinates to `delta_E_CAM16UCS(...)`.
+The same principle applies to CAM02-UCS/LCD/SCD and CAM16-UCS/LCD/SCD:
+observation conditions belong to the `spaces` conversion stage, while
+`difference` receives only the resulting `J'a'b'` coordinates.

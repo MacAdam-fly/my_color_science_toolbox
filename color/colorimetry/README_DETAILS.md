@@ -26,14 +26,21 @@ color.colorimetry  色度学计算
 
 ```python
 from color.generators.blackbody import blackbody_spd
-from color.spectra import from_columns
+from color.spectra import (
+    from_cie1931_xyz_cmfs,
+    from_cie2006_lms_2degree_fundamentals,
+    from_columns,
+)
 from color.colorimetry import emission_to_XYZ, emission_to_LMS
 
 raw = blackbody_spd(temperature=6500)
 sd = from_columns(raw, y="radiance", name="blackbody 6500 K")
 
-XYZ = emission_to_XYZ(sd)
-LMS = emission_to_LMS(sd)
+cmfs = from_cie1931_xyz_cmfs(interval_nm=1)
+lms2 = from_cie2006_lms_2degree_fundamentals(interval_nm=1)
+
+XYZ = emission_to_XYZ(sd, cmfs=cmfs)
+LMS = emission_to_LMS(sd, fundamentals=lms2)
 ```
 
 `emission_to_*` 用于自发光光谱，例如黑体、LED、显示器光谱、发射光源 SPD。
@@ -41,19 +48,40 @@ LMS = emission_to_LMS(sd)
 ### 反射率光谱到 XYZ / LMS
 
 ```python
-from color.datasets import get_color_card
-from color.spectra import from_columns
+from color.datasets.color_cards import get_color_card
+from color.spectra import (
+    from_D65_illuminant,
+    from_cie1931_xyz_cmfs,
+    from_cie2006_lms_2degree_fundamentals,
+    from_columns,
+)
 from color.colorimetry import reflectance_to_XYZ, reflectance_to_LMS
 
 raw = get_color_card("pmc")
 patch = from_columns(raw, y="Blue Sky", name="PMC Blue Sky")
 
-XYZ = reflectance_to_XYZ(patch, illuminant="D65")
-LMS = reflectance_to_LMS(patch, illuminant="D65")
+d65 = from_D65_illuminant()
+cmfs = from_cie1931_xyz_cmfs(interval_nm=1)
+lms2 = from_cie2006_lms_2degree_fundamentals(interval_nm=1)
+
+XYZ = reflectance_to_XYZ(patch, illuminant=d65, cmfs=cmfs)
+LMS = reflectance_to_LMS(
+    patch,
+    illuminant=d65,
+    fundamentals=lms2,
+    normalisation_channel="m",
+)
 ```
 
-`reflectance_to_*` 用于物体表面反射率，需要指定照明体。默认照明体为
-`D65`。
+`reflectance_to_*` 用于物体表面反射率，需要照明体、响应函数和反射率三者共同参与积分。上面示例显式准备了 D65、CIE 1931 XYZ CMFs 和 CIE 2006 2° LMS fundamentals，因此计算条件在代码中是可见的。
+
+高层函数仍然支持字符串便捷入口：
+
+```python
+XYZ = reflectance_to_XYZ(patch, illuminant="D65", cmfs="cie1931_xyz_1nm")
+```
+
+但在说明文档、示例和科学复现实验中，更推荐传入已经包装好的光谱对象。
 
 ### XYZ 与 xyY / xy
 
@@ -111,6 +139,29 @@ temperature/
 这里的 `emission` 和 `reflectance` 应该是 `color.spectra` 中的
 `SpectralDistribution` 或 `MultiSpectralDistribution`，而不是原始
 `dict[str, np.ndarray]`。
+
+`cmfs`、`fundamentals`、`illuminant` 可以传字符串，也可以传已经加载好的光谱对象。字符串写法是便捷入口：
+
+```python
+XYZ = reflectance_to_XYZ(
+    patch,
+    illuminant="D65",
+    cmfs="cie1931_xyz_1nm",
+)
+```
+
+它内部会从 `color.datasets` 加载对应数据并包装。这个写法适合快速探索；如果要写示例、测试或可复现实验，更推荐显式准备对象：
+
+```python
+from color.spectra import from_D65_illuminant, from_cie1931_xyz_cmfs
+
+d65 = from_D65_illuminant()
+cmfs = from_cie1931_xyz_cmfs(interval_nm=1)
+
+XYZ = reflectance_to_XYZ(patch, illuminant=d65, cmfs=cmfs)
+```
+
+这样可以避免使用者不清楚默认观察者、照明体、采样间隔和 NaN 策略。
 
 ### 自发光与反射率的区别
 
@@ -657,10 +708,19 @@ examples/colorimetry/output/
 
 ## 当前边界
 
-当前 `colorimetry` 已经覆盖基础色度学计算主干。`：
+当前 `colorimetry` 覆盖的是 CIE 色度学基础计算主干：
 
 ```text
-color.colorimetry = CIE 色度学基础计算
+color.colorimetry = 光谱积分 + 色度坐标 + 光度学 + 主波长/纯度 + 色温
+```
+
+它不负责颜色空间路由、色适应、色差或色貌模型本体：
+
+```text
+color.spaces      颜色空间转换
+color.adaptation  显式色适应
+color.difference  色差计算
+color.appearance  CIECAM02 / CIECAM16 色貌模型
 ```
 
 ## 测试

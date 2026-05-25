@@ -1,53 +1,74 @@
 # spectra - spectral object wrappers
 
-`color.spectra` is the optional object layer above `color.datasets`.
+`color.spectra` is the object layer for discrete spectral signals. It sits
+above `color.datasets` and `color.generators`:
 
-`color.datasets` returns raw parsed arrays:
-
-```python
-dict[str, numpy.ndarray]
+```text
+color.datasets     static data files -> dict[str, ndarray]
+color.generators   formula-generated data -> dict[str, ndarray]
+color.spectra      immutable spectral objects, sampling and alignment
+color.colorimetry  XYZ/LMS integration and colour calculations
 ```
 
-`color.spectra` wraps those arrays as immutable spectral objects for
-interpolation, extrapolation, alignment, reshaping, export, and arithmetic. It
-does not replace raw dataset access.
-
-For a detailed guide to object creation, sampling, interpolation, alignment,
-export, and common workflows, see `README_DETAILS.md`.
+The important rule is simple: datasets and generators return raw column
+mappings, while `spectra` wraps those columns as objects that can be sampled,
+interpolated, reshaped, aligned, exported, and combined.
 
 ## Quick Start
 
 ```python
-from color.spectra import SpectralShape, from_cie1931_xyz_cmfs, from_dataset
+from color.spectra import (
+    SpectralShape,
+    from_D65_illuminant,
+    from_cie1931_xyz_cmfs,
+    from_columns,
+)
 
-d65 = from_dataset("illuminants", "D65")
-d65_5nm = d65.reshape(SpectralShape(400, 700, 5))
-d65_visible = d65.trim(SpectralShape(400, 700, 10))
-d65_aligned = d65.align(SpectralShape(360, 830, 5))
-d65_values = d65.sample([450, 550])
-
+d65 = from_D65_illuminant()
 cmfs = from_cie1931_xyz_cmfs(interval_nm=1)
-y_bar = cmfs.channel("Y")
+
+d65_5nm = d65.reshape(SpectralShape(400, 700, 5))
+y_bar = cmfs["Y"]
+values_450_550 = y_bar.sample([450, 550])
 ```
 
-Common standard observer shortcuts such as `from_cie1931_xyz_cmfs(...)` and
-`from_cie2006_lms_2degree_fundamentals(...)` wrap the corresponding raw
-`color.datasets.standard_observers.get_*` helpers. `interval_nm` selects an
-existing source file sampling interval; use `reshape(...)` when you need a new
-interpolated sampling interval.
+## Object Creation
 
-Missing values are preserved by default. When a data source uses blank cells to
-mean zero response in a known computation context, opt in explicitly:
+Use `from_columns(...)` when you already have a raw column mapping:
 
 ```python
-lms = from_dataset(
-    "standard_observers.cone_fundamentals",
-    "cie2006_lms2_linE_1nm",
-    fill_nan=0.0,
-)
+sd = from_columns(raw, x="wavelength", y="spd")
+msd = from_columns(raw, x="wavelength", ys=("X", "Y", "Z"))
 ```
 
-## Objects
+Use `from_dataset(...)` for a registered static dataset:
+
+```python
+d65 = from_dataset("illuminants", "D65")
+cmfs = from_dataset("standard_observers.cmfs", "cie1931_xyz_1nm")
+```
+
+For common standards, prefer the semantic shortcuts:
+
+| Shortcut | Returns |
+| --- | --- |
+| `from_D65_illuminant()` | CIE standard illuminant D65 |
+| `from_cie1931_xyz_cmfs(interval_nm=1)` | CIE 1931 2-degree XYZ CMFs |
+| `from_cie1964_xyz_cmfs(interval_nm=1)` | CIE 1964 10-degree XYZ CMFs |
+| `from_cie2012_xyz_2degree_cmfs(interval_nm=1)` | CIE 2012 2-degree XYZ CMFs |
+| `from_cie2012_xyz_10degree_cmfs(interval_nm=1)` | CIE 2012 10-degree XYZ CMFs |
+| `from_cie2006_lms_2degree_fundamentals(interval_nm=1, energy="linE")` | CIE 2006 2-degree LMS fundamentals |
+| `from_cie2006_lms_10degree_fundamentals(interval_nm=1, energy="linE")` | CIE 2006 10-degree LMS fundamentals |
+
+`interval_nm` selects an existing source file sampling interval; it does not
+interpolate. Use `reshape(...)` or `align(...)` when you need a new wavelength
+grid.
+
+CIE 2006 LMS shortcuts default to `fill_nan=0.0`, matching their common use as
+response functions for numerical integration. Generic constructors preserve
+missing values unless you explicitly pass `fill_nan`.
+
+## Objects And Access
 
 | Object | Purpose |
 | --- | --- |
@@ -58,17 +79,41 @@ lms = from_dataset(
 Constructors copy input arrays and expose read-only arrays. Operations return
 new objects and do not mutate the source object.
 
-`domain` and `range` are read-only aliases for `wavelengths` and `values`.
-They are provided for users who prefer the mathematical function vocabulary.
+Core attributes:
 
-## Operations
+```python
+sd.wavelengths
+sd.values
+sd.domain  # alias for wavelengths
+sd.range   # alias for values
+
+msd.labels
+```
+
+`keys()` and `[]` follow the raw column view:
+
+```python
+d65.keys()   # ("wavelength", "value")
+cmfs.keys()  # ("wavelength", "X", "Y", "Z")
+
+d65["wavelength"]  # wavelength array
+d65["value"]       # value array
+cmfs["wavelength"] # wavelength array
+cmfs["Y"]          # SpectralDistribution for the Y channel
+```
+
+For a multi-channel object, `obj["label"]` is equivalent to
+`obj.channel("label")` and returns a `SpectralDistribution`, not a bare array.
+Use `obj.to_dict()["label"]` when you need a writable array copy.
+
+## Sampling And Alignment
 
 | Method | Behavior |
 | --- | --- |
 | `sample(wavelengths, method="auto")` | Return interpolated numeric values |
 | `__call__(wavelengths, method="auto")` | Shortcut for `sample(...)` |
-| `interpolate(wavelengths, method="auto")` | Sample inside the current domain |
-| `reshape(shape, method="auto")` | Sample inside the current domain at a `SpectralShape` |
+| `interpolate(wavelengths, method="auto")` | Return a new object sampled at explicit wavelengths |
+| `reshape(shape, method="auto")` | Resample inside the current domain at a `SpectralShape` |
 | `trim(shape)` | Keep existing source samples inside the shape bounds |
 | `extrapolate(shape, method="fill")` | Sample a shape and extrapolate out-of-domain samples |
 | `align(shape, extrapolator="constant")` | Sample a shape with interpolation and edge extrapolation |
@@ -77,28 +122,24 @@ Interpolation methods are `auto`, `nearest`, `linear`, `cubic`, `pchip`, and
 `sprague`. `auto` uses Sprague for uniform data with at least 6 samples, cubic
 for non-uniform data with at least 4 samples, and linear otherwise.
 
-Extrapolation methods are `constant`, `linear`, and `fill`. `constant` matches
-the boundary values, `linear` extends the boundary slope, and `fill` writes
-`fill_value` outside the source domain. `left` and `right` can override the two
-outside regions explicitly.
+Extrapolation methods are `constant`, `linear`, and `fill`.
 
-## Export
+## Export And Arithmetic
 
-Use `to_dict()` for column mappings, `to_numpy()` for a dense array, and
-`to_pandas()` for a DataFrame.
+Use `to_dict()` for a writable column mapping, `to_numpy()` for a dense array,
+and `to_pandas()` for a DataFrame.
 
 ```python
-array = d65.to_numpy()
+raw = cmfs.to_dict()
+array = cmfs.to_numpy()
 frame = cmfs.to_pandas()
 ```
-
-## Arithmetic
 
 Spectral objects support scalar arithmetic and same-type object arithmetic:
 
 ```python
 scaled = d65 * 0.5
-sum_spd = d65 + d65.copy()
+product = illuminant * reflectance
 ```
 
 Object arithmetic requires identical wavelength samples. Multi-channel
@@ -107,15 +148,12 @@ not performed; call `align(...)` explicitly first.
 
 ## Scope
 
-This object layer includes:
+This module does not compute XYZ or LMS directly. Prepare spectral objects here,
+then use `color.colorimetry` for response integration:
 
-- object construction and validation
-- conversion from raw columns and registered datasets
-- interpolation with explicit out-of-domain handling
-- reshape, trim, extrapolate, and align
-- numpy and pandas export
-- arithmetic operations
+```python
+from color.colorimetry import emission_to_XYZ, reflectance_to_XYZ
+```
 
-It does not implement spectral integration or colorimetric response
-computation directly. Use `color.colorimetry` for XYZ/LMS computations once
-spectral objects have been prepared and aligned.
+That separation keeps raw data loading, signal preparation, and colorimetric
+calculation cleanly separated.

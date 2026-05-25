@@ -30,7 +30,8 @@ Plot outputs are written to `examples/spectra/output/`.
 
 `example_01_create_spectral_objects.py` shows the object creation paths:
 registered datasets with `from_dataset(...)`, in-memory column mappings with
-`from_columns(...)`, and direct `SpectralDistribution` /
+`from_columns(...)`, semantic shortcuts such as `from_D65_illuminant()` /
+`from_cie1931_xyz_cmfs(...)`, and direct `SpectralDistribution` /
 `MultiSpectralDistribution` construction. It also clarifies that `y` selects one
 value column while `ys` selects multiple value columns.
 
@@ -41,8 +42,9 @@ operations: `sample()`, `__call__()`, `domain`, `range`, `interpolate()`,
 handling.
 
 `example_03_multi_channel_workflow.py` focuses on multi-channel objects such as
-XYZ CMFs and PMC colour-card patches. It demonstrates labels, `channel(label)`,
-multi-channel reshape and a shared wavelength domain.
+XYZ CMFs and PMC colour-card patches. It demonstrates labels, `keys()`,
+dictionary-like `obj["channel"]` access, `channel(label)`, multi-channel
+reshape and a shared wavelength domain.
 
 `example_04_export_and_arithmetic.py` shows `to_dict()`, `to_numpy()`,
 `to_pandas()`, scalar arithmetic and object arithmetic. It intentionally shows
