@@ -9,6 +9,7 @@ from color.generators._registry import (
     GeneratorEntry,
     _CACHE,
     _REGISTRY,
+    canonicalize_name,
     clear_cache,
     describe,
     generate,
@@ -47,6 +48,12 @@ def test_generate_with_canonical_names():
 
     data = generate("Canonical Generators", "My Generator")
     np.testing.assert_array_equal(data["value"], [1.0])
+
+
+def test_canonicalize_name_maps_colour_science_symbols():
+    assert canonicalize_name("0.1 nm") == "0p1nm"
+    assert canonicalize_name("V(\u03bb)") == "vlambda"
+    assert canonicalize_name("10\u00b0 observer") == "10degreeobserver"
 
 
 def test_generated_result_is_readonly_copy():

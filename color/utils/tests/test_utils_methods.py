@@ -34,6 +34,7 @@ def test_canonical_method_name():
     assert canonical_method_name("CIE 2000") == "cie2000"
     assert canonical_method_name("CAM16-UCS") == "cam16ucs"
     assert canonical_method_name("Jz Az Bz") == "jzazbz"
+    assert canonical_method_name("0.1 nm") == "01nm"
 
 
 def test_build_method_index():

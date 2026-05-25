@@ -5,9 +5,15 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from color.datasets import describe
+from color.datasets import describe, get, list_datasets
 from color.datasets.standard_observers import (
     describe_standard_observer,
+    get_cie1931_xyz_cmfs,
+    get_cie1964_xyz_cmfs,
+    get_cie2006_lms_2degree_fundamentals,
+    get_cie2006_lms_10degree_fundamentals,
+    get_cie2012_xyz_2degree_cmfs,
+    get_cie2012_xyz_10degree_cmfs,
     get_standard_observer,
     list_standard_observer_categories,
     list_standard_observers,
@@ -254,3 +260,66 @@ class TestCategoryAliases:
     def test_canonical_dataset_name(self):
         data = get_standard_observer("cmfs", "CIE 1931 XYZ 1 nm")
         assert "X" in data
+
+    def test_registry_get_with_subcategory_alias(self):
+        data = get("standard_observers.cmf", "cie1931 xyz_1nm")
+        assert "X" in data
+        assert "Y" in data
+        assert "Z" in data
+
+    def test_registry_list_with_subcategory_alias(self):
+        items = list_datasets("standard_observers.cmf")
+        assert "cie1931_xyz_1nm" in items
+
+    def test_registry_describe_with_subcategory_alias(self):
+        entry = describe("standard_observers.cmf", "cie1931 xyz_1nm")
+        assert entry.category == "standard_observers.cmfs"
+        assert entry.name == "cie1931_xyz_1nm"
+
+
+class TestCommonStandardObserverEntrypoints:
+    """Tests for semantic shortcuts to common standard observer datasets."""
+
+    def test_get_cie1931_xyz_cmfs(self):
+        data = get_cie1931_xyz_cmfs(interval_nm=1)
+        assert tuple(data) == ("wavelength", "X", "Y", "Z")
+        np.testing.assert_allclose(np.diff(data["wavelength"][:3]), [1, 1])
+
+    def test_get_cie1964_xyz_cmfs(self):
+        data = get_cie1964_xyz_cmfs(interval_nm=5)
+        assert tuple(data) == ("wavelength", "X", "Y", "Z")
+        np.testing.assert_allclose(np.diff(data["wavelength"][:3]), [5, 5])
+
+    def test_get_cie2012_xyz_cmfs_2_and_10_degree(self):
+        data_2 = get_cie2012_xyz_2degree_cmfs(interval_nm=0.1)
+        data_10 = get_cie2012_xyz_10degree_cmfs(interval_nm=1)
+        assert tuple(data_2) == ("wavelength", "X", "Y", "Z")
+        assert tuple(data_10) == ("wavelength", "X", "Y", "Z")
+        np.testing.assert_allclose(np.diff(data_2["wavelength"][:3]), [0.1, 0.1])
+
+    def test_get_cie2006_lms_fundamentals_energy_variants(self):
+        for energy in ("linE", "logE", "logQ", "LIN E"):
+            data = get_cie2006_lms_2degree_fundamentals(
+                interval_nm=1,
+                energy=energy,
+            )
+            assert tuple(data) == ("wavelength", "l", "m", "s")
+
+        data_10 = get_cie2006_lms_10degree_fundamentals(
+            interval_nm=5,
+            energy="linE",
+        )
+        assert tuple(data_10) == ("wavelength", "l", "m", "s")
+
+    def test_rejects_unsupported_interval(self):
+        with pytest.raises(ValueError, match="valid values"):
+            get_cie1931_xyz_cmfs(interval_nm=0.1)
+
+    def test_rejects_unsupported_energy(self):
+        with pytest.raises(ValueError, match="valid values"):
+            get_cie2006_lms_2degree_fundamentals(energy="linear")
+
+    def test_common_entries_are_not_exported_from_datasets_top_level(self):
+        import color.datasets as datasets
+
+        assert not hasattr(datasets, "get_cie1931_xyz_cmfs")

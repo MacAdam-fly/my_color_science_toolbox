@@ -122,7 +122,8 @@ class TestCanonicalNames:
         assert canonicalize_name(" CIE 1931 XYZ 1 nm ") == "cie1931xyz1nm"
         assert canonicalize_name("cie_1931-xyz/1nm") == "cie1931xyz1nm"
         assert canonicalize_name("0.1 nm") == "0p1nm"
-        assert canonicalize_name("V(λ)") == "vlambda"
+        assert canonicalize_name("V(\u03bb)") == "vlambda"
+        assert canonicalize_name("10\u00b0 observer") == "10degreeobserver"
 
     def test_get_with_canonical_names(self):
         register(DatasetEntry(

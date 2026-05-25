@@ -8,7 +8,7 @@ import numpy as np
 
 from color.constants.illuminants_XYZ import D65_XYZ
 from color.utils.arrays import as_last_axis_triplets
-from color.utils.methods import canonical_method_name
+from color.utils.names import canonical_method_name
 
 from .matrices import CHROMATIC_ADAPTATION_TRANSFORMS
 

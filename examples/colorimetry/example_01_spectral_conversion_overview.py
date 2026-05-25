@@ -22,12 +22,12 @@ from _plot_helpers import (
 )
 from color.colorimetry import emission_to_XYZ, reflectance_to_XYZ
 from color.generators.ideal import gaussian_spd
-from color.spectra import SpectralDistribution, SpectralShape, from_columns, from_dataset
+from color.spectra import SpectralDistribution, SpectralShape, from_columns, from_dataset, from_cie1931_xyz_cmfs
 
 
 def main() -> None:
     output_dir = example_output_dir()
-    shape = SpectralShape(400, 700, 1)
+    shape = SpectralShape(400, 700, 1)  
 
     reflector = SpectralDistribution(
         shape.wavelengths,
@@ -41,7 +41,8 @@ def main() -> None:
     ).align(shape)
 
     # create the XYZ CMFs and D65 illuminant aligned to the same shape as the spectra (they are defaults, but this makes it explicit)
-    xyz_cmfs = from_dataset("standard_observers.cmfs", "cie1931 xyz_1nm").align(shape)
+    xyz_cmfs = from_dataset("standard_observers.cmf", "cie1931 xyz_1nm").align(shape)
+    xyf_xmfs = from_cie1931_xyz_cmfs().align(shape)
     illuminant = from_dataset("illuminants", "D65").align(shape)
 
 

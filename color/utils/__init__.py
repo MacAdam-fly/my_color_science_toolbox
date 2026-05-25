@@ -15,10 +15,10 @@ from .arrays import (
 )
 from .methods import (
     build_method_index,
-    canonical_method_name,
     filter_kwargs,
     resolve_method,
 )
+from .names import canonical_method_name, canonicalize_name, canonicalize_resource_name
 from .scale import (
     from_range_1,
     from_range_100,
@@ -38,7 +38,9 @@ __all__ = [
     "broadcast_triplets",  # broadcast triplet arrays
     "broadcast_pairs",  # broadcast pair arrays
     "split_last_axis",  # split array channels along the last axis
-    "canonical_method_name",  # normalize method names and aliases
+    "canonicalize_name",  # normalize general names and aliases
+    "canonicalize_resource_name",  # normalize dataset/generator registry names
+    "canonical_method_name",  # semantic wrapper for method names and aliases
     "build_method_index",  # build canonical method alias lookup
     "resolve_method",  # resolve a method name to a registered function
     "filter_kwargs",  # keep kwargs accepted by a function signature

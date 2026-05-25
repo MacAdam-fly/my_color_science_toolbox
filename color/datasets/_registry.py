@@ -12,10 +12,11 @@ Formula-generated data belongs in :mod:`color.generators`, not here.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-import re
 from typing import Any, Callable, Dict, Hashable, List, Optional, Tuple
 
 import numpy as np
+
+from color.utils.names import canonicalize_resource_name as canonicalize_name
 
 # ---------------------------------------------------------------------------
 # Types
@@ -70,15 +71,6 @@ _READ_OPTION_KEYS = frozenset({
 # Registration helpers
 # ---------------------------------------------------------------------------
 
-def canonicalize_name(value: str) -> str:
-    """Return a delimiter and case-insensitive lookup key."""
-    value = value.strip().lower()
-    value = value.replace("°", "degree")
-    value = value.replace("λ", "lambda")
-    value = re.sub(r"(?<=\d)\.(?=\d)", "p", value)
-    return re.sub(r"[^a-z0-9]+", "", value)
-
-
 def _canonical_key(category: str, name: str) -> Tuple[str, str]:
     """Return the canonical registry key for *category* and *name*."""
     return canonicalize_name(category), canonicalize_name(name)
@@ -94,6 +86,17 @@ def _resolve_key(category: str, name: str) -> Tuple[str, str]:
     resolved = _CANONICAL_INDEX.get(canonical_key)
     if resolved is not None:
         return resolved
+
+    resolved_category = _resolve_category(category)
+    if resolved_category is not None and resolved_category != category:
+        key = (resolved_category, name)
+        if key in _REGISTRY:
+            return key
+
+        canonical_key = _canonical_key(resolved_category, name)
+        resolved = _CANONICAL_INDEX.get(canonical_key)
+        if resolved is not None:
+            return resolved
 
     return key
 
@@ -136,6 +139,19 @@ def register(entry: DatasetEntry) -> None:
     _REGISTRY[key] = entry
     _CANONICAL_CATEGORY_INDEX[canonical_category] = entry.category
     _CANONICAL_INDEX[canonical_key] = key
+
+
+def register_category_alias(alias: str, category: str) -> None:
+    """Register *alias* as an alternate spelling for an existing category."""
+    resolved_category = _resolve_category(category) or category
+    canonical_alias = canonicalize_name(alias)
+    existing_category = _CANONICAL_CATEGORY_INDEX.get(canonical_alias)
+    if existing_category is not None and existing_category != resolved_category:
+        raise ValueError(
+            f"Canonical category alias collision for {alias!r}: "
+            f"already used by {existing_category!r}"
+        )
+    _CANONICAL_CATEGORY_INDEX[canonical_alias] = resolved_category
 
 
 # ---------------------------------------------------------------------------

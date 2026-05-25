@@ -7,7 +7,7 @@ from typing import Iterable, Mapping
 
 import numpy as np
 
-from color.utils.methods import canonical_method_name
+from color.utils.names import canonical_method_name
 
 from .appearance import SPACE_NODES as APPEARANCE_SPACE_NODES
 from .basic import SPACE_NODES as BASIC_SPACE_NODES

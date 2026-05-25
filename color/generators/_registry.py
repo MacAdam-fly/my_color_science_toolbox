@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-import re
 from typing import Any, Callable, Dict, Hashable, List, Optional, Tuple
 
 import numpy as np
+
+from color.utils.names import canonicalize_resource_name as canonicalize_name
 
 
 GeneratedDict = Dict[str, np.ndarray]
@@ -29,15 +30,6 @@ _REGISTRY: Dict[Tuple[str, str], GeneratorEntry] = {}
 _CANONICAL_CATEGORY_INDEX: Dict[str, str] = {}
 _CANONICAL_INDEX: Dict[Tuple[str, str], Tuple[str, str]] = {}
 _CACHE: Dict[Tuple[Any, ...], GeneratedDict] = {}
-
-
-def canonicalize_name(value: str) -> str:
-    """Return a delimiter and case-insensitive lookup key."""
-    value = value.strip().lower()
-    value = value.replace("掳", "degree")
-    value = value.replace("位", "lambda")
-    value = re.sub(r"(?<=\d)\.(?=\d)", "p", value)
-    return re.sub(r"[^a-z0-9]+", "", value)
 
 
 def _canonical_key(category: str, name: str) -> Tuple[str, str]:

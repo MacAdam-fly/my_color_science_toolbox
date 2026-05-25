@@ -7,7 +7,7 @@ from typing import Literal, Sequence
 import numpy as np
 
 from .arrays import as_float_array, as_float_result
-from .methods import canonical_method_name
+from .names import canonical_method_name
 
 Scale = Literal["reference", "1", "100"]
 AngleScale = Literal["reference", "1", "100", "degrees"]

@@ -18,7 +18,7 @@ export, and common workflows, see `README_DETAILS.md`.
 ## Quick Start
 
 ```python
-from color.spectra import SpectralShape, from_dataset
+from color.spectra import SpectralShape, from_cie1931_xyz_cmfs, from_dataset
 
 d65 = from_dataset("illuminants", "D65")
 d65_5nm = d65.reshape(SpectralShape(400, 700, 5))
@@ -26,9 +26,15 @@ d65_visible = d65.trim(SpectralShape(400, 700, 10))
 d65_aligned = d65.align(SpectralShape(360, 830, 5))
 d65_values = d65.sample([450, 550])
 
-cmfs = from_dataset("standard_observers.cmfs", "CIE 1931 XYZ 1 nm")
+cmfs = from_cie1931_xyz_cmfs(interval_nm=1)
 y_bar = cmfs.channel("Y")
 ```
+
+Common standard observer shortcuts such as `from_cie1931_xyz_cmfs(...)` and
+`from_cie2006_lms_2degree_fundamentals(...)` wrap the corresponding raw
+`color.datasets.standard_observers.get_*` helpers. `interval_nm` selects an
+existing source file sampling interval; use `reshape(...)` when you need a new
+interpolated sampling interval.
 
 Missing values are preserved by default. When a data source uses blank cells to
 mean zero response in a known computation context, opt in explicitly:

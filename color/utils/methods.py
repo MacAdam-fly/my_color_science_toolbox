@@ -6,10 +6,7 @@ import inspect
 from collections.abc import Callable, Mapping
 from typing import Any
 
-
-def canonical_method_name(name: str) -> str:
-    """Return a normalized method key."""
-    return "".join(character for character in name.casefold() if character.isalnum())
+from .names import canonical_method_name
 
 
 def build_method_index(method_aliases: Mapping[str, tuple[str, ...]]) -> dict[str, str]:

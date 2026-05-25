@@ -8,8 +8,10 @@ science modules such as `spaces`, `colorimetry`, `appearance`, or `difference`.
 
 - `color.utils.arrays`: NumPy input validation, fixed-size last-axis arrays,
   broadcasting helpers, scalar/array result handling.
-- `color.utils.methods`: method-name canonicalisation, alias indexes, dispatch
-  resolution, and keyword filtering.
+- `color.utils.methods`: method alias indexes, dispatch resolution, and
+  keyword filtering.
+- `color.utils.names`: name canonicalisation for general aliases and resource
+  identifiers, including resource-specific degree and lambda symbols.
 - `color.utils.scale`: explicit numeric scale conversion between `[0, 1]`,
   `[0, 100]`, and degree-style angle domains.
 
@@ -60,6 +62,23 @@ canonical_method_name(name)
 build_method_index(method_aliases)
 resolve_method(method, method_index, methods)
 filter_kwargs(function, kwargs)
+```
+
+## Name Helpers
+
+Use `names.py` for all string canonicalisation. General aliases use
+`canonicalize_name(...)`; dataset and generator resources use
+`canonicalize_resource_name(...)` to preserve decimal and colour-science symbol
+semantics.
+
+```python
+from color.utils.names import canonical_method_name, canonicalize_name, canonicalize_resource_name
+
+canonicalize_name("CAM16-UCS")                 # "cam16ucs"
+canonical_method_name("0.1 nm")                # "01nm"
+canonicalize_resource_name("0.1 nm")           # "0p1nm"
+canonicalize_resource_name("V(\u03bb)")             # "vlambda"
+canonicalize_resource_name("10\u00b0 observer")     # "10degreeobserver"
 ```
 
 ## Scale Helpers

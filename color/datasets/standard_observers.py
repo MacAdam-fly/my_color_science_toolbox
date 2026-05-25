@@ -32,7 +32,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
 
-from ._registry import DatasetEntry, register, SpectralDict
+from ._registry import DatasetEntry, register, register_category_alias, SpectralDict
 from ._registry import canonicalize_name
 from ._utils import data_dir
 
@@ -45,17 +45,20 @@ from ._utils import data_dir
 # ---------------------------------------------------------------------------
 #
 # Supported fields:
-#   category    — folder name under standard_observer_data/ (required)
-#   stem        — CSV filename without .csv (required)
-#   columns     — column name tuple, e.g. ("wavelength", "l", "m", "s") (optional)
+#   category    - folder name under standard_observer_data/ (required)
+#   stem        - CSV filename without .csv (required)
+#   columns     - column name tuple, e.g. ("wavelength", "l", "m", "s") (optional)
 #                 Controls column names.
-#   description — human-readable description (optional, falls back to filename pattern)
-#   aliases     — list of category aliases (optional)
-#   read_options — dict of read_csv options (optional), e.g.:
+#   description - human-readable description (optional, falls back to filename pattern)
+#   category_aliases - category aliases for this custom category (optional)
+#                 These aliases resolve standard_observers categories only; they are
+#                 not dataset name aliases.
+#   aliases     - deprecated compatibility spelling for category_aliases (optional)
+#   read_options - dict of read_csv options (optional), e.g.:
 #                 {"skiprows": 3, "header": 3}
 #                 Supported keys: header, skiprows, usecols.
-#                 "names" is ignored — use "columns" instead.
-#   metadata    — descriptive fields that do not affect reading (optional)
+#                 "names" is ignored; use "columns" instead.
+#   metadata    - descriptive fields that do not affect reading (optional)
 #
 # Note: by default, header is auto-detected (header=True). If the CSV has a
 # text header row, those names are used. If all-numeric, *columns* (if provided)
@@ -262,46 +265,20 @@ _CATEGORY_NAMES: dict[str, str] = {
     "photopigments": "Photopigment Absorption Spectra",
 }
 
-# Multiple aliases → canonical category name
-_CATEGORY_ALIASES: dict[str, str] = {
-    # cmfs
-    "cmf": "cmfs",
-    "cmfs": "cmfs",
-    "xyz": "cmfs",
-    # cone_fundamentals
-    "cone": "cone_fundamentals",
-    "cones": "cone_fundamentals",
-    "cone_fundamentals": "cone_fundamentals",
-    "lms": "cone_fundamentals",
-    "fundamentals": "cone_fundamentals",
-    # luminous_efficiency
-    "luminous": "luminous_efficiency",
-    "luminous_efficiency": "luminous_efficiency",
-    "v_lambda": "luminous_efficiency",
-    "vl": "luminous_efficiency",
-    "efficiency": "luminous_efficiency",
-    # prereceptoral_filters
-    "filter": "prereceptoral_filters",
-    "filters": "prereceptoral_filters",
-    "prereceptoral": "prereceptoral_filters",
-    "prereceptoral_filters": "prereceptoral_filters",
-    "macular": "prereceptoral_filters",
-    "lens": "prereceptoral_filters",
-    # chromaticity_coordinates
-    "chromaticity": "chromaticity_coordinates",
-    "chromaticity_coordinates": "chromaticity_coordinates",
-    "chroma": "chromaticity_coordinates",
-    "chro": "chromaticity_coordinates",
-    "xy": "chromaticity_coordinates",
-    # photopigments
-    "photopigment": "photopigments",
-    "photopigments": "photopigments",
-    "pigment": "photopigments",
-    "pigments": "photopigments",
+# Category aliases are grouped by canonical standard_observers subcategory.
+_CATEGORY_ALIAS_GROUPS: dict[str, tuple[str, ...]] = {
+    "cmfs": ("cmf", "xyz"),
+    "cone_fundamentals": ("cone", "cones", "lms", "fundamentals"),
+    "luminous_efficiency": ("luminous", "v_lambda", "vl", "efficiency"),
+    "prereceptoral_filters": ("filter", "filters", "prereceptoral", "macular", "lens"),
+    "chromaticity_coordinates": ("chromaticity", "chroma", "chro", "xy"),
+    "photopigments": ("photopigment", "pigment", "pigments"),
 }
-_CATEGORY_ALIASES = {
+
+_CATEGORY_ALIASES: dict[str, str] = {
     canonicalize_name(alias): category
-    for alias, category in _CATEGORY_ALIASES.items()
+    for category, aliases in _CATEGORY_ALIAS_GROUPS.items()
+    for alias in (category, *aliases)
 }
 
 
@@ -319,6 +296,70 @@ def _resolve_category(category: str) -> str:
         f"Unknown standard observer category: {category!r}. "
         f"Valid categories: {list(_CATEGORY_NAMES.keys())}"
     )
+
+
+_INTERVAL_TOKENS: dict[float, str] = {
+    0.1: "0p1",
+    1.0: "1",
+    5.0: "5",
+}
+
+_ENERGY_TOKENS: dict[str, str] = {
+    "line": "linE",
+    "loge": "logE",
+    "logq": "logQ",
+}
+
+
+def _interval_token(interval_nm: float, *, supported: tuple[float, ...]) -> str:
+    """Return the filename token for a supported sampling interval."""
+    try:
+        interval = float(interval_nm)
+    except (TypeError, ValueError) as exc:
+        supported_text = ", ".join(str(v).rstrip("0").rstrip(".") for v in supported)
+        raise ValueError(f"interval_nm must be one of: {supported_text}") from exc
+
+    if interval not in supported:
+        supported_text = ", ".join(str(v).rstrip("0").rstrip(".") for v in supported)
+        raise ValueError(
+            f"Unsupported interval_nm {interval_nm!r}; valid values: {supported_text}"
+        )
+    return _INTERVAL_TOKENS[interval]
+
+
+def _energy_token(energy: str) -> str:
+    """Return the canonical filename token for a CIE 2006 LMS energy scale."""
+    key = canonicalize_name(energy)
+    token = _ENERGY_TOKENS.get(key)
+    if token is None:
+        valid = ", ".join(_ENERGY_TOKENS.values())
+        raise ValueError(f"Unsupported energy {energy!r}; valid values: {valid}")
+    return token
+
+
+def _cie1931_xyz_cmfs_stem(interval_nm: float) -> str:
+    interval = _interval_token(interval_nm, supported=(1.0, 5.0))
+    return f"cie1931_xyz_{interval}nm"
+
+
+def _cie1964_xyz_cmfs_stem(interval_nm: float) -> str:
+    interval = _interval_token(interval_nm, supported=(1.0, 5.0))
+    return f"cie1964_xyz_{interval}nm"
+
+
+def _cie2012_xyz_cmfs_stem(observer_degree: int, interval_nm: float) -> str:
+    interval = _interval_token(interval_nm, supported=(0.1, 1.0, 5.0))
+    return f"cie2012_xyz{observer_degree}_{interval}nm"
+
+
+def _cie2006_lms_fundamentals_stem(
+    observer_degree: int,
+    interval_nm: float,
+    energy: str,
+) -> str:
+    interval = _interval_token(interval_nm, supported=(0.1, 1.0, 5.0))
+    energy_token = _energy_token(energy)
+    return f"cie2006_lms{observer_degree}_{energy_token}_{interval}nm"
 
 
 # ---------------------------------------------------------------------------
@@ -355,9 +396,13 @@ def _process_custom_entries() -> None:
         if "description" in entry:
             _DESCRIPTION_OVERRIDES[f"{cat}/{stem}"] = entry["description"]
 
-        # Category aliases — always register the canonical name itself
+        # Category aliases: always register the canonical category itself.
         _CATEGORY_ALIASES[canonicalize_name(cat)] = cat
-        for alias in entry.get("aliases", []):
+        category_aliases = (
+            *entry.get("category_aliases", ()),
+            *entry.get("aliases", ()),
+        )
+        for alias in category_aliases:
             _CATEGORY_ALIASES[canonicalize_name(alias)] = cat
 
 
@@ -505,8 +550,18 @@ def _scan_and_register() -> None:
             ))
 
 
+def _register_category_aliases() -> None:
+    """Expose standard_observers subcategory aliases to the global registry."""
+    for alias, category in _CATEGORY_ALIASES.items():
+        register_category_alias(
+            f"standard_observers.{alias}",
+            f"standard_observers.{category}",
+        )
+
+
 # Run discovery at import time
 _scan_and_register()
+_register_category_aliases()
 
 
 # ---------------------------------------------------------------------------
@@ -540,6 +595,48 @@ def get_standard_observer(
     """
     from ._registry import get
     return get(f"standard_observers.{_resolve_category(category)}", name, **kwargs)
+
+
+def get_cie1931_xyz_cmfs(interval_nm: float = 1) -> SpectralDict:
+    """Return CIE 1931 2-degree XYZ colour matching functions."""
+    return get_standard_observer("cmfs", _cie1931_xyz_cmfs_stem(interval_nm))
+
+
+def get_cie1964_xyz_cmfs(interval_nm: float = 1) -> SpectralDict:
+    """Return CIE 1964 10-degree XYZ colour matching functions."""
+    return get_standard_observer("cmfs", _cie1964_xyz_cmfs_stem(interval_nm))
+
+
+def get_cie2012_xyz_2degree_cmfs(interval_nm: float = 1) -> SpectralDict:
+    """Return CIE 2012 2-degree XYZ colour matching functions."""
+    return get_standard_observer("cmfs", _cie2012_xyz_cmfs_stem(2, interval_nm))
+
+
+def get_cie2012_xyz_10degree_cmfs(interval_nm: float = 1) -> SpectralDict:
+    """Return CIE 2012 10-degree XYZ colour matching functions."""
+    return get_standard_observer("cmfs", _cie2012_xyz_cmfs_stem(10, interval_nm))
+
+
+def get_cie2006_lms_2degree_fundamentals(
+    interval_nm: float = 1,
+    energy: str = "linE",
+) -> SpectralDict:
+    """Return CIE 2006 2-degree LMS cone fundamentals."""
+    return get_standard_observer(
+        "cone_fundamentals",
+        _cie2006_lms_fundamentals_stem(2, interval_nm, energy),
+    )
+
+
+def get_cie2006_lms_10degree_fundamentals(
+    interval_nm: float = 1,
+    energy: str = "linE",
+) -> SpectralDict:
+    """Return CIE 2006 10-degree LMS cone fundamentals."""
+    return get_standard_observer(
+        "cone_fundamentals",
+        _cie2006_lms_fundamentals_stem(10, interval_nm, energy),
+    )
 
 
 def list_standard_observers(category: str) -> List[str]:

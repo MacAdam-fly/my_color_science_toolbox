@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from types import MappingProxyType
 
-from color.utils.methods import canonical_method_name
+from color.utils.names import canonical_method_name
 
 from .colourspace import RGBColorSpace
 from .display_standards import RGB_COLOURSPACE_DEFINITIONS

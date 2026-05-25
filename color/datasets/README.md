@@ -45,6 +45,27 @@ read-only copies of cached data.
 Blackbody and daylight generators are available from `color.generators`, not
 from `color.datasets`.
 
+## Common Standard Observers
+
+High-use standard observer files have semantic shortcuts in
+`color.datasets.standard_observers`. They return the same raw
+`dict[str, numpy.ndarray]` as `get(...)`, but avoid requiring users to remember
+CVRL file stems:
+
+```python
+from color.datasets.standard_observers import (
+    get_cie1931_xyz_cmfs,
+    get_cie2006_lms_2degree_fundamentals,
+)
+
+cmfs = get_cie1931_xyz_cmfs(interval_nm=1)
+lms = get_cie2006_lms_2degree_fundamentals(interval_nm=1, energy="linE")
+```
+
+`interval_nm` selects an existing source file sampling interval; it does not
+interpolate the data. These shortcuts are intentionally not re-exported from
+`color.datasets` to keep the top-level dataset API compact.
+
 ## DatasetEntry
 
 All datasets are registered with `DatasetEntry`:

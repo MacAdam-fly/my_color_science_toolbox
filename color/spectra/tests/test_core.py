@@ -9,6 +9,12 @@ from color.spectra import (
     MultiSpectralDistribution,
     SpectralDistribution,
     SpectralShape,
+    from_cie1931_xyz_cmfs,
+    from_cie1964_xyz_cmfs,
+    from_cie2006_lms_2degree_fundamentals,
+    from_cie2006_lms_10degree_fundamentals,
+    from_cie2012_xyz_2degree_cmfs,
+    from_cie2012_xyz_10degree_cmfs,
     from_columns,
     from_dataset,
 )
@@ -450,6 +456,62 @@ class TestFromDataset:
         assert isinstance(result, MultiSpectralDistribution)
         assert result.labels == ("X", "Y", "Z")
 
+    def test_standard_observer_subcategory_alias(self):
+        result = from_dataset("standard_observers.cmf", "cie1931 xyz_1nm")
+        assert isinstance(result, MultiSpectralDistribution)
+        assert result.labels == ("X", "Y", "Z")
+
     def test_non_spectral_dataset_raises(self):
         with pytest.raises(ValueError, match="no wavelength"):
             from_dataset("color_systems", "munsell_srgb")
+
+
+class TestCommonStandardObserverEntrypoints:
+    """Tests for common standard observer spectra shortcuts."""
+
+    def test_xyz_cmfs_wrappers(self):
+        wrappers = (
+            from_cie1931_xyz_cmfs,
+            from_cie1964_xyz_cmfs,
+            from_cie2012_xyz_2degree_cmfs,
+            from_cie2012_xyz_10degree_cmfs,
+        )
+        for wrapper in wrappers:
+            result = wrapper(interval_nm=1)
+            assert isinstance(result, MultiSpectralDistribution)
+            assert result.labels == ("X", "Y", "Z")
+            assert result.metadata["dataset_category"] == "standard_observers.cmfs"
+            assert result.metadata["interval_nm"] == 1.0
+
+    def test_cie1931_wrapper_matches_from_dataset(self):
+        result = from_cie1931_xyz_cmfs(interval_nm=1)
+        expected = from_dataset("standard_observers.cmfs", "cie1931_xyz_1nm")
+        np.testing.assert_allclose(result.wavelengths, expected.wavelengths)
+        np.testing.assert_allclose(result.values, expected.values)
+        assert result.metadata["dataset_name"] == "cie1931_xyz_1nm"
+        assert result.metadata["observer_degree"] == 2
+
+    def test_lms_fundamentals_wrappers(self):
+        result_2 = from_cie2006_lms_2degree_fundamentals(
+            interval_nm=1,
+            energy="linE",
+            fill_nan=0.0,
+        )
+        result_10 = from_cie2006_lms_10degree_fundamentals(
+            interval_nm=5,
+            energy="LOG E",
+            fill_nan=0.0,
+        )
+
+        for result in (result_2, result_10):
+            assert isinstance(result, MultiSpectralDistribution)
+            assert result.labels == ("l", "m", "s")
+            assert result.metadata["dataset_category"] == (
+                "standard_observers.cone_fundamentals"
+            )
+            assert np.isfinite(result.values).all()
+
+        assert result_2.metadata["dataset_name"] == "cie2006_lms2_linE_1nm"
+        assert result_2.metadata["energy"] == "linE"
+        assert result_10.metadata["dataset_name"] == "cie2006_lms10_logE_5nm"
+        assert result_10.metadata["observer_degree"] == 10

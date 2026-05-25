@@ -8,7 +8,7 @@ import numpy as np
 
 from color.utils.arrays import as_float_array as _as_float_array
 from color.utils.arrays import as_last_axis_pairs as _as_last_axis_pairs
-from color.utils.methods import canonical_method_name
+from color.utils.names import canonical_method_name
 
 
 def as_finite_array(

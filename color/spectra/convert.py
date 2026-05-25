@@ -13,6 +13,38 @@ from .multi_distribution import MultiSpectralDistribution
 SpectralData = Mapping[str, np.ndarray]
 
 
+def _display_interval(interval_nm: float) -> str:
+    """Return a compact interval label for object names."""
+    interval = float(interval_nm)
+    if interval.is_integer():
+        return str(int(interval))
+    return str(interval)
+
+
+def _standard_observer_metadata(
+    category: str,
+    stem: str,
+    *,
+    standard: str,
+    observer_degree: int,
+    interval_nm: float,
+    energy: str | None = None,
+) -> dict[str, Any]:
+    """Build spectral object metadata from the registered dataset entry."""
+    from color.datasets import describe
+
+    entry = describe(f"standard_observers.{category}", stem)
+    metadata = dict(entry.metadata)
+    metadata.setdefault("dataset_category", entry.category)
+    metadata.setdefault("dataset_name", entry.name)
+    metadata["standard"] = standard
+    metadata["observer_degree"] = observer_degree
+    metadata["interval_nm"] = float(interval_nm)
+    if energy is not None:
+        metadata["energy"] = energy
+    return metadata
+
+
 def from_columns(
     raw: SpectralData,
     *,
@@ -91,5 +123,181 @@ def from_dataset(
         ys=labels,
         name=object_name,
         metadata=metadata,
+        fill_nan=fill_nan,
+    )
+
+
+def from_cie1931_xyz_cmfs(interval_nm: float = 1) -> MultiSpectralDistribution:
+    """Return CIE 1931 2-degree XYZ CMFs as a multispectral object."""
+    from color.datasets.standard_observers import (
+        _cie1931_xyz_cmfs_stem,
+        get_cie1931_xyz_cmfs,
+    )
+
+    stem = _cie1931_xyz_cmfs_stem(interval_nm)
+    raw = get_cie1931_xyz_cmfs(interval_nm=interval_nm)
+    interval = _display_interval(interval_nm)
+    return MultiSpectralDistribution.from_columns(
+        raw,
+        x="wavelength",
+        ys=("X", "Y", "Z"),
+        name=f"CIE 1931 XYZ CMFs {interval} nm",
+        metadata=_standard_observer_metadata(
+            "cmfs",
+            stem,
+            standard="CIE 1931 XYZ CMFs",
+            observer_degree=2,
+            interval_nm=interval_nm,
+        ),
+    )
+
+
+def from_cie1964_xyz_cmfs(interval_nm: float = 1) -> MultiSpectralDistribution:
+    """Return CIE 1964 10-degree XYZ CMFs as a multispectral object."""
+    from color.datasets.standard_observers import (
+        _cie1964_xyz_cmfs_stem,
+        get_cie1964_xyz_cmfs,
+    )
+
+    stem = _cie1964_xyz_cmfs_stem(interval_nm)
+    raw = get_cie1964_xyz_cmfs(interval_nm=interval_nm)
+    interval = _display_interval(interval_nm)
+    return MultiSpectralDistribution.from_columns(
+        raw,
+        x="wavelength",
+        ys=("X", "Y", "Z"),
+        name=f"CIE 1964 XYZ CMFs {interval} nm",
+        metadata=_standard_observer_metadata(
+            "cmfs",
+            stem,
+            standard="CIE 1964 XYZ CMFs",
+            observer_degree=10,
+            interval_nm=interval_nm,
+        ),
+    )
+
+
+def from_cie2012_xyz_2degree_cmfs(
+    interval_nm: float = 1,
+) -> MultiSpectralDistribution:
+    """Return CIE 2012 2-degree XYZ CMFs as a multispectral object."""
+    from color.datasets.standard_observers import (
+        _cie2012_xyz_cmfs_stem,
+        get_cie2012_xyz_2degree_cmfs,
+    )
+
+    stem = _cie2012_xyz_cmfs_stem(2, interval_nm)
+    raw = get_cie2012_xyz_2degree_cmfs(interval_nm=interval_nm)
+    interval = _display_interval(interval_nm)
+    return MultiSpectralDistribution.from_columns(
+        raw,
+        x="wavelength",
+        ys=("X", "Y", "Z"),
+        name=f"CIE 2012 2-degree XYZ CMFs {interval} nm",
+        metadata=_standard_observer_metadata(
+            "cmfs",
+            stem,
+            standard="CIE 2012 XYZ CMFs",
+            observer_degree=2,
+            interval_nm=interval_nm,
+        ),
+    )
+
+
+def from_cie2012_xyz_10degree_cmfs(
+    interval_nm: float = 1,
+) -> MultiSpectralDistribution:
+    """Return CIE 2012 10-degree XYZ CMFs as a multispectral object."""
+    from color.datasets.standard_observers import (
+        _cie2012_xyz_cmfs_stem,
+        get_cie2012_xyz_10degree_cmfs,
+    )
+
+    stem = _cie2012_xyz_cmfs_stem(10, interval_nm)
+    raw = get_cie2012_xyz_10degree_cmfs(interval_nm=interval_nm)
+    interval = _display_interval(interval_nm)
+    return MultiSpectralDistribution.from_columns(
+        raw,
+        x="wavelength",
+        ys=("X", "Y", "Z"),
+        name=f"CIE 2012 10-degree XYZ CMFs {interval} nm",
+        metadata=_standard_observer_metadata(
+            "cmfs",
+            stem,
+            standard="CIE 2012 XYZ CMFs",
+            observer_degree=10,
+            interval_nm=interval_nm,
+        ),
+    )
+
+
+def from_cie2006_lms_2degree_fundamentals(
+    interval_nm: float = 1,
+    energy: str = "linE",
+    fill_nan: float | None = None,
+) -> MultiSpectralDistribution:
+    """Return CIE 2006 2-degree LMS fundamentals as a multispectral object."""
+    from color.datasets.standard_observers import (
+        _cie2006_lms_fundamentals_stem,
+        _energy_token,
+        get_cie2006_lms_2degree_fundamentals,
+    )
+
+    energy_token = _energy_token(energy)
+    stem = _cie2006_lms_fundamentals_stem(2, interval_nm, energy_token)
+    raw = get_cie2006_lms_2degree_fundamentals(
+        interval_nm=interval_nm,
+        energy=energy_token,
+    )
+    interval = _display_interval(interval_nm)
+    return MultiSpectralDistribution.from_columns(
+        raw,
+        x="wavelength",
+        ys=("l", "m", "s"),
+        name=f"CIE 2006 2-degree LMS fundamentals {energy_token} {interval} nm",
+        metadata=_standard_observer_metadata(
+            "cone_fundamentals",
+            stem,
+            standard="CIE 2006 LMS fundamentals",
+            observer_degree=2,
+            interval_nm=interval_nm,
+            energy=energy_token,
+        ),
+        fill_nan=fill_nan,
+    )
+
+
+def from_cie2006_lms_10degree_fundamentals(
+    interval_nm: float = 1,
+    energy: str = "linE",
+    fill_nan: float | None = None,
+) -> MultiSpectralDistribution:
+    """Return CIE 2006 10-degree LMS fundamentals as a multispectral object."""
+    from color.datasets.standard_observers import (
+        _cie2006_lms_fundamentals_stem,
+        _energy_token,
+        get_cie2006_lms_10degree_fundamentals,
+    )
+
+    energy_token = _energy_token(energy)
+    stem = _cie2006_lms_fundamentals_stem(10, interval_nm, energy_token)
+    raw = get_cie2006_lms_10degree_fundamentals(
+        interval_nm=interval_nm,
+        energy=energy_token,
+    )
+    interval = _display_interval(interval_nm)
+    return MultiSpectralDistribution.from_columns(
+        raw,
+        x="wavelength",
+        ys=("l", "m", "s"),
+        name=f"CIE 2006 10-degree LMS fundamentals {energy_token} {interval} nm",
+        metadata=_standard_observer_metadata(
+            "cone_fundamentals",
+            stem,
+            standard="CIE 2006 LMS fundamentals",
+            observer_degree=10,
+            interval_nm=interval_nm,
+            energy=energy_token,
+        ),
         fill_nan=fill_nan,
     )
