@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections import defaultdict
 from typing import Any
 
 import numpy as np
@@ -185,10 +186,23 @@ def plot_conversion_graph(
         if node.name != "XYZ" and node.parent is None
     )
     derived_nodes = tuple(node for node in generic_nodes if node.parent is not None)
+    derived_by_parent: dict[str, list] = defaultdict(list)
+    for node in derived_nodes:
+        if node.parent is not None:
+            derived_by_parent[node.parent].append(node)
 
-    max_rows = max(len(rgb_names), len(direct_nodes), 1)
+    direct_block_gap = 0.34
+    direct_block_heights = [
+        max(1.0, len(derived_by_parent.get(node.name, ())) * 0.72)
+        for node in direct_nodes
+    ]
+    direct_total_height = (
+        sum(direct_block_heights) + direct_block_gap * max(len(direct_block_heights) - 1, 0)
+    )
+    rgb_total_height = max(len(rgb_names) - 1, 0) * 0.72
+    max_height = max(direct_total_height, rgb_total_height, 1.0)
     if ax is None:
-        fig, ax = plt.subplots(figsize=(13.5, max(7.0, 0.55 * max_rows + 2.0)))
+        fig, ax = plt.subplots(figsize=(13.5, max(7.0, max_height + 2.2)))
     else:
         fig = ax.figure
 
@@ -197,17 +211,16 @@ def plot_conversion_graph(
     for name, y in zip(rgb_names, _spaced_positions(len(rgb_names))):
         positions[name] = (0.0, y)
 
-    for node, y in zip(direct_nodes, _spaced_positions(len(direct_nodes))):
-        positions[node.name] = (4.2, y)
+    current_y = direct_total_height / 2.0
+    for node, block_height in zip(direct_nodes, direct_block_heights):
+        center_y = current_y - block_height / 2.0
+        positions[node.name] = (4.2, center_y)
+        current_y -= block_height + direct_block_gap
 
-    child_counts: dict[str, int] = {}
-    for node in derived_nodes:
-        parent = node.parent or "XYZ"
-        index = child_counts.get(parent, 0)
-        child_counts[parent] = index + 1
+    for parent, children in derived_by_parent.items():
         parent_y = positions.get(parent, (4.2, 0.0))[1]
-        offset = 0.0 if index == 0 else (index - 0.5) * 0.5
-        positions[node.name] = (6.45, parent_y - offset)
+        for node, offset in zip(children, _spaced_positions(len(children), spacing=0.72)):
+            positions[node.name] = (6.45, parent_y + offset)
 
     for name in rgb_names:
         _draw_graph_node(ax, name, *positions[name], kind="rgb")

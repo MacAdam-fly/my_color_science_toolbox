@@ -123,6 +123,7 @@ Current basic spaces and chromaticity helpers:
 XYZ <-> xyY
 XYZ <-> Lab <-> LCHab
 XYZ <-> Luv <-> LCHuv
+          \-> Lshuv
 XYZ <-> UVW
 XYZ <-> Oklab <-> Oklch
 XYZ <-> IPT
@@ -249,6 +250,7 @@ Lab
 LCHab
 Luv
 LCHuv
+Lshuv
 UVW
 Oklab
 Oklch

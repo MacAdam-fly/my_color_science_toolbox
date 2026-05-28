@@ -20,6 +20,7 @@ def test_registry_resolves_xyz_and_xyy():
     assert get_colourspace_node("LCHab").parent == "Lab"
     assert get_colourspace_node("Luv").name == "Luv"
     assert get_colourspace_node("LCHuv").parent == "Luv"
+    assert get_colourspace_node("Lshuv").parent == "Luv"
     assert get_colourspace_node("UVW").name == "UVW"
     assert get_colourspace_node("Oklab").name == "Oklab"
     assert get_colourspace_node("Oklch").parent == "Oklab"
@@ -65,6 +66,7 @@ def test_list_colourspace_nodes():
     assert "LCHab" in names
     assert "Luv" in names
     assert "LCHuv" in names
+    assert "Lshuv" in names
     assert "UVW" in names
     assert "Oklab" in names
     assert "Oklch" in names

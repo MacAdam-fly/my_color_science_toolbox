@@ -1,4 +1,4 @@
-"""CIE 1976 Luv and LCHuv colour-space helpers."""
+"""CIE 1976 Luv, LCHuv and Lshuv colour-space helpers."""
 
 from __future__ import annotations
 
@@ -109,6 +109,26 @@ def LCHuv_to_Luv(LCHuv: Sequence[float] | np.ndarray) -> np.ndarray:
     return np.stack((lch[..., 0], u, v), axis=-1)
 
 
+def Luv_to_Lshuv(Luv: Sequence[float] | np.ndarray) -> np.ndarray:
+    """Convert CIE 1976 Luv values to Lshuv saturation coordinates."""
+    luv = as_last_axis_triplets(Luv, name="Luv")
+    L = luv[..., 0]
+    C = np.hypot(luv[..., 1], luv[..., 2])
+    s = np.divide(C, L, out=np.zeros_like(C), where=L != 0)
+    h = np.mod(np.degrees(np.arctan2(luv[..., 2], luv[..., 1])), 360.0)
+    return np.stack((L, s, h), axis=-1)
+
+
+def Lshuv_to_Luv(Lshuv: Sequence[float] | np.ndarray) -> np.ndarray:
+    """Convert Lshuv saturation coordinates to CIE 1976 Luv values."""
+    lsh = as_last_axis_triplets(Lshuv, name="Lshuv")
+    h = np.radians(lsh[..., 2])
+    C = lsh[..., 0] * lsh[..., 1]
+    u = C * np.cos(h)
+    v = C * np.sin(h)
+    return np.stack((lsh[..., 0], u, v), axis=-1)
+
+
 SPACE_NODES = (
     ColorSpaceNode(
         name="Luv",
@@ -125,6 +145,14 @@ SPACE_NODES = (
         from_parent=Luv_to_LCHuv,
         family="Luv",
     ),
+    ColorSpaceNode(
+        name="Lshuv",
+        aliases=("CIE Lshuv", "CIELshuv", "LShuv", "Lsh"),
+        parent="Luv",
+        to_parent=Lshuv_to_Luv,
+        from_parent=Luv_to_Lshuv,
+        family="Luv",
+    ),
 )
 
 
@@ -134,5 +162,7 @@ __all__ = [
     "Luv_to_XYZ",
     "Luv_to_LCHuv",
     "LCHuv_to_Luv",
+    "Luv_to_Lshuv",
+    "Lshuv_to_Luv",
     "SPACE_NODES",
 ]

@@ -44,7 +44,9 @@ from .basic import (
     Lab_to_XYZ,
     LCHab_to_Lab,
     LCHuv_to_Luv,
+    Lshuv_to_Luv,
     Luv_to_LCHuv,
+    Luv_to_Lshuv,
     Luv_to_XYZ,
     Oklab_to_Oklch,
     Oklab_to_XYZ,
@@ -156,6 +158,8 @@ __all__ += [
     "Luv_to_XYZ",  # convert CIE Luv values to XYZ
     "Luv_to_LCHuv",  # convert CIE Luv values to LCHuv
     "LCHuv_to_Luv",  # convert LCHuv values to CIE Luv
+    "Luv_to_Lshuv",  # convert CIE Luv values to Lshuv
+    "Lshuv_to_Luv",  # convert Lshuv values to CIE Luv
     "XYZ_to_UVW",  # convert XYZ values to CIE 1964 UVW
     "UVW_to_XYZ",  # convert CIE 1964 UVW values to XYZ
     "XYZ_to_Oklab",  # convert XYZ values to Oklab

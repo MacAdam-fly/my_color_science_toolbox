@@ -182,6 +182,7 @@ CAT16
 XYZ <-> xyY
 XYZ <-> Lab <-> LCHab
 XYZ <-> Luv <-> LCHuv
+          \-> Lshuv
 XYZ <-> UVW
 XYZ <-> Oklab <-> Oklch
 XYZ <-> IPT
@@ -270,6 +271,7 @@ Jzazbz = XYZ_to_Jzazbz(XYZ_D65_referred)
 ```text
 Lab     -> LCHab:  L*, C*, h
 Luv     -> LCHuv:  L*, C*, h
+Luv     -> Lshuv:  L*, s*, h
 Oklab   -> Oklch:  L, C, h
 Jzazbz  -> JzCzhz: Jz, Cz, hz
 ```
@@ -281,6 +283,7 @@ h 使用角度制，范围为 `[0, 360)`。
 ```text
 LCHab -> Lab -> XYZ
 LCHuv -> Luv -> XYZ
+Lshuv -> Luv -> XYZ
 Oklch -> Oklab -> XYZ
 JzCzhz -> Jzazbz -> XYZ
 ```
@@ -491,6 +494,7 @@ Lab
 LCHab
 Luv
 LCHuv
+Lshuv
 UVW
 Oklab
 Oklch

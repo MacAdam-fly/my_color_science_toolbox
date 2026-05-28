@@ -27,7 +27,9 @@ from .jzazbz import (
 )
 from .luv import (
     LCHuv_to_Luv,
+    Lshuv_to_Luv,
     Luv_to_LCHuv,
+    Luv_to_Lshuv,
     Luv_to_XYZ,
     SPACE_NODES as LUV_SPACE_NODES,
     XYZ_to_Luv,
@@ -86,6 +88,8 @@ __all__ = [
     "Luv_to_XYZ",
     "Luv_to_LCHuv",
     "LCHuv_to_Luv",
+    "Luv_to_Lshuv",
+    "Lshuv_to_Luv",
     "XYZ_to_UVW",
     "UVW_to_XYZ",
     "XYZ_to_Oklab",

@@ -273,6 +273,7 @@ RGB 层支持：
 - `LCHab`。
 - `Luv`。
 - `LCHuv`。
+- `Lshuv`。
 - `UVW`。
 - `Oklab`。
 - `Oklch`。

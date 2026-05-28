@@ -54,3 +54,11 @@ def test_plot_conversion_graph():
     assert _count_gid(ax, "conversion_graph_node") > 10
     assert _count_gid(ax, "conversion_graph_edge") > 10
     plt.close(fig)
+
+
+def test_plot_conversion_graph_separates_sibling_derived_nodes():
+    fig, ax = plot_conversion_graph()
+    positions = {text.get_text(): text.get_position() for text in ax.texts}
+
+    assert abs(positions["LCHuv"][1] - positions["Lshuv"][1]) >= 0.7
+    plt.close(fig)

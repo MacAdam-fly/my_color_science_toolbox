@@ -13,27 +13,27 @@ from .chromaticity import (
     plot_cie1931_diagram,
     plot_cie1960_ucs_diagram,
     plot_cie1976_ucs_diagram,
+    plot_chromaticity_points,
     plot_chromaticity_background,
+    plot_locus_wavelength_labels,
     plot_xy_chromaticity_background,
     plot_xy_points,
 )
 from .common import as_2d_points, as_rgb_rows, finish_figure, get_figure_axes
-from .conversion import plot_conversion_graph, plot_conversion_path
-from .rgb import plot_rgb_gamuts
-from .spectra import (
-    plot_multi_spectral_distribution,
-    plot_spectral_distribution,
-    style_spectral_axis,
+from .primitives import (
+    plot_arrows,
+    plot_bars,
+    plot_image,
+    plot_labels,
+    plot_lines,
+    plot_points,
+    plot_polygons,
+    plot_segments,
+    set_axis_limits_from_data,
+    style_2d_axis,
 )
+from .style import PLOT_STYLE_PRESETS, colour_cycle, plot_style, set_plot_style
 from .swatches import preview_sRGB_from_XYZ, plot_swatch_grid, plot_swatch_strip
-from .temperature import (
-    daylight_locus_uv1960,
-    duv_offset_grid_uv1960,
-    planckian_locus_uv1960,
-    plot_duv_offsets_uv1960,
-    plot_mired_curve,
-    plot_temperature_loci_uv1960,
-)
 
 __all__ = [
     "D65_UPVP1976",  # rounded D65 u'v'1976 whitepoint used for plotting
@@ -42,29 +42,33 @@ __all__ = [
     "as_2d_points",  # validate row-wise plotting points
     "as_rgb_rows",  # validate RGB rows for plotting
     "chromaticity_background_image",  # compute chromaticity background RGB image
-    "daylight_locus_uv1960",  # compute CIE D daylight locus in CIE 1960 uv
-    "duv_offset_grid_uv1960",  # compute CCT and Duv offset grid in CIE 1960 uv
     "finish_figure",  # apply final figure layout
     "get_figure_axes",  # create or reuse matplotlib axes
     "load_cie1931_locus_upvp1976",  # load CIE 1931 spectral locus u'v' coordinates
     "load_cie1931_locus_uv1960",  # load CIE 1931 spectral locus uv coordinates
     "load_cie1931_locus_xy",  # load CIE 1931 spectral locus xy coordinates
+    "PLOT_STYLE_PRESETS",  # named matplotlib style presets for plotting
+    "colour_cycle",  # return an infinite cycle of plotting colours
     "plot_chromaticity_background",  # plot a chromaticity background image
     "plot_cie1931_diagram",  # plot CIE 1931 xy chromaticity diagram
     "plot_cie1960_ucs_diagram",  # plot CIE 1960 uv chromaticity diagram
     "plot_cie1976_ucs_diagram",  # plot CIE 1976 u'v' chromaticity diagram
+    "plot_chromaticity_points",  # plot labelled chromaticity points
+    "plot_locus_wavelength_labels",  # label wavelengths along a spectral locus
     "plot_xy_chromaticity_background",  # plot the CIE 1931 xy background
-    "plot_xy_points",  # plot labelled xy chromaticity points
-    "plot_conversion_graph",  # plot the registered colour-space conversion graph
-    "plot_conversion_path",  # plot one conversion path
-    "planckian_locus_uv1960",  # compute Planckian locus in CIE 1960 uv
-    "plot_duv_offsets_uv1960",  # plot Duv offsets in CIE 1960 uv
-    "plot_mired_curve",  # plot CCT to mired relationship
-    "plot_rgb_gamuts",  # plot RGB colourspace primary triangles
-    "plot_temperature_loci_uv1960",  # plot Planckian and daylight loci in uv
-    "plot_multi_spectral_distribution",  # plot multi-channel spectral data
-    "plot_spectral_distribution",  # plot single-channel spectral data
-    "style_spectral_axis",  # apply common spectral axis styling
+    "plot_xy_points",  # compatibility wrapper for xy chromaticity points
+    "plot_arrows",  # plot one or more two-dimensional arrows
+    "plot_bars",  # plot one or more groups of bars
+    "plot_image",  # plot a scalar image or RGB(A) image
+    "plot_lines",  # plot one or more two-dimensional line series
+    "plot_labels",  # add text labels to two-dimensional points
+    "plot_points",  # plot one or more two-dimensional point groups
+    "plot_polygons",  # plot one or more two-dimensional polygons
+    "plot_segments",  # plot one or more two-dimensional line-segment groups
+    "plot_style",  # temporarily apply a plotting style
+    "set_axis_limits_from_data",  # set axis limits from finite two-dimensional data
+    "set_plot_style",  # apply a plotting style to global matplotlib rcParams
+    "style_2d_axis",  # apply common two-dimensional axes styling
     "preview_sRGB_from_XYZ",  # clipped sRGB preview values from XYZ
     "plot_swatch_grid",  # plot a labelled sRGB swatch grid
     "plot_swatch_strip",  # plot a horizontal sRGB swatch strip

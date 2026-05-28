@@ -1,8 +1,9 @@
 # color.plot
 
-`color.plot` contains small matplotlib helpers for colour-science
-visualisation. It is intentionally a plotting layer only: it does not perform
-colour-science calculations beyond lightweight preview conversion for swatches.
+`color.plot` contains low-level matplotlib building blocks for colour-science
+visualisation. It draws existing data; it does not perform spectral integration,
+colour-space routing, chromatic adaptation, gamut mapping, or appearance
+modelling.
 
 For Chinese design notes, see [README_DETAILS.md](README_DETAILS.md).
 
@@ -11,100 +12,86 @@ For Chinese design notes, see [README_DETAILS.md](README_DETAILS.md).
 ```python
 from color.plot import (
     get_figure_axes,
+    finish_figure,
+    plot_lines,
+    plot_points,
+    plot_segments,
+    plot_labels,
+    plot_polygons,
+    plot_arrows,
+    plot_image,
+    plot_bars,
+    set_axis_limits_from_data,
+    style_2d_axis,
+    colour_cycle,
+    PLOT_STYLE_PRESETS,
+    plot_style,
+    set_plot_style,
     chromaticity_background_image,
-    plot_spectral_distribution,
-    plot_multi_spectral_distribution,
-    style_spectral_axis,
-    load_cie1931_locus_xy,
-    load_cie1931_locus_uv1960,
-    load_cie1931_locus_upvp1976,
+    plot_chromaticity_background,
+    plot_locus_wavelength_labels,
     plot_xy_chromaticity_background,
     plot_cie1931_diagram,
     plot_cie1960_ucs_diagram,
     plot_cie1976_ucs_diagram,
-    plot_xy_points,
+    plot_chromaticity_points,
     preview_sRGB_from_XYZ,
     plot_swatch_strip,
     plot_swatch_grid,
-    plot_rgb_gamuts,
-    planckian_locus_uv1960,
-    daylight_locus_uv1960,
-    duv_offset_grid_uv1960,
-    plot_temperature_loci_uv1960,
-    plot_duv_offsets_uv1960,
-    plot_mired_curve,
-    plot_conversion_path,
-    plot_conversion_graph,
 )
 ```
 
 ## Quick Start
 
 ```python
-from color.plot import (
-    plot_spectral_distribution,
-    plot_cie1931_diagram,
-    plot_cie1960_ucs_diagram,
-    plot_temperature_loci_uv1960,
-)
-from color.spectra import from_D65_illuminant
+import numpy as np
+from color.plot import plot_cie1931_diagram, plot_lines, plot_points
 
-d65 = from_D65_illuminant()
+x = np.linspace(0, 1, 100)
+fig, ax = plot_lines((x, x ** 2), xlabel="x", ylabel="y")
 
-fig, ax = plot_spectral_distribution(d65, ylabel="Relative SPD")
-fig.savefig("d65.png", dpi=150)
-
-fig, ax = plot_cie1931_diagram()
-fig.savefig("cie1931_xy.png", dpi=150)
+fig, ax = plot_points([[0.2, 0.3], [0.4, 0.5]], labels=["A", "B"], annotate=True)
 
 fig, ax = plot_cie1931_diagram(show_background=True)
-fig.savefig("cie1931_xy_background.png", dpi=150)
-
-fig, ax = plot_cie1960_ucs_diagram(show_background=True)
-fig.savefig("cie1960_uv_background.png", dpi=150)
-
-fig, ax = plot_temperature_loci_uv1960()
-fig.savefig("temperature_loci_uv.png", dpi=150)
+fig, ax = plot_cie1931_diagram(show_wavelength_labels=True)
 ```
 
 All plotting functions accept `ax=None` and return `(fig, ax)`.
 
-`color.plot.common` also provides small plotting utilities such as
-`get_figure_axes(...)`, `finish_figure(...)`, `as_2d_points(...)` and
-`as_rgb_rows(...)`. These are plotting-layer helpers, not general scientific
-array utilities.
+## Design Boundary
 
-## Preview Swatches
+`color.plot` exposes primitives:
 
-## Chromaticity Background
+- 2D lines and points.
+- 2D segments, labels, polygons, arrows and data-driven axis limits.
+- Scalar/RGB images and grouped bars.
+- Local or global plotting style helpers for publication-oriented figures.
+- CIE 1931 xy, CIE 1960 uv, and CIE 1976 u'v' chromaticity diagrams.
+- Optional wavelength labels along the CIE spectral locus, using diagram-specific default labels inspired by `colour.plotting`.
+- Approximate sRGB preview swatches.
+- Small axes and input helpers.
 
-`plot_cie1931_diagram(show_background=True)` draws an approximate sRGB background
-inside the CIE 1931 spectral locus. The background is a visual aid: RGB values
-are normalised and clipped for display, so it is not a strict colour-management
-result.
+Domain-specific figures should be composed from these primitives:
 
-`plot_cie1960_ucs_diagram(...)` and `plot_cie1976_ucs_diagram(...)` draw the same CIE 1931
-spectral locus in CIE 1960 UCS `uv` and CIE 1976 UCS `u'v'` coordinates. The
-`uv1960` view is the natural plotting space for CCT and Duv visualisations;
-`u'v'1976` is useful for Luv-related chromaticity diagrams.
+- Spectral curves are line plots.
+- Temperature loci are chromaticity diagrams plus lines and points.
+- RGB gamuts are chromaticity diagrams plus polygons and primary points.
+- Conversion path and graph plotting lives in `color.spaces.plotting`.
 
-## Temperature Plots
+The chromaticity background is a visual aid. RGB values are normalised and
+clipped for display, so the background is not a strict colour-management result.
 
-`plot_temperature_loci_uv1960(...)` and `plot_duv_offsets_uv1960(...)` use CIE
-1960 UCS `uv`, because Duv is defined as an offset from the Planckian locus in
-that diagram. CIE 1931 `xy` plots remain useful for general chromaticity
-inspection, but they are not the preferred view for Duv.
+Use `plot_style("journal")` as a context manager when you want a compact
+journal-friendly figure without permanently changing matplotlib settings.
+`journal` is the default and maps to the single-column preset. Use
+`plot_style("journal_double")` for wide or multi-panel figures, and use
+`set_plot_style("journal")` only when you intentionally want to update global
+`rcParams`.
 
-`preview_sRGB_from_XYZ(...)`, `plot_swatch_strip(...)` and
-`plot_swatch_grid(...)` are visualisation helpers. They clip RGB values to
-`[0, 1]` for display and should not be used as gamut-mapping or appearance
-models.
-
-## Conversion Plots
-
-`plot_conversion_path(...)` and `plot_conversion_graph(...)` are re-exported
-from `color.spaces.plotting`. The old `color.spaces.plotting` import path
-remains valid.
+The journal presets are not official journal templates. They follow common
+publisher guidance such as Nature's single/double-column figure sizing and final
+text-size recommendations, and IEEE's 3.5 inch / 7.16 inch column widths and
+300 dpi minimum guidance for colour or greyscale raster graphics.
 
 ## Examples
 

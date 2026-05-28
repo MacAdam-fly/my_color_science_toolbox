@@ -12,7 +12,9 @@ from color.spaces import (
     Lab_to_XYZ,
     LCHab_to_Lab,
     LCHuv_to_Luv,
+    Lshuv_to_Luv,
     Luv_to_LCHuv,
+    Luv_to_Lshuv,
     Luv_to_XYZ,
     Oklab_to_Oklch,
     Oklab_to_XYZ,
@@ -108,6 +110,20 @@ def test_cylindrical_round_trip(to_lch, from_lch, value):
     np.testing.assert_allclose(recovered, value, atol=1e-12)
 
 
+def test_Luv_to_Lshuv_round_trip_and_zero_L():
+    Luv = np.array([50.0, 20.0, -30.0])
+    Lshuv = Luv_to_Lshuv(Luv)
+    recovered = Lshuv_to_Luv(Lshuv)
+
+    assert Lshuv.shape == Luv.shape
+    assert 0.0 <= Lshuv[-1] < 360.0
+    np.testing.assert_allclose(Lshuv[1], np.hypot(20.0, -30.0) / 50.0)
+    np.testing.assert_allclose(recovered, Luv, atol=1e-12)
+
+    black = Luv_to_Lshuv([0.0, 0.0, 0.0])
+    np.testing.assert_allclose(black, [0.0, 0.0, 0.0])
+
+
 def test_custom_whitepoint_changes_Lab_and_round_trips():
     XYZ = np.array([20.0, 30.0, 40.0])
     whitepoint = D50_XYZ
@@ -173,6 +189,15 @@ def test_convert_color_derived_to_derived_path():
     recovered = convert_color(Oklch, "Oklch", "XYZ")
 
     np.testing.assert_allclose(recovered, XYZ, atol=1e-5)
+
+
+def test_convert_color_Lshuv_to_LCHuv_uses_Luv_parent():
+    Lshuv = np.array([50.0, 0.5, 30.0])
+    LCHuv = convert_color(Lshuv, "Lshuv", "LCHuv")
+    recovered = convert_color(LCHuv, "LCHuv", "Lshuv")
+
+    np.testing.assert_allclose(LCHuv, [50.0, 25.0, 30.0], atol=1e-12)
+    np.testing.assert_allclose(recovered, Lshuv, atol=1e-12)
 
 
 def test_convert_color_RGB_to_Lab():
