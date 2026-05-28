@@ -18,6 +18,7 @@ from color.spectra import (
     from_cie2012_xyz_10degree_cmfs,
     from_columns,
     from_dataset,
+    from_individual_cone_fundamentals,
 )
 
 
@@ -559,3 +560,12 @@ class TestCommonStandardObserverEntrypoints:
         assert result_2.metadata["energy"] == "linE"
         assert result_10.metadata["dataset_name"] == "cie2006_lms10_logE_5nm"
         assert result_10.metadata["observer_degree"] == 10
+
+    def test_individual_cone_fundamentals_wrapper(self):
+        result = from_individual_cone_fundamentals(observer_degree=2)
+        assert isinstance(result, MultiSpectralDistribution)
+        assert result.labels == ("l", "m", "s")
+        assert result.metadata["generator_category"] == "individual_cone_fundamentals"
+        assert result.metadata["generator_name"] == "stockman_rider_2023"
+        assert result.metadata["parameters"]["observer_degree"] == 2
+        np.testing.assert_allclose(result.values.max(axis=0), [1.0, 1.0, 1.0])

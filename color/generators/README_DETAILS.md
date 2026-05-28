@@ -355,6 +355,56 @@ raw = generate(
 )
 ```
 
+## Individual Cone Fundamentals
+
+`individual_cone_fundamentals` 类别用于根据 Stockman/Rider 2023 公式生成
+个体化 LMS cone fundamentals。它返回最终的 corneal energy LMS：
+
+```python
+from color.generators import generate
+
+raw = generate(
+    "individual_cone_fundamentals",
+    "stockman_rider_2023",
+    observer_degree=2,
+    l_shift_nm=2.0,
+    m_shift_nm=-1.0,
+)
+```
+
+返回列为：
+
+```python
+{
+    "wavelength": ...,
+    "l": ...,
+    "m": ...,
+    "s": ...,
+}
+```
+
+也可以使用直接入口：
+
+```python
+from color.generators import generate_individual_cone_fundamentals
+
+raw = generate_individual_cone_fundamentals(observer_degree=10)
+```
+
+常用参数：
+
+| 参数 | 含义 |
+| --- | --- |
+| `observer_degree` | `2` 或 `10`，选择默认 OD 和 macular density |
+| `photopigment_od` | L/M/S photopigment optical density |
+| `macular_density_460` | 460 nm 处 macular pigment density |
+| `lens_density_400` | 400 nm 处 lens density |
+| `l_shift_nm`, `m_shift_nm`, `s_shift_nm` | L/M/S 峰值波长偏移 |
+| `l_template` | `"mean"`、`"ser180"` 或 `"ala180"` |
+
+第一版不做 codon/hybrid 到 shift 的自动推导；如果需要个体观察者差异，
+请直接传入 shift 和密度参数。
+
 ## 从 generators 到 spectra
 
 生成器返回的是原始字典。如果后续要做插值、对齐、积分，推荐立即包装：
@@ -464,6 +514,17 @@ single_led_spd
 multi_led_spd
 generate_led
 list_led_generators
+```
+
+### Individual Cone Fundamentals
+
+```python
+macular_density_spectrum
+lens_density_spectrum
+cone_absorbance_spectra
+generate_individual_cone_fundamentals
+generate_individual_cone_fundamental
+list_individual_cone_fundamental_generators
 ```
 
 ## 测试

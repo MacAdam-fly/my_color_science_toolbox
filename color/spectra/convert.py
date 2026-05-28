@@ -328,3 +328,22 @@ def from_cie2006_lms_10degree_fundamentals(
         ),
         fill_nan=fill_nan,
     )
+
+
+def from_individual_cone_fundamentals(**kwargs: Any) -> MultiSpectralDistribution:
+    """Return Stockman/Rider individual LMS cone fundamentals as a spectral object."""
+    from color.generators import describe, generate_individual_cone_fundamentals
+
+    raw = generate_individual_cone_fundamentals(**kwargs)
+    entry = describe("individual_cone_fundamentals", "stockman_rider_2023")
+    metadata = dict(entry.metadata)
+    metadata.setdefault("generator_category", entry.category)
+    metadata.setdefault("generator_name", entry.name)
+    metadata["parameters"] = dict(kwargs)
+    return MultiSpectralDistribution.from_columns(
+        raw,
+        x="wavelength",
+        ys=("l", "m", "s"),
+        name="Stockman/Rider 2023 individual LMS fundamentals",
+        metadata=metadata,
+    )

@@ -22,13 +22,16 @@ from color.spectra import (
     from_D65_illuminant,
     from_cie1931_xyz_cmfs,
     from_columns,
+    from_individual_cone_fundamentals,
 )
 
 d65 = from_D65_illuminant()
 cmfs = from_cie1931_xyz_cmfs(interval_nm=1)
+lms = from_individual_cone_fundamentals(observer_degree=2)
 
 d65_5nm = d65.reshape(SpectralShape(400, 700, 5))
 y_bar = cmfs["Y"]
+l_bar = lms["l"]
 values_450_550 = y_bar.sample([450, 550])
 ```
 
@@ -59,6 +62,7 @@ For common standards, prefer the semantic shortcuts:
 | `from_cie2012_xyz_10degree_cmfs(interval_nm=1)` | CIE 2012 10-degree XYZ CMFs |
 | `from_cie2006_lms_2degree_fundamentals(interval_nm=1, energy="linE")` | CIE 2006 2-degree LMS fundamentals |
 | `from_cie2006_lms_10degree_fundamentals(interval_nm=1, energy="linE")` | CIE 2006 10-degree LMS fundamentals |
+| `from_individual_cone_fundamentals(...)` | Stockman/Rider 2023 individual LMS fundamentals |
 
 `interval_nm` selects an existing source file sampling interval; it does not
 interpolate. Use `reshape(...)` or `align(...)` when you need a new wavelength
@@ -67,6 +71,12 @@ grid.
 CIE 2006 LMS shortcuts default to `fill_nan=0.0`, matching their common use as
 response functions for numerical integration. Generic constructors preserve
 missing values unless you explicitly pass `fill_nan`.
+
+`from_individual_cone_fundamentals(...)` wraps generated data rather than a
+static dataset. It accepts the same parameters as
+`color.individual_cone_fundamentals.generate_individual_cone_fundamentals(...)`,
+including `observer_degree`, `photopigment_od`, `macular_density_460`,
+`lens_density_400`, and L/M/S wavelength shifts.
 
 ## Objects And Access
 

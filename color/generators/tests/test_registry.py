@@ -153,3 +153,7 @@ def test_registry_contains_expected_builtin():
     assert ("illuminants", "A") in _REGISTRY
     assert ("ideal", "gaussian") in _REGISTRY
     assert ("leds", "single") in _REGISTRY
+    assert (
+        "individual_cone_fundamentals",
+        "stockman_rider_2023",
+    ) in _REGISTRY

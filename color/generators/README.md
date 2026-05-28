@@ -20,12 +20,14 @@ from color.generators import generate
 from color.generators.blackbody import blackbody_spd
 from color.generators.ideal import gaussian_spd
 from color.generators.illuminants import daylight_spd
+from color.generators.individual_cone_fundamentals import generate_individual_cone_fundamentals
 from color.generators.leds import single_led_spd
 
 bb = generate("blackbody", "blackbody_spd", temperature=6500)
 d50 = daylight_spd(cct=5000)
 gaussian = gaussian_spd(peak_wavelength=555, width=25)
 led = single_led_spd(peak_wavelength=630, half_spectral_width=20)
+lms = generate_individual_cone_fundamentals(observer_degree=2)
 ```
 
 ## Registered Categories
@@ -36,6 +38,7 @@ led = single_led_spd(peak_wavelength=630, half_spectral_width=20)
 | `illuminants` | `A`, `cie_d_daylight` | CIE illuminant generation formulas |
 | `ideal` | `constant`, `zero`, `equal_energy`, `gaussian` | Idealised spectral distributions |
 | `leds` | `single`, `multi` | LED source models |
+| `individual_cone_fundamentals` | `stockman_rider_2023` | Individual LMS cone fundamentals |
 
 ## Blackbody Generator
 
@@ -100,4 +103,29 @@ rgb_led = multi_led_spd(
     half_spectral_widths=(20, 30, 20),
     peak_power_ratios=(0.731, 1.0, 1.66),
 )
+```
+
+## Individual Cone Fundamentals
+
+The `individual_cone_fundamentals` category generates Stockman/Rider 2023
+corneal energy LMS cone fundamentals:
+
+```python
+from color.generators import generate
+
+lms = generate(
+    "individual_cone_fundamentals",
+    "stockman_rider_2023",
+    observer_degree=2,
+    l_shift_nm=2.0,
+    m_shift_nm=-1.0,
+)
+```
+
+The direct function is also available:
+
+```python
+from color.generators import generate_individual_cone_fundamentals
+
+lms = generate_individual_cone_fundamentals(observer_degree=10)
 ```
