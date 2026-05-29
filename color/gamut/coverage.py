@@ -211,7 +211,14 @@ def _lch_volume_from_C(
     L_values: np.ndarray,
     hue_values: np.ndarray,
 ) -> float:
-    """Return Lab/LCHab volume from ``C_max[L, h]`` values."""
+    """Return Lab/LCHab volume from ``C_max[L, h]`` values.
+
+    Mathematically equivalent to the a*b* shoelace-area method used by
+    ``GamutBoundary.volume()`` in boundary.py.  Kept as a standalone helper
+    here because overlap-volume calculations need to operate on raw
+    ``C_max`` arrays (e.g. ``min(C_test, C_ref)``) rather than full
+    ``GamutBoundary`` instances.
+    """
     C_closed, hue_closed = _closed_hue_grid(C, hue_values)
     hue_radians = np.radians(hue_closed)
     areas = 0.5 * np.trapz(C_closed**2, hue_radians, axis=1)
