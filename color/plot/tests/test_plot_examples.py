@@ -17,3 +17,4 @@ def test_plot_examples_run() -> None:
     runpy.run_path(str(_EXAMPLES / "example_05_component_gallery.py"), run_name="__main__")
     runpy.run_path(str(_EXAMPLES / "example_06_image_rgb_colourspace_conversion.py"), run_name="__main__")
     runpy.run_path(str(_EXAMPLES / "example_07_plot_style_comparison.py"), run_name="__main__")
+    runpy.run_path(str(_EXAMPLES / "example_08_3d_primitives.py"), run_name="__main__")

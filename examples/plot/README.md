@@ -12,6 +12,7 @@ Examples for the low-level `color.plot` building blocks.
 .\.venv\Scripts\python.exe examples\plot\example_05_component_gallery.py
 .\.venv\Scripts\python.exe examples\plot\example_06_image_rgb_colourspace_conversion.py
 .\.venv\Scripts\python.exe examples\plot\example_07_plot_style_comparison.py
+.\.venv\Scripts\python.exe examples\plot\example_08_3d_primitives.py
 ```
 
 ## Outputs
@@ -37,11 +38,17 @@ The overview example writes images to `examples/plot/output/`:
 | `06_srgb_to_rec2020_image_comparison.png` | sRGB image and Rec.2020 encoded RGB preview drawn with `plot_image` |
 | `06_rec2020_encoded_preview.jpg` | Clipped encoded Rec.2020 values saved as an 8-bit preview |
 | `07_plot_style_comparison.png` | Current matplotlib defaults compared with `journal_single`, `journal_double` and `presentation` style presets |
+| `08_3d_surface_wireframe.png` | 3D surface and wireframe primitives for colour-solid style boundaries |
+| `08_3d_points_lines.png` | 3D point and line primitives |
 
 Examples 02-05 intentionally rebuild domain-specific figures from lower-level
 pieces instead of relying on high-level `color.plot` helpers. Conversion graphs
 remain in `color.spaces.plotting`, because they are driven by the colour-space
 registry rather than generic plotting geometry.
+
+Example 08 uses synthetic LCH-like data only to demonstrate 3D primitives. Real
+colour-solid figures can replace the synthetic surface with `GamutBoundary`
+output, for example `a* = C_max*cos(h)`, `b* = C_max*sin(h)`, `L* = L`.
 
 The Rec.2020 image example compares encoded channel values for inspection. It
 does not embed an ICC profile or perform colour-managed Rec.2020 display

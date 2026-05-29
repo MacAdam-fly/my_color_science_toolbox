@@ -23,6 +23,12 @@ from color.plot import (
     plot_bars,
     set_axis_limits_from_data,
     style_2d_axis,
+    plot_3d_points,
+    plot_3d_lines,
+    plot_3d_surface,
+    plot_3d_wireframe,
+    set_3d_axis_limits_from_data,
+    style_3d_axis,
     colour_cycle,
     PLOT_STYLE_PRESETS,
     plot_style,
@@ -54,6 +60,12 @@ fig, ax = plot_points([[0.2, 0.3], [0.4, 0.5]], labels=["A", "B"], annotate=True
 
 fig, ax = plot_cie1931_diagram(show_background=True)
 fig, ax = plot_cie1931_diagram(show_wavelength_labels=True)
+
+L = np.linspace(0, 100, 32)
+h = np.linspace(0, 2 * np.pi, 64)
+H, LL = np.meshgrid(h, L)
+C = 60 * np.sin(np.pi * LL / 100)
+fig, ax = plot_3d_surface(C * np.cos(H), C * np.sin(H), LL, xlabel="a*", ylabel="b*", zlabel="L*")
 ```
 
 All plotting functions accept `ax=None` and return `(fig, ax)`.
@@ -64,6 +76,7 @@ All plotting functions accept `ax=None` and return `(fig, ax)`.
 
 - 2D lines and points.
 - 2D segments, labels, polygons, arrows and data-driven axis limits.
+- 3D points, lines, surfaces, wireframes and data-driven 3D axis limits.
 - Scalar/RGB images and grouped bars.
 - Local or global plotting style helpers for publication-oriented figures.
 - CIE 1931 xy, CIE 1960 uv, and CIE 1976 u'v' chromaticity diagrams.
@@ -74,6 +87,7 @@ All plotting functions accept `ax=None` and return `(fig, ax)`.
 Domain-specific figures should be composed from these primitives:
 
 - Spectral curves are line plots.
+- Colour solids are 3D surfaces or wireframes.
 - Temperature loci are chromaticity diagrams plus lines and points.
 - RGB gamuts are chromaticity diagrams plus polygons and primary points.
 - Conversion path and graph plotting lives in `color.spaces.plotting`.

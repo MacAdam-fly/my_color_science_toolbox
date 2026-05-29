@@ -26,6 +26,12 @@ datasets / generators -> spectra / colorimetry / spaces / difference / quality -
 | `plot_bars` | 绘制单组或多组柱状图 |
 | `set_axis_limits_from_data` | 根据二维数据自动设置坐标范围 |
 | `style_2d_axis` | 设置标题、坐标轴、网格和等比例坐标 |
+| `plot_3d_points` | 绘制一组或多组三维散点 |
+| `plot_3d_lines` | 绘制一条或多条三维曲线 |
+| `plot_3d_surface` | 绘制三维曲面网格 |
+| `plot_3d_wireframe` | 绘制三维线框网格 |
+| `set_3d_axis_limits_from_data` | 根据三维数据自动设置坐标范围 |
+| `style_3d_axis` | 设置三维坐标轴标题、标签、视角和网格 |
 | `get_figure_axes` | 创建或复用 matplotlib axes |
 | `finish_figure` | 统一执行 figure 收尾布局 |
 | `colour_cycle` | 返回论文图常用颜色循环 |
@@ -262,6 +268,54 @@ fig, ax = plot_bars(
 )
 ```
 
+## 三维绘图组件
+
+`plot_3d_points(...)`、`plot_3d_lines(...)`、`plot_3d_surface(...)` 和
+`plot_3d_wireframe(...)` 是为三维色立体、Lab/LCH 边界、RGB cube 或
+三维轨迹准备的底层组件。它们仍然不做任何颜色科学计算，只接受已经计算好的
+三维点、曲线或网格。
+
+### `plot_3d_surface(...)` / `plot_3d_wireframe(...)`
+
+色域边界通常可以整理为 `L* / h / C_max` 网格，然后转换为
+`a* = C_max cos(h)`、`b* = C_max sin(h)`、`L* = L` 后绘制：
+
+```python
+from color.plot import plot_3d_surface, plot_3d_wireframe
+
+fig, ax = plot_3d_surface(
+    a_grid,
+    b_grid,
+    L_grid,
+    xlabel="a*",
+    ylabel="b*",
+    zlabel="L*",
+    cmap="viridis",
+)
+plot_3d_wireframe(a_grid, b_grid, L_grid, ax=ax, color="0.25", linewidth=0.4)
+```
+
+### `plot_3d_points(...)` / `plot_3d_lines(...)`
+
+三维样本点或轨迹可以单独绘制，也可以叠加到曲面上：
+
+```python
+from color.plot import plot_3d_lines, plot_3d_points
+
+fig, ax = plot_3d_lines((x, y, z), xlabel="a*", ylabel="b*", zlabel="L*")
+plot_3d_points(points_3d, ax=ax, colors="tab:orange")
+```
+
+### `set_3d_axis_limits_from_data(...)`
+
+组合三维图时，推荐最后统一设置坐标范围：
+
+```python
+from color.plot import set_3d_axis_limits_from_data
+
+set_3d_axis_limits_from_data(ax, xyz_points, padding=0.08, equal_aspect=True)
+```
+
 ## 绘图风格
 
 `colour_cycle(...)`、`plot_style(...)` 和 `set_plot_style(...)` 用来提供更稳定的
@@ -275,7 +329,7 @@ fig, ax = plot_bars(
 这些风格是 journal-friendly 预设，不是 Nature、IEEE 或其他期刊的官方模板。
 参数参考了常见出版方对最终图宽、字号、分辨率和可读性的要求：单栏约
 89-90 mm，双栏约 180-183 mm，最终字号约 5-7 pt，彩色/灰度位图通常
-至少 300 dpi。实际投稿时仍应以目标期刊的最终指南为准。
+至少 300 dpi。
 
 主要参考：
 

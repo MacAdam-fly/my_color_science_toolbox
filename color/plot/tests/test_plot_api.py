@@ -18,11 +18,16 @@ from color.plot import (
     load_cie1931_locus_upvp1976,
     load_cie1931_locus_uv1960,
     load_cie1931_locus_xy,
+    get_3d_figure_axes,
     plot_chromaticity_background,
     plot_chromaticity_points,
     plot_cie1931_diagram,
     plot_cie1960_ucs_diagram,
     plot_cie1976_ucs_diagram,
+    plot_3d_lines,
+    plot_3d_points,
+    plot_3d_surface,
+    plot_3d_wireframe,
     plot_arrows,
     plot_bars,
     plot_labels,
@@ -38,9 +43,11 @@ from color.plot import (
     plot_xy_chromaticity_background,
     plot_xy_points,
     preview_sRGB_from_XYZ,
+    set_3d_axis_limits_from_data,
     set_axis_limits_from_data,
     set_plot_style,
     style_2d_axis,
+    style_3d_axis,
 )
 
 
@@ -52,6 +59,18 @@ def test_common_get_figure_axes_creates_axes() -> None:
     fig, ax = get_figure_axes(figsize=(3.0, 2.0))
     assert fig is ax.figure
     _close(fig)
+
+
+def test_common_get_3d_figure_axes_creates_axes() -> None:
+    fig, ax = get_3d_figure_axes(figsize=(3.0, 2.0))
+    assert fig is ax.figure
+    assert ax.name == "3d"
+    _close(fig)
+
+    fig2, ax2 = plt.subplots()
+    with pytest.raises(ValueError):
+        get_3d_figure_axes(ax2)
+    _close(fig2)
 
 
 def test_common_as_2d_points_and_rgb_rows() -> None:
@@ -79,6 +98,30 @@ def test_style_2d_axis_applies_common_settings() -> None:
     assert ax.get_ylabel() == "y"
     assert ax.get_aspect() == 1.0
     _close(fig)
+
+
+def test_style_3d_axis_applies_common_settings() -> None:
+    fig, ax = get_3d_figure_axes()
+    style_3d_axis(
+        ax,
+        title="Title",
+        xlabel="a*",
+        ylabel="b*",
+        zlabel="L*",
+        grid=True,
+        equal_aspect=True,
+        view=(25.0, -45.0),
+    )
+    assert ax.get_title() == "Title"
+    assert ax.get_xlabel() == "a*"
+    assert ax.get_ylabel() == "b*"
+    assert ax.get_zlabel() == "L*"
+    _close(fig)
+
+    fig2, ax2 = plt.subplots()
+    with pytest.raises(ValueError):
+        style_3d_axis(ax2)
+    _close(fig2)
 
 
 def test_plot_lines_single_and_multiple_series() -> None:
@@ -130,6 +173,52 @@ def test_plot_points_rejects_invalid_shapes_and_label_lengths() -> None:
         plot_points([[[0.1, 0.2]], [[0.3, 0.4]]], labels=("only one",))
     with pytest.raises(ValueError):
         plot_points([[0.1, 0.2], [0.3, 0.4]], labels=("only one",), annotate=True)
+
+
+def test_plot_3d_points_single_and_multiple_groups() -> None:
+    fig, ax = plot_3d_points([[0.1, 0.2, 0.3], [0.3, 0.4, 0.5]], labels=("group",))
+    assert fig is ax.figure
+    assert ax.name == "3d"
+    assert len(ax.collections) == 1
+    assert ax.get_legend() is not None
+    _close(fig)
+
+    groups = (
+        [[0.1, 0.2, 0.3], [0.2, 0.3, 0.4]],
+        [[0.4, 0.5, 0.6], [0.5, 0.6, 0.7]],
+    )
+    fig, ax = plot_3d_points(groups, labels=("group 1", "group 2"), colors=("tab:blue", "tab:red"))
+    assert len(ax.collections) == 2
+    _close(fig)
+
+
+def test_plot_3d_points_rejects_invalid_shapes() -> None:
+    with pytest.raises(ValueError):
+        plot_3d_points([[0.1, 0.2]])
+    with pytest.raises(ValueError):
+        plot_3d_points([[[0.1, 0.2, 0.3]], [[0.4, 0.5, 0.6]]], labels=("only one",))
+
+
+def test_plot_3d_lines_single_and_multiple_series() -> None:
+    t = np.linspace(0.0, 1.0, 5)
+    fig, ax = plot_3d_lines((t, t**2, t**3), xlabel="x", ylabel="y", zlabel="z")
+    assert fig is ax.figure
+    assert len(ax.lines) == 1
+    _close(fig)
+
+    fig, ax = plot_3d_lines(
+        [(t, t, t), (t, t**2, t**3)],
+        labels=("linear", "curve"),
+        colors=("tab:blue", "tab:red"),
+    )
+    assert len(ax.lines) == 2
+    assert ax.get_legend() is not None
+    _close(fig)
+
+
+def test_plot_3d_lines_rejects_mismatched_lengths() -> None:
+    with pytest.raises(ValueError):
+        plot_3d_lines((np.array([0.0, 1.0]), np.array([0.0]), np.array([0.0, 1.0])))
 
 
 def test_plot_labels_adds_text_and_rejects_label_mismatch() -> None:
@@ -210,6 +299,29 @@ def test_plot_image_scalar_and_rgb() -> None:
         plot_image(np.ones((2, 2, 2)))
 
 
+def test_plot_3d_surface_and_wireframe() -> None:
+    x = np.linspace(-1.0, 1.0, 6)
+    y = np.linspace(-1.0, 1.0, 5)
+    X, Y = np.meshgrid(x, y)
+    Z = X**2 + Y**2
+
+    fig, ax = plot_3d_surface(X, Y, Z, cmap="viridis", colorbar=True)
+    assert fig is ax.figure
+    assert ax.name == "3d"
+    assert len(ax.collections) >= 1
+    assert len(fig.axes) == 2
+    _close(fig)
+
+    fig, ax = plot_3d_wireframe(X, Y, Z, color="black")
+    assert fig is ax.figure
+    assert ax.name == "3d"
+    assert len(ax.collections) >= 1
+    _close(fig)
+
+    with pytest.raises(ValueError):
+        plot_3d_surface(X, Y, Z[:-1])
+
+
 def test_plot_bars_single_and_grouped() -> None:
     fig, ax = plot_bars([1.0, 2.0, 3.0], labels=("A", "B", "C"), colors="tab:blue")
     assert fig is ax.figure
@@ -248,6 +360,22 @@ def test_set_axis_limits_from_data() -> None:
 
     with pytest.raises(ValueError):
         set_axis_limits_from_data(ax, [])
+
+
+def test_set_3d_axis_limits_from_data() -> None:
+    fig, ax = get_3d_figure_axes()
+    data = np.array([[0.0, 0.0, 0.0], [2.0, 4.0, 6.0]])
+    set_3d_axis_limits_from_data(ax, data, padding=0.1, equal_aspect=True)
+    assert ax.get_xlim()[0] < 0.0
+    assert ax.get_xlim()[1] > 2.0
+    assert ax.get_ylim()[0] < 0.0
+    assert ax.get_ylim()[1] > 4.0
+    assert ax.get_zlim()[0] < 0.0
+    assert ax.get_zlim()[1] > 6.0
+    _close(fig)
+
+    with pytest.raises(ValueError):
+        set_3d_axis_limits_from_data(ax, [])
 
 
 def test_plot_style_helpers() -> None:
