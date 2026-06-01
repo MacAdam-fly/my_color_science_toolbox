@@ -214,7 +214,7 @@ def _lch_volume_from_C(
     """Return Lab/LCHab volume from ``C_max[L, h]`` values.
 
     Mathematically equivalent to the a*b* shoelace-area method used by
-    ``GamutBoundary.volume()`` in boundary.py.  Kept as a standalone helper
+    ``GamutBoundary.lab_volume()`` in boundary.py.  Kept as a standalone helper
     here because overlap-volume calculations need to operate on raw
     ``C_max`` arrays (e.g. ``min(C_test, C_ref)``) rather than full
     ``GamutBoundary`` instances.

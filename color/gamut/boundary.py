@@ -166,11 +166,15 @@ class GamutBoundary:
             for index in range(self.L_values.size)
         ])
 
-    def volume(self) -> float:
+    def lab_volume(self) -> float:
         """Return an approximate Lab gamut volume by integrating slice areas."""
         if self.L_values.size == 1:
             return 0.0
         return float(np.trapz(self.areas(), self.L_values))
+
+    def xy_area(self) -> float:
+        """Return the CIE xy convex-hull area of this gamut boundary."""
+        return _polygon_area(self.xy_boundary())
 
     def gamut_rings(
         self,

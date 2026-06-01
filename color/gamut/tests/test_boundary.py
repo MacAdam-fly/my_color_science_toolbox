@@ -105,7 +105,7 @@ def test_boundary_area_volume_and_rings():
 
     area_50 = boundary.area_at_L(50.0)
     areas = boundary.areas()
-    volume = boundary.volume()
+    volume = boundary.lab_volume()
     rings, steps = boundary.gamut_rings([50.0, 100.0])
     ring_area = boundary.ring_area()
     ring_areas = boundary.ring_areas([50.0, 100.0])

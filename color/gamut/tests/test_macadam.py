@@ -82,7 +82,7 @@ def test_macadam_limits_and_pointer_coverage():
     assert boundary.illuminant == "D65"
     assert boundary.vertices_XYZ.shape == macadam_limits_XYZ("D65").shape
     np.testing.assert_allclose(boundary.xy_boundary(), macadam_limits_published_xy_boundary("D65"))
-    assert boundary.volume() > 0
+    assert boundary.lab_volume() > 0
 
     with pytest.warns(UserWarning):
         coverage = lab_gamut_coverage(pointer_gamut(), boundary)

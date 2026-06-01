@@ -10,9 +10,7 @@ from color.gamut import (
     GamutAnalysis,
     analyze_gamut,
     compute_LCH_gamut_boundary,
-    lab_gamut_volume,
     pointer_gamut,
-    xy_gamut_area_from_xy,
 )
 
 
@@ -53,9 +51,9 @@ def test_analyze_gamut_from_rgb_name():
     _assert_finite_analysis(analysis)
     np.testing.assert_allclose(
         analysis.xy_area,
-        xy_gamut_area_from_xy(analysis.boundary.xy_boundary()),
+        analysis.boundary.xy_area(),
     )
-    np.testing.assert_allclose(analysis.lab_volume, lab_gamut_volume(analysis.boundary))
+    np.testing.assert_allclose(analysis.lab_volume, analysis.boundary.lab_volume())
     assert analysis.warnings
 
 
