@@ -65,7 +65,7 @@ def _plot_projection_comparison(boundaries) -> None:
                 title="xy: primary chromaticity hull",
             )
         for index, (name, boundary) in enumerate(boundaries.items()):
-            primary_xy = boundary.primary_xy_hull()
+            primary_xy = boundary.xy_boundary()
             ax_xy.plot(
                 primary_xy[:, 0],
                 primary_xy[:, 1],
@@ -80,7 +80,7 @@ def _plot_projection_comparison(boundaries) -> None:
         for name, boundary in boundaries.items():
             ax_polar.plot(
                 np.radians(boundary.hue_values),
-                boundary.projected_chroma(),
+                boundary.projected_chroma_boundary(),
                 label=name,
                 color=COLOURS[name],
                 linewidth=1.2,
@@ -93,7 +93,7 @@ def _plot_projection_comparison(boundaries) -> None:
 
         ax_projected = fig.add_subplot(grid[0, 2])
         for index, (name, boundary) in enumerate(boundaries.items()):
-            projected_ab = boundary.projected_ab()
+            projected_ab = boundary.projected_ab_boundary()
             ax_projected.plot(
                 projected_ab[:, 0],
                 projected_ab[:, 1],
@@ -193,7 +193,7 @@ def main() -> None:
     boundaries = compute_example_boundaries()
     print("=" * 20 + " projected plane gamut " + "=" * 20)
     for name, boundary in boundaries.items():
-        print(f"{name:8s} projected area: {boundary.projected_area():10.2f}")
+        print(f"{name:8s} projected a*b* area: {boundary.projected_ab_area():10.2f}")
         print(f"{name:8s} final ring area: {boundary.ring_area():10.2f}")
 
     _plot_projection_comparison(boundaries)

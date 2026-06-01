@@ -22,6 +22,9 @@ __all__ = [
     "CAT_CAT02",  # CAT02 chromatic adaptation transform
     "CAT_CAT16",  # CAT16 chromatic adaptation transform
     "CHROMATIC_ADAPTATION_TRANSFORMS",  # supported chromatic adaptation transforms
+]
+
+__all__ += [
     "matrix_chromatic_adaptation_von_kries",  # compute a Von Kries style adaptation matrix
     "chromatic_adaptation_XYZ",  # adapt XYZ values between whitepoints
     "adapt_to_D65",  # adapt XYZ values from a source whitepoint to D65

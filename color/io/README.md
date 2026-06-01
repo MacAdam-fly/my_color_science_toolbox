@@ -7,4 +7,4 @@ Naming
 - Use reader_*/writer_* or load_*/save_* patterns.
 
 Entry points
-- Prefer color_agent.io.<module> for IO utilities.
+- Prefer color.io.<module> for IO utilities.

@@ -7,4 +7,4 @@ Naming
 - Separate parsing from transformation logic.
 
 Entry points
-- Prefer color_agent.icc.<module>.
+- Prefer color.icc.<module>.

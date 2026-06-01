@@ -19,10 +19,8 @@ from color.gamut import (
     is_within_pointer_gamut,
     lab_gamut_coverage,
     lab_gamut_volume,
-    pointer_gamut_XYZ,
-    pointer_gamut_boundary,
-    pointer_gamut_whitepoint_XYZ,
-    pointer_gamut_xy_boundary,
+    pointer_gamut,
+    pointer_gamut_published_xy_boundary,
     xy_gamut_coverage_from_xy,
 )
 from color.plot import plot_cie1931_diagram, plot_style
@@ -35,10 +33,10 @@ def _plot_pointer_comparison(pointer, displays) -> None:
         fig, axes = plt.subplots(1, 2, figsize=(8.6, 4.1), constrained_layout=True)
 
         ax = axes[0]
-        pointer_ab = pointer.projected_ab()
+        pointer_ab = pointer.projected_ab_boundary()
         ax.plot(pointer_ab[:, 0], pointer_ab[:, 1], color="black", linewidth=1.6, label="Pointer")
         for name in ("sRGB", "Rec.2020"):
-            ab = displays[name].projected_ab()
+            ab = displays[name].projected_ab_boundary()
             ax.plot(ab[:, 0], ab[:, 1], color=COLOURS[name], linewidth=1.2, label=name)
         ax.set_title("Pointer Gamut and Display Projected Plane Gamuts")
         ax.set_xlabel("a*")
@@ -54,7 +52,7 @@ def _plot_pointer_comparison(pointer, displays) -> None:
             background_samples=192,
             title="Pointer Gamut in CIE 1931 xy",
         )
-        pointer_xy = pointer_gamut_xy_boundary()
+        pointer_xy = pointer_gamut_published_xy_boundary()
         ax.plot(
             pointer_xy[:, 0],
             pointer_xy[:, 1],
@@ -63,7 +61,7 @@ def _plot_pointer_comparison(pointer, displays) -> None:
             label="Pointer xy boundary",
         )
         for index, name in enumerate(("sRGB", "Rec.2020")):
-            xy = displays[name].primary_xy_hull()
+            xy = displays[name].xy_boundary()
             ax.plot(
                 xy[:, 0],
                 xy[:, 1],
@@ -78,13 +76,13 @@ def _plot_pointer_comparison(pointer, displays) -> None:
 
 
 def main() -> None:
-    pointer = pointer_gamut_boundary()
+    pointer = pointer_gamut()
     displays = compute_example_boundaries()
 
     print("=" * 20 + " Pointer gamut " + "=" * 20)
     print(f"L* levels: {pointer.L_values}")
     print(f"hue values: {pointer.hue_values[0]:.0f}..{pointer.hue_values[-1]:.0f} step {pointer.hue_values[1] - pointer.hue_values[0]:.0f}")
-    print(f"whitepoint XYZ: {pointer_gamut_whitepoint_XYZ()}")
+    print(f"whitepoint XYZ: {pointer.whitepoint_XYZ}")
     print(f"Pointer Lab volume: {lab_gamut_volume(pointer):.2f}")
     with warnings.catch_warnings(record=True) as caught:
         warnings.simplefilter("always", UserWarning)
@@ -93,12 +91,12 @@ def main() -> None:
             print(f"{name:8s} covers Pointer Lab volume: {coverage:.3f}")
     if caught:
         print("Coverage warnings: display and Pointer boundaries use different whitepoints/grids.")
-    pointer_xy = pointer_gamut_xy_boundary()
+    pointer_xy = pointer_gamut_published_xy_boundary()
     for name in ("sRGB", "Rec.2020"):
-        coverage = xy_gamut_coverage_from_xy(displays[name].primary_xy_hull(), pointer_xy)
+        coverage = xy_gamut_coverage_from_xy(displays[name].xy_boundary(), pointer_xy)
         print(f"{name:8s} covers Pointer xy boundary area: {coverage:.3f}")
 
-    vertices = pointer_gamut_XYZ()
+    vertices = pointer.to_XYZ().reshape(-1, 3)
     sample = vertices[[0, 120, -1]]
     print(f"Pointer sample inside flags: {is_within_pointer_gamut(sample, tolerance=1e-7)}")
     print(f"Black inside Pointer: {bool(is_within_pointer_gamut([0.0, 0.0, 0.0], tolerance=1e-7))}")

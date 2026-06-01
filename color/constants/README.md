@@ -21,7 +21,8 @@ Entry points
 
 Semantic ownership
 
-- Whitepoint and reference illuminant tristimulus constants such as `D65_XYZ`
+- Whitepoint and reference illuminant tristimulus constants such as `A_XYZ`,
+  `C_XYZ`, and `D65_XYZ`
   are defined in `illuminants_XYZ.py` because
   they are shared across colorimetry, spaces, appearance, and adaptation.
 - RGB colour-space matrices and definitions are defined in

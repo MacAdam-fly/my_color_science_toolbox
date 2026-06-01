@@ -18,9 +18,9 @@ import numpy as np
 from color.gamut import (
     lab_gamut_coverage,
     lab_gamut_volume,
-    xy_gamut_area,
     xy_gamut_coverage,
 )
+from color.gamut.coverage import xy_gamut_area
 from color.plot import plot_style
 
 from _example_helpers import compute_example_boundaries, rgbc_primaries, save_figure

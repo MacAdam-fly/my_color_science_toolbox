@@ -46,7 +46,7 @@ def main() -> None:
     print("=" * 20 + " 3D colour-solid metrics " + "=" * 20)
     for name, boundary in boundaries.items():
         print(f"{name:8s} Lab volume: {boundary.volume():10.2f}")
-        print(f"{name:8s} projected a*b* area: {boundary.projected_area():10.2f}")
+        print(f"{name:8s} projected a*b* area: {boundary.projected_ab_area():10.2f}")
 
     with plot_style("journal_double"):
         fig = plt.figure(figsize=(11.6, 4.4))

@@ -1,6 +1,6 @@
 """Shared constants for color calculations."""
 
-from .illuminants_XYZ import D50_XYZ, D55_XYZ, D65_XYZ, E_XYZ
+from .illuminants_XYZ import A_XYZ, C_XYZ, D50_XYZ, D55_XYZ, D65_XYZ, E_XYZ
 
 from .adaptation_matrices import (
     CAT_BRADFORD,
@@ -39,7 +39,12 @@ __all__ = [
     "D50_XYZ",  # CIE D50 whitepoint tristimulus values
     "D55_XYZ",  # CIE D55 whitepoint tristimulus values
     "D65_XYZ",  # CIE D65 whitepoint tristimulus values
+    "A_XYZ",  # CIE Illuminant A whitepoint tristimulus values
+    "C_XYZ",  # CIE Illuminant C whitepoint tristimulus values
     "E_XYZ",  # equal-energy whitepoint tristimulus values
+]
+
+__all__ += [
     "SRGB_TO_XYZ",  # linear sRGB to Y=100 XYZ conversion matrix
     "XYZ_TO_SRGB",  # Y=100 XYZ to linear sRGB conversion matrix
     "REC709_TO_XYZ",  # linear Rec.709 to Y=100 XYZ conversion matrix
@@ -54,13 +59,22 @@ __all__ = [
     "XYZ_TO_DCIP3",  # Y=100 XYZ to linear DCI-P3 conversion matrix
     "NTSC_1953_TO_XYZ",  # linear NTSC (1953) to Y=100 XYZ conversion matrix
     "XYZ_TO_NTSC_1953",  # Y=100 XYZ to linear NTSC (1953) conversion matrix
+]
+
+__all__ += [
     "RGB_COLOURSPACE_DEFINITIONS",  # RGB colour-space standard definitions
     "RGB_GAMUT_METADATA",  # backwards-compatible RGB definitions alias
     "COMMON_GAMUTS",  # backwards-compatible RGB matrix registry
+]
+
+__all__ += [
     "LMS_2_DEGREE_TO_XYZ_2_DEGREE",  # CIE 2006 2-degree LMS to XYZ matrix
     "XYZ_2_DEGREE_TO_LMS_2_DEGREE",  # CIE 2006 2-degree XYZ to LMS matrix
     "LMS_10_DEGREE_TO_XYZ_10_DEGREE",  # CIE 2006 10-degree LMS to XYZ matrix
     "XYZ_10_DEGREE_TO_LMS_10_DEGREE",  # CIE 2006 10-degree XYZ to LMS matrix
+]
+
+__all__ += [
     "CAT_VON_KRIES",  # Von Kries chromatic adaptation transform index
     "CAT_BRADFORD",  # Bradford chromatic adaptation transform index
     "CAT_CAT02",  # CAT02 chromatic adaptation transform index

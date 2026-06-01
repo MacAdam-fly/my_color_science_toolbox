@@ -1,1 +1,1 @@
-"""Example scripts for the color_agent package."""
+"""Example scripts for the color package."""

@@ -7,15 +7,18 @@ import pytest
 
 from color.gamut import (
     GamutBoundary,
-    is_within_mesh_volume,
     is_within_pointer_gamut,
     lab_gamut_volume,
+    pointer_gamut,
+    pointer_gamut_published_xy_boundary,
+)
+from color.gamut.mesh import is_within_mesh_volume
+from color.gamut.pointer import (
+    PointerGamutBoundary,
     pointer_gamut_LCHab,
     pointer_gamut_XYZ,
-    pointer_gamut_boundary,
     pointer_gamut_data,
     pointer_gamut_whitepoint_XYZ,
-    pointer_gamut_xy_boundary,
 )
 
 
@@ -49,10 +52,11 @@ def test_is_within_mesh_volume_rejects_invalid_vertices():
 
 def test_pointer_gamut_data_and_boundary_shape():
     data = pointer_gamut_data()
-    boundary = pointer_gamut_boundary()
+    boundary = pointer_gamut()
 
     assert {"L", "hab", "C", "Xn", "Yn", "Zn"} <= set(data)
     assert isinstance(boundary, GamutBoundary)
+    assert isinstance(boundary, PointerGamutBoundary)
     assert boundary.primaries is None
     np.testing.assert_allclose(boundary.L_values, [20, 30, 40, 50, 60, 70, 80, 90])
     np.testing.assert_allclose(boundary.hue_values, np.arange(0.0, 361.0, 10.0))
@@ -70,8 +74,8 @@ def test_pointer_gamut_whitepoint_and_lch_rows():
     np.testing.assert_allclose(LCHab[:3, 2], [0.0, 10.0, 20.0])
 
 
-def test_pointer_gamut_xy_boundary_is_closed_xy_plane_envelope():
-    xy = pointer_gamut_xy_boundary()
+def test_pointer_gamut_published_xy_boundary_is_closed_xy_plane_envelope():
+    xy = pointer_gamut_published_xy_boundary()
 
     assert xy.ndim == 2
     assert xy.shape[1] == 2
@@ -80,10 +84,9 @@ def test_pointer_gamut_xy_boundary_is_closed_xy_plane_envelope():
     np.testing.assert_allclose(xy[0], xy[-1])
 
 
-def test_pointer_boundary_has_no_primary_xy_hull():
-    boundary = pointer_gamut_boundary()
-    with pytest.raises(ValueError, match="display primaries"):
-        boundary.primary_xy_hull()
+def test_pointer_boundary_has_xy_boundary():
+    boundary = pointer_gamut()
+    np.testing.assert_allclose(boundary.xy_boundary(), pointer_gamut_published_xy_boundary())
 
 
 def test_is_within_pointer_gamut_boundary_vertices_and_batch_shape():

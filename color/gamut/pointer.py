@@ -68,8 +68,8 @@ def pointer_gamut_LCHab() -> np.ndarray:
     return np.stack((data["L"], data["C"], data["hab"]), axis=-1)
 
 
-def pointer_gamut_xy_boundary() -> np.ndarray:
-    """Return Pointer's CIE 1931 xy-plane boundary.
+def pointer_gamut_published_xy_boundary() -> np.ndarray:
+    """Return Pointer's published CIE 1931 xy-plane boundary.
 
     Pointer data is tabulated as several L* slices. This helper computes the
     xy boundary directly in the xy plane, avoiding Lab/LCHab projection
@@ -80,7 +80,15 @@ def pointer_gamut_xy_boundary() -> np.ndarray:
     return np.vstack((boundary, boundary[0]))
 
 
-def pointer_gamut_boundary() -> GamutBoundary:
+class PointerGamutBoundary(GamutBoundary):
+    """Pointer real-surface gamut boundary."""
+
+    def xy_boundary(self) -> np.ndarray:
+        """Return Pointer's published CIE xy-plane boundary."""
+        return pointer_gamut_published_xy_boundary()
+
+
+def pointer_gamut() -> PointerGamutBoundary:
     """Return Pointer gamut as a :class:`GamutBoundary`."""
     data = pointer_gamut_data()
     L_values = np.unique(data["L"])
@@ -94,7 +102,7 @@ def pointer_gamut_boundary() -> GamutBoundary:
                 raise ValueError("Pointer gamut data must be a regular L*/hue grid")
             C_max[L_index, hue_index] = data["C"][mask][0]
 
-    return GamutBoundary(
+    return PointerGamutBoundary(
         C_max=C_max,
         L_values=L_values,
         hue_values=hue_values,
@@ -105,7 +113,7 @@ def pointer_gamut_boundary() -> GamutBoundary:
 
 def pointer_gamut_XYZ() -> np.ndarray:
     """Return Pointer gamut boundary vertices as XYZ rows."""
-    return pointer_gamut_boundary().to_XYZ().reshape(-1, 3)
+    return pointer_gamut().to_XYZ().reshape(-1, 3)
 
 
 def is_within_pointer_gamut(
@@ -118,11 +126,12 @@ def is_within_pointer_gamut(
 
 
 __all__ = [
-    "pointer_gamut_data",
+    "PointerGamutBoundary",
     "pointer_gamut_whitepoint_XYZ",
+    "pointer_gamut_data",
     "pointer_gamut_LCHab",
-    "pointer_gamut_xy_boundary",
-    "pointer_gamut_boundary",
+    "pointer_gamut_published_xy_boundary",
+    "pointer_gamut",
     "pointer_gamut_XYZ",
     "is_within_pointer_gamut",
 ]

@@ -10,10 +10,9 @@ import pytest
 from color.gamut import (
     DisplayPrimaries,
     is_within_primary_gamut,
-    primary_gamut_halfspaces,
-    primary_gamut_vertices,
     solve_primary_weights,
 )
+from color.gamut.solvers import primary_gamut_halfspaces, primary_gamut_vertices
 from color.spaces.rgb import XYZ_to_RGB
 
 

@@ -11,9 +11,15 @@ from .templates import (
 )
 
 __all__ = [
-    "STOCKMAN_RIDER_REFERENCE",
-    "macular_density_spectrum",
-    "lens_density_spectrum",
-    "cone_absorbance_spectra",
-    "generate_individual_cone_fundamentals",
+    "STOCKMAN_RIDER_REFERENCE",  # Stockman/Rider 2023 model reference text
+]
+
+__all__ += [
+    "macular_density_spectrum",  # generate macular pigment density spectrum
+    "lens_density_spectrum",  # generate lens density spectrum
+    "cone_absorbance_spectra",  # generate L/M/S photopigment absorbance spectra
+]
+
+__all__ += [
+    "generate_individual_cone_fundamentals",  # generate individualised LMS cone fundamentals
 ]

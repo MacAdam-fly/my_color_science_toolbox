@@ -13,6 +13,9 @@ __all__ = [
     "RGB_COLORSPACES",  # registered RGB colour spaces
     "get_RGB_colourspace",  # resolve an RGB colour space by name or alias
     "list_RGB_colourspaces",  # list registered RGB colour-space names
+]
+
+__all__ += [
     "RGB_to_XYZ",  # convert RGB values to XYZ
     "XYZ_to_RGB",  # convert XYZ values to RGB
     "RGB_to_RGB",  # convert between RGB colour spaces

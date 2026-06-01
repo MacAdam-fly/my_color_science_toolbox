@@ -67,41 +67,53 @@ SPACE_NODES = (
 )
 
 __all__ = [
-    "DEFAULT_WHITEPOINT_XYZ",
-    "EPSILON",
-    "KAPPA",
-    "XYZ_to_xyY",
-    "xyY_to_XYZ",
-    "XYZ_to_xy",
-    "xyY_to_xy",
-    "xy_to_uv1960",
-    "XYZ_to_uv1960",
-    "uv1960_to_xy",
-    "xy_to_upvp1976",
-    "XYZ_to_upvp1976",
-    "upvp1976_to_xy",
-    "XYZ_to_Lab",
-    "Lab_to_XYZ",
-    "Lab_to_LCHab",
-    "LCHab_to_Lab",
-    "XYZ_to_Luv",
-    "Luv_to_XYZ",
-    "Luv_to_LCHuv",
-    "LCHuv_to_Luv",
-    "Luv_to_Lshuv",
-    "Lshuv_to_Luv",
-    "XYZ_to_UVW",
-    "UVW_to_XYZ",
-    "XYZ_to_Oklab",
-    "Oklab_to_XYZ",
-    "Oklab_to_Oklch",
-    "Oklch_to_Oklab",
-    "XYZ_to_IPT",
-    "IPT_to_XYZ",
-    "IPT_hue_angle",
-    "XYZ_to_Jzazbz",
-    "Jzazbz_to_XYZ",
-    "Jzazbz_to_JzCzhz",
-    "JzCzhz_to_Jzazbz",
-    "SPACE_NODES",
+    "DEFAULT_WHITEPOINT_XYZ",  # default D65 reference whitepoint for Lab and Luv
+    "EPSILON",  # CIE 1976 epsilon threshold
+    "KAPPA",  # CIE 1976 kappa slope
+]
+
+__all__ += [
+    "XYZ_to_xyY",  # convert XYZ values to xyY coordinates
+    "xyY_to_XYZ",  # convert xyY coordinates to XYZ values
+    "XYZ_to_xy",  # project XYZ values to xy chromaticity coordinates
+    "xyY_to_xy",  # project xyY values to xy chromaticity coordinates
+    "xy_to_uv1960",  # convert xy chromaticity coordinates to CIE 1960 uv
+    "XYZ_to_uv1960",  # project XYZ values to CIE 1960 uv
+    "uv1960_to_xy",  # convert CIE 1960 uv coordinates to xy
+    "xy_to_upvp1976",  # convert xy chromaticity coordinates to CIE 1976 u'v'
+    "XYZ_to_upvp1976",  # project XYZ values to CIE 1976 u'v'
+    "upvp1976_to_xy",  # convert CIE 1976 u'v' coordinates to xy
+]
+
+__all__ += [
+    "XYZ_to_Lab",  # convert XYZ values to CIE Lab
+    "Lab_to_XYZ",  # convert CIE Lab values to XYZ
+    "Lab_to_LCHab",  # convert CIE Lab values to LCHab
+    "LCHab_to_Lab",  # convert LCHab values to CIE Lab
+    "XYZ_to_Luv",  # convert XYZ values to CIE Luv
+    "Luv_to_XYZ",  # convert CIE Luv values to XYZ
+    "Luv_to_LCHuv",  # convert CIE Luv values to LCHuv
+    "LCHuv_to_Luv",  # convert LCHuv values to CIE Luv
+    "Luv_to_Lshuv",  # convert CIE Luv values to Lshuv
+    "Lshuv_to_Luv",  # convert Lshuv values to CIE Luv
+    "XYZ_to_UVW",  # convert XYZ values to CIE 1964 UVW
+    "UVW_to_XYZ",  # convert CIE 1964 UVW values to XYZ
+]
+
+__all__ += [
+    "XYZ_to_Oklab",  # convert D65-referred XYZ values to Oklab
+    "Oklab_to_XYZ",  # convert Oklab values to D65-referred XYZ
+    "Oklab_to_Oklch",  # convert Oklab values to Oklch
+    "Oklch_to_Oklab",  # convert Oklch values to Oklab
+    "XYZ_to_IPT",  # convert D65-referred XYZ values to IPT
+    "IPT_to_XYZ",  # convert IPT values to D65-referred XYZ
+    "IPT_hue_angle",  # compute IPT hue angle in degrees
+    "XYZ_to_Jzazbz",  # convert D65-referred XYZ values to Jzazbz
+    "Jzazbz_to_XYZ",  # convert Jzazbz values to D65-referred XYZ
+    "Jzazbz_to_JzCzhz",  # convert Jzazbz values to cylindrical JzCzhz
+    "JzCzhz_to_Jzazbz",  # convert cylindrical JzCzhz values to Jzazbz
+]
+
+__all__ += [
+    "SPACE_NODES",  # colour-space registry nodes defined by basic spaces
 ]

@@ -100,11 +100,11 @@ class GamutBoundary:
         """Return boundary points as XYZ rows."""
         return Lab_to_XYZ(self.to_Lab(), whitepoint_XYZ=self.whitepoint_XYZ)
 
-    def primary_xy_hull(self) -> np.ndarray:
-        """Return the exact primary chromaticity hull in CIE xy coordinates."""
-        if self.primaries is None:
-            raise ValueError("primary_xy_hull requires display primaries")
-        return _convex_hull_polygon(XYZ_to_xy(self.primaries.primaries_XYZ))
+    def xy_boundary(self) -> np.ndarray:
+        """Return the preferred CIE xy-plane boundary for this gamut."""
+        if self.primaries is not None:
+            return _convex_hull_polygon(XYZ_to_xy(self.primaries.primaries_XYZ))
+        return _convex_hull_polygon(XYZ_to_xy(self.to_XYZ().reshape(-1, 3)))
 
     def slice_L(self, L: float) -> np.ndarray:
         """Return an interpolated LCHab boundary slice at lightness *L*."""
@@ -120,7 +120,7 @@ class GamutBoundary:
         L_column = np.full_like(self.hue_values, L, dtype=np.float64)
         return np.stack((L_column, C, self.hue_values), axis=-1)
 
-    def projected_chroma(self) -> np.ndarray:
+    def projected_chroma_boundary(self) -> np.ndarray:
         """Return the maximum chroma over all lightness slices for each hue.
 
         This is the radial boundary of the projected ``a*b*`` plane gamut:
@@ -129,29 +129,29 @@ class GamutBoundary:
         """
         return np.max(self.C_max, axis=0)
 
-    def projected_lightness(self) -> np.ndarray:
+    def projected_lightness_boundary(self) -> np.ndarray:
         """Return the L* slice that provides the projected maximum chroma."""
         indices = np.argmax(self.C_max, axis=0)
         return self.L_values[indices]
 
-    def projected_LCHab(self) -> np.ndarray:
+    def projected_LCHab_boundary(self) -> np.ndarray:
         """Return projected plane-gamut boundary as ``(L, C, h)`` rows."""
         return np.stack(
             (
-                self.projected_lightness(),
-                self.projected_chroma(),
+                self.projected_lightness_boundary(),
+                self.projected_chroma_boundary(),
                 self.hue_values,
             ),
             axis=-1,
         )
 
-    def projected_ab(self) -> np.ndarray:
+    def projected_ab_boundary(self) -> np.ndarray:
         """Return projected plane-gamut boundary as ``(a*, b*)`` rows."""
-        return LCHab_to_Lab(self.projected_LCHab())[:, 1:3]
+        return LCHab_to_Lab(self.projected_LCHab_boundary())[:, 1:3]
 
-    def projected_area(self) -> float:
+    def projected_ab_area(self) -> float:
         """Return the projected plane-gamut area in Lab ``a*b*`` coordinates."""
-        return _polygon_area(self.projected_ab())
+        return _polygon_area(self.projected_ab_boundary())
 
     def area_at_L(self, L: float) -> float:
         """Return the Lab a*b* polygon area of a lightness slice."""

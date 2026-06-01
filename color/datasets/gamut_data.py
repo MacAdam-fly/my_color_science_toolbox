@@ -108,6 +108,13 @@ def _read_pointer_sheet(**kwargs: Any) -> SpectralDict:
     return read_xls(path, sheet=sheet)
 
 
+def _read_macadam_limits(path: str, **kwargs: Any) -> SpectralDict:
+    """Read cached MacAdam optimal colour stimuli data."""
+    from ._utils import read_csv
+
+    return read_csv(path, header=True, coerce_numeric=True)
+
+
 # ---------------------------------------------------------------------------
 # Register
 # ---------------------------------------------------------------------------
@@ -151,6 +158,27 @@ register(DatasetEntry(
     },
 ))
 
+for _illuminant in ("A", "C", "D65"):
+    register(DatasetEntry(
+        category="gamut_data",
+        name=f"macadam_limits_{_illuminant}",
+        description=(
+            f"MacAdam optimal colour stimuli limits for Illuminant {_illuminant}"
+        ),
+        source="color.gamut.macadam computed optimal-colour stimuli",
+        file_path=f"{_GAMUT_DIR}/MacAdamLimits_{_illuminant}.csv",
+        parser_fn=_read_macadam_limits,
+        metadata={
+            "quantity": "macadam_optimal_colour_stimuli",
+            "color_space": "CIE xyY, CIE XYZ, CIE Lab, CIE LCHab",
+            "illuminant": _illuminant,
+            "observer_angle_deg": 2,
+            "reference_white": f"Illuminant {_illuminant}, 2 degree observer",
+            "data_origin": "computed_optimal_colour_stimuli_cache",
+            "fields": ("x", "y", "Y", "X", "Z", "L", "a", "b", "C", "h"),
+        },
+    ))
+
 # ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
@@ -161,7 +189,7 @@ def get_gamut_data(name: str, **kwargs: Any) -> SpectralDict:
     Parameters
     ----------
     name : str
-        ``'pointer'`` or ``'pointer_raw'``.
+        ``'pointer'``, ``'pointer_raw'`` or ``'macadam_limits_A/C/D65'``.
     **kwargs
         For ``'pointer'``: ``L`` — filter by L* level (20, 30, …, 90).
         For ``'pointer_raw'``: ``sheet`` — sheet name (default ``'Data'``).

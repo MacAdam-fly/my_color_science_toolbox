@@ -59,7 +59,6 @@ from .standard_observers import (
 )
 
 __all__ = [
-    # Core registry
     "DatasetEntry",  # metadata record for a registered dataset
     "canonicalize_name",  # resolve a dataset name to its canonical name
     "get",  # load a registered dataset as raw arrays
@@ -69,21 +68,31 @@ __all__ = [
     "list_datasets",  # list datasets in a category
     "register",  # register a dataset entry
     "search",  # search registered datasets
-    # Illuminants
+]
+
+__all__ += [
     "get_illuminant",  # load an illuminant dataset
     "list_illuminants",  # list illuminant datasets
-    # Color cards
+]
+
+__all__ += [
     "get_color_card",  # load a color-card dataset
     "list_color_cards",  # list color-card datasets
-    # Standard observers
+]
+
+__all__ += [
     "get_standard_observer",  # load a standard-observer dataset
     "list_standard_observers",  # list standard observers in a category
     "list_standard_observer_categories",  # list standard-observer subcategories
     "describe_standard_observer",  # describe a standard-observer dataset
-    # Gamut data
+]
+
+__all__ += [
     "get_gamut_data",  # load a gamut reference dataset
     "list_gamut_data",  # list gamut reference datasets
-    # Color systems
+]
+
+__all__ += [
     "get_color_system",  # load a color-system dataset
     "list_color_systems",  # list color-system datasets
 ]

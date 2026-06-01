@@ -38,12 +38,21 @@ __all__ = [
     "broadcast_triplets",  # broadcast triplet arrays
     "broadcast_pairs",  # broadcast pair arrays
     "split_last_axis",  # split array channels along the last axis
+]
+
+__all__ += [
     "canonicalize_name",  # normalize general names and aliases
     "canonicalize_resource_name",  # normalize dataset/generator registry names
     "canonical_method_name",  # semantic wrapper for method names and aliases
+]
+
+__all__ += [
     "build_method_index",  # build canonical method alias lookup
     "resolve_method",  # resolve a method name to a registered function
     "filter_kwargs",  # keep kwargs accepted by a function signature
+]
+
+__all__ += [
     "to_domain_1",  # convert values to a [0, 1] numeric domain
     "to_domain_100",  # convert values to a [0, 100] numeric domain
     "from_range_1",  # convert values from a [0, 1] numeric range

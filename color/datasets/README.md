@@ -26,6 +26,7 @@ d65 = get_illuminant("D65")
 xyz = get_standard_observer("cmfs", "cie1931_xyz_1nm")
 macbeth = get_color_card("macbeth")
 pointer_50 = get_gamut_data("pointer", L=50)
+macadam_d65 = get_gamut_data("macadam_limits_D65")
 munsell = get_color_system("munsell_srgb")
 ```
 
@@ -39,7 +40,7 @@ read-only copies of cached data.
 | `illuminants` | `A`, `D65`, `fluorescents` |
 | `standard_observers.*` | CMFs, chromaticity coordinates, LMS fundamentals, luminous efficiency |
 | `color_cards` | `macbeth`, `pmc`, `bcra` |
-| `gamut_data` | `pointer`, `pointer_raw` |
+| `gamut_data` | `pointer`, `pointer_raw`, `macadam_limits_A`, `macadam_limits_C`, `macadam_limits_D65` |
 | `color_systems` | `munsell_srgb` |
 
 Blackbody and daylight generators are available from `color.generators`, not

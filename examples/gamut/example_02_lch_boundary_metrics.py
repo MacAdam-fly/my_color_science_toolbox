@@ -21,7 +21,7 @@ def main() -> None:
     for name, boundary in boundaries.items():
         print(f"{name:8s} L*=50 area: {boundary.area_at_L(50.0):10.2f}")
         print(f"{name:8s} Lab volume:  {boundary.volume():10.2f}")
-        print(f"{name:8s} projected area: {boundary.projected_area():10.2f}")
+        print(f"{name:8s} projected a*b* area: {boundary.projected_ab_area():10.2f}")
 
     with plot_style("journal"):
         fig, ax = plot_lines(

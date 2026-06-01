@@ -27,14 +27,23 @@ __all__ = [
     "delta_E_CIE1994",  # compute CIE 1994 Lab colour difference
     "delta_E_CIE2000",  # compute CIEDE2000 Lab colour difference
     "delta_E_CMC",  # compute CMC l:c Lab colour difference
+]
+
+__all__ += [
     "delta_E_CAM02UCS",  # compute CAM02-UCS colour difference
     "delta_E_CAM02LCD",  # compute CAM02-LCD colour difference
     "delta_E_CAM02SCD",  # compute CAM02-SCD colour difference
     "delta_E_CAM16UCS",  # compute CAM16-UCS colour difference
     "delta_E_CAM16LCD",  # compute CAM16-LCD colour difference
     "delta_E_CAM16SCD",  # compute CAM16-SCD colour difference
+]
+
+__all__ += [
     "delta_E_Oklab",  # compute Oklab coordinate distance
     "delta_E_Jzazbz",  # compute Jzazbz coordinate distance
+]
+
+__all__ += [
     "DELTA_E_METHODS",  # registered delta E method names
     "delta_E",  # dispatch to a registered delta E method
 ]

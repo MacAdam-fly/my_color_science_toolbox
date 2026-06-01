@@ -1,23 +1,33 @@
 # gamut 详细说明
 
-`color.gamut` 用于色域可达性、色域边界、覆盖率和标准物体色域的计算。当前模块主要覆盖两类对象：
+`color.gamut` 用来处理色域可达性、色域边界、覆盖率和常见参考物体色域。它关注的是已经处于线性 `XYZ(Y=100)` 体系中的颜色刺激，不负责 RGB 编码/解码、色适应、色貌观察条件或普通光谱积分。
 
-- 显示器基色色域：由三基色或多基色线性叠加形成。
-- 非显示器标准色域：目前包括 Pointer real-surface gamut。
+当前模块可以分成六块：
 
-模块使用项目统一的 `XYZ(Y=100)` 标度。这里的 `XYZ` 是线性刺激值，不是编码 RGB，也不包含 gamma / transfer function。
+1. 显示器基色定义与可达性判断。
+2. `Lab/LCHab` 色域边界 `GamutBoundary`。
+3. `xy` 面积覆盖率和 `Lab` 体积覆盖率。
+4. Pointer real-surface gamut。
+5. MacAdam optimal-colour limits。
+6. 汇总分析入口 `analyze_gamut(...)`。
 
 ## 模块边界
 
-`color.gamut` 只处理线性混合、几何边界和覆盖率，不处理：
+本模块统一使用项目约定的 `XYZ(Y=100)` 标度。这里的 `XYZ` 是线性三刺激值，不是 encoded RGB。
 
-- RGB 编码 / 解码。
-- 显示器校准模型。
-- 色适应。
-- 色貌观察条件。
-- 光谱积分。
+`color.gamut` 不做以下事情：
 
-如果需要从 RGB 标准获得显示基色，模块会使用 `color.spaces.rgb` 中的线性 `RGB -> XYZ` 矩阵：
+- 不做 RGB transfer function。
+- 不做色适应。
+- 不做显示器校准和驱动策略优化。
+- 不做色貌模型转换。
+- 不做普通颜色的光谱积分。
+
+如果需要从 sRGB、Display P3 或 Rec.2020 等 RGB 标准获得基色，模块会读取 `color.spaces.rgb` 中已经注册好的线性 `RGB -> XYZ` 矩阵。
+
+## DisplayPrimaries
+
+`DisplayPrimaries` 是显示器基色定义对象。
 
 ```python
 from color.gamut import DisplayPrimaries
@@ -25,77 +35,54 @@ from color.gamut import DisplayPrimaries
 srgb = DisplayPrimaries.from_RGB_colourspace("sRGB")
 ```
 
-## DisplayPrimaries
+核心字段：
 
-`DisplayPrimaries` 是显示器基色定义对象：
+- `primaries_XYZ`：shape 为 `(n, 3)`，每一行是一个基色的 `XYZ(Y=100)` 刺激值。
+- `names`：基色名称，默认是 `P0, P1, ...`。
+- `whitepoint_XYZ`：显示白点，默认是所有基色满输出之和。
 
-```python
-from color.gamut import DisplayPrimaries
+注意：`primaries_XYZ` 不是 `xy` 色品坐标。它保留了亮度信息，因此可以用于三维可达性判断。
 
-primaries = DisplayPrimaries(
-    primaries_XYZ=[
-        [41.24, 21.26, 1.93],
-        [35.76, 71.52, 11.92],
-        [18.05, 7.22, 95.05],
-    ],
-    names=("R", "G", "B"),
-)
-```
+## 基色可达性
 
-字段含义：
-
-- `primaries_XYZ`：shape 为 `(n, 3)`，每一行是一个基色的线性 `XYZ(Y=100)` 刺激值。
-- `names`：可选，基色名称。
-- `whitepoint_XYZ`：可选，默认等于所有基色满输出之和。
-
-`DisplayPrimaries.from_RGB_colourspace("sRGB")` 可以从已注册 RGB 空间构造三基色显示器。
-
-## 三基色与多基色
-
-三基色显示器满足：
-
-```text
-XYZ = [R, G, B] @ primaries_XYZ
-```
-
-只要三基色矩阵满秩，给定一个 `XYZ` 就可以直接求唯一线性权重。
-
-多基色显示器满足：
-
-```text
-XYZ = [P0, P1, ..., Pn] @ primaries_XYZ
-```
-
-当基色数大于 3 时，权重解通常不唯一。模块把所有 `0/1` 基色开关组合形成的刺激点构造成凸包：
+点级可达性使用：
 
 ```python
 from color.gamut import is_within_primary_gamut
 
-inside = is_within_primary_gamut(XYZ_batch, primaries)
+inside = is_within_primary_gamut([20, 30, 40], srgb)
 ```
 
-默认策略：
+默认 `method="auto"`：
 
-- 三基色 inside 判断：矩阵求解。
-- 四基色及以上 inside 判断：凸包半空间，支持批量向量化。
-- 三基色权重求解：矩阵求逆。
-- 四基色及以上权重求解：`scipy.optimize.linprog` 找到一组可行解。
+- 三基色：使用矩阵求解唯一线性权重。
+- 四基色及以上：构造所有 `0/1` 基色开关组合形成的凸包，用半空间方程批量判断 inside。
+
+多基色 inside 判断回答的是：
+
+```text
+这个 XYZ 是否位于多基色线性混合可以形成的三维凸体内？
+```
+
+它不回答“实际显示器应该用哪一组最佳驱动值”。
+
+## 基色权重
+
+权重求解使用：
 
 ```python
 from color.gamut import solve_primary_weights
 
-weights = solve_primary_weights([20, 30, 40], primaries)
+weights = solve_primary_weights([20, 30, 40], srgb)
 ```
 
-多基色权重不唯一，当前结果只表示一组可行驱动，不代表真实显示器的最佳驱动策略。
+三基色情况下，解是唯一的。多基色情况下，解通常不唯一；当前版本使用 `scipy.optimize.linprog` 返回一组可行解，默认目标是 `min_sum`。
 
-## LCHab 边界
+这部分暂时只作为可行性工具。多基色显示器的真实驱动策略可能还需要考虑能耗、亮度分配、通道限制、视觉误差、设备标定等因素，当前模块不对这些策略作承诺。
 
-`compute_LCH_gamut_boundary(...)` 用于把显示器基色可达域转换成 Lab/LCHab 空间中的边界：
+## LCHab 色域边界
 
-```text
-给定 L* 和 hue，沿 C* 方向二分搜索最大可显示 chroma。
-```
+显示色域的三维边界可以重采样为规则的 `L* x hue` 网格：
 
 ```python
 from color.gamut import compute_LCH_gamut_boundary
@@ -108,17 +95,15 @@ boundary = compute_LCH_gamut_boundary(
 )
 ```
 
-返回对象是 `GamutBoundary`。核心数据是：
+`GamutBoundary.C_max` 的含义是：
 
 ```text
-C_max.shape == (len(L_values), len(hue_values))
+C_max[L_index, hue_index] = 该 L* 和 hue 方向上的最大可达 C*
 ```
 
-它表示每个 `(L*, hue)` 方向上的最大 `C*`。
+计算方法是二分搜索：固定 `L*` 和 hue，沿 `C*` 方向搜索最大可显示边界。
 
-## GamutBoundary
-
-`GamutBoundary` 主要用于保存、转换和统计离散 LCHab 边界：
+常用转换：
 
 ```python
 boundary.to_LCHab()
@@ -127,7 +112,7 @@ boundary.to_XYZ()
 boundary.slice_L(50)
 ```
 
-统计函数：
+常用统计：
 
 ```python
 boundary.area_at_L(50)
@@ -138,127 +123,107 @@ boundary.ring_area()
 boundary.ring_areas([25, 50, 75, 100])
 ```
 
-平面投影函数：
+`volume()` 是用各个 `L*` 切片面积沿亮度轴积分得到的近似 `Lab` 体积。它依赖 `L_values` 和 `hue_values` 的采样密度。
+
+## xy_boundary 与 Lab 投影边界
+
+这是当前 `gamut` 模块里最容易混淆的部分。
+
+### xy_boundary()
+
+如果需要 CIE 1931 `xy` 平面边界，使用：
 
 ```python
-boundary.projected_chroma()
-boundary.projected_lightness()
-boundary.projected_LCHab()
-boundary.projected_ab()
-boundary.projected_area()
+xy = boundary.xy_boundary()
 ```
 
-这些投影函数的含义是：把所有 `L*` 层投影到同一个 hue 方向上，保留该 hue 的最大 `C*`。这适合画 Lab `a*b*` 平面色域，但不是 xy 色品图边界。
+`xy_boundary()` 的语义是“这个色域对象在 xy 平面上最合适的边界”。
 
-显示器 xy 边界函数：
+具体规则：
+
+1. 显示基色色域：返回基色 `XYZ -> xy` 后的凸包。
+2. Pointer：返回 published 32 点 Pointer xy boundary。
+3. MacAdam cached：返回缓存表中正亮度点的 xy 凸包。
+4. computed MacAdam：返回计算得到的 optimal-colour 顶点在 xy 平面的凸包。
+5. 普通无特化 `GamutBoundary`：退回到 `to_XYZ()` 采样点投影到 xy 后的凸包。
+
+对于显示器色域，`xy_boundary()` 本质上就是基色 xy hull。对于 Pointer 和 MacAdam，它不是从 `projected_ab_boundary()` 转换来的。
+
+### projected_ab_boundary()
+
+如果需要 Lab `a*b*` 平面投影边界，使用：
 
 ```python
-boundary.primary_xy_hull()
+ab = boundary.projected_ab_boundary()
+area = boundary.projected_ab_area()
 ```
 
-`primary_xy_hull()` 只对含有 `DisplayPrimaries` 的显示器边界有意义。它直接对显示基色 xy 点求凸包。Pointer 这类非显示器色域没有 primaries，调用该函数会抛 `ValueError`。
+这类 `projected_*_boundary()` 函数做的是：
 
-注意：不要把 `projected_LCHab()` 或 `projected_ab()` 再转换到 xy 后解释为 xy 边界。`Lab/LCHab -> XYZ -> xy` 会丢失亮度，而且是非线性映射，可能产生错误的突出或折返形状。
+```text
+对每个 hue，在所有 L* 切面里取最大 C*
+```
 
-## xy 平面覆盖率
+它适合比较 Lab 平面色域，但不能再转换到 xy 并解释为 xy 色域边界。原因是 `Lab/LCHab -> XYZ -> xy` 是非线性映射，而且 xy 会丢失亮度；直接把 Lab 投影边界转成 xy 会产生错误形状。
 
-xy 覆盖率比较的是 CIE 1931 xy 平面上的二维面积：
+## xy 面积覆盖率
+
+xy 覆盖率比较的是 CIE 1931 xy 平面的二维面积。
+
+定义：
 
 ```text
 coverage(test, reference) = intersection_area(test, reference) / area(reference)
 ```
 
-覆盖率有方向性：
+它是单向的：
 
 ```python
 xy_gamut_coverage("sRGB", "Rec.2020")
 xy_gamut_coverage("Rec.2020", "sRGB")
 ```
 
-这两个结果不是同一个数。
+这两个结果通常不同。
 
-### 输入为显示基色定义
-
-如果输入是显示器基色定义，使用：
+### 输入是 RGB 名称、DisplayPrimaries 或 primary XYZ
 
 ```python
 from color.gamut import DisplayPrimaries, xy_gamut_coverage
 
-# 1. RGB 标准名称。
-coverage_names = xy_gamut_coverage("sRGB", "Rec.2020")
-
-# 2. DisplayPrimaries。
 srgb = DisplayPrimaries.from_RGB_colourspace("sRGB")
 rec2020 = DisplayPrimaries.from_RGB_colourspace("Rec.2020")
-coverage_objects = xy_gamut_coverage(srgb, rec2020)
 
-# 3. (n, 3) 基色 XYZ 行。
-coverage_XYZ = xy_gamut_coverage(srgb.primaries_XYZ, rec2020.primaries_XYZ)
+coverage_1 = xy_gamut_coverage("sRGB", "Rec.2020")
+coverage_2 = xy_gamut_coverage(srgb, rec2020)
+coverage_3 = xy_gamut_coverage(srgb.primaries_XYZ, rec2020.primaries_XYZ)
 ```
 
-`xy_gamut_coverage(...)` 会把基色 `XYZ` 转换到 xy，再对 xy 点求凸包。
+这一路径会先把 primary `XYZ` 转为 `xy`，再求凸包。
 
-### 输入已经是 xy 点或 xy hull
-
-如果手里的数据已经是 `(n, 2)` 的 CIE xy 点或 xy 多边形，使用 `*_from_xy`：
+### 输入已经是 xy 点或 xy 边界
 
 ```python
-from color.gamut import (
-    pointer_gamut_xy_boundary,
-    xy_gamut_area_from_xy,
-    xy_gamut_coverage_from_xy,
-    xy_gamut_intersection_area_from_xy,
-)
+from color.gamut import pointer_gamut_published_xy_boundary, xy_gamut_coverage_from_xy
+from color.gamut.coverage import xy_gamut_area_from_xy
 
 rec2020_xy = [
     [0.708, 0.292],
     [0.170, 0.797],
     [0.131, 0.046],
 ]
-pointer_xy = pointer_gamut_xy_boundary()
+pointer_xy = pointer_gamut_published_xy_boundary()
 
 area = xy_gamut_area_from_xy(pointer_xy)
-intersection = xy_gamut_intersection_area_from_xy(rec2020_xy, pointer_xy)
 coverage = xy_gamut_coverage_from_xy(rec2020_xy, pointer_xy)
 ```
 
-三基色、四基色或更多基色 xy 点都可以直接传入：
+`*_from_xy` 函数会对输入 xy 点求凸包。三基色、四基色和更多基色的 xy 点都可以直接传入。点不需要预排序，也不需要首尾闭合。
 
-```python
-from color.gamut import xy_gamut_area_from_xy, xy_gamut_coverage_from_xy
-
-srgb_xy = [
-    [0.640, 0.330],
-    [0.300, 0.600],
-    [0.150, 0.060],
-]
-
-rgbc_xy = [
-    [0.640, 0.330],
-    [0.300, 0.600],
-    [0.150, 0.060],
-    [0.170, 0.350],
-]
-
-area_rgbc = xy_gamut_area_from_xy(rgbc_xy)
-coverage = xy_gamut_coverage_from_xy(rgbc_xy, srgb_xy)
-```
-
-输入点不需要提前排序，也不需要闭合首尾。内部会对 xy 点求凸包：
-
-- 三基色通常得到三角形。
-- 四基色或更多基色得到凸多边形。
-- 如果某个点落在其他点围成的区域内部，它不会扩大 xy 面积。
-
-这个设计适合显示器 primary xy gamut。如果未来要保留凹边界，需要单独设计 polygon API，不能继续用当前凸包逻辑。
+如果未来要比较凹多边形边界，需要单独设计 polygon API；当前 xy coverage API 使用的是凸包语义。
 
 ## Lab 体积覆盖率
 
-Lab 覆盖率比较的是两个 `GamutBoundary` 的三维边界体积：
-
-```text
-coverage(test, reference) = overlap_volume(test, reference) / volume(reference)
-```
+Lab 覆盖率比较的是两个 `GamutBoundary` 的三维 `C_max[L, h]` 体积。
 
 ```python
 from color.gamut import compute_LCH_gamut_boundary, lab_gamut_coverage
@@ -269,76 +234,234 @@ rec2020_boundary = compute_LCH_gamut_boundary("Rec.2020")
 coverage = lab_gamut_coverage(srgb_boundary, rec2020_boundary)
 ```
 
-`lab_gamut_coverage(...)` 只接受 `GamutBoundary`，不接受 RGB 名称、基色 XYZ 或 xy 点。这样可以明确边界计算时使用的白点、L 网格、hue 网格和搜索参数。
+定义：
 
-计算时有两个重要 warning：
+```text
+coverage(test, reference) = overlap_volume(test, reference) / volume(reference)
+```
 
-1. `whitepoint_XYZ` 不一致
+`lab_gamut_coverage(...)` 只接受 `GamutBoundary`。这样可以明确比较时使用的白点、`L_values` 网格、`hue_values` 网格和边界搜索参数。
 
-   如果两个边界的 `whitepoint_XYZ` 不同，会抛出 `UserWarning`。代码仍继续计算，但不会隐式做色适应；它只是直接比较已经存储的 `C_max[L, h]`。
+两个 warning 需要注意：
 
-2. `L_values` / `hue_values` 网格不一致
+1. `whitepoint_XYZ` 不同。
+   函数会发出 `UserWarning`，但继续计算。它不会自动做色适应，只会直接比较两个已经存在的 `C_max` 边界。
 
-   如果两个边界的亮度网格或 hue 网格不同，会抛出 `UserWarning`。代码会把 test boundary 插值到 reference boundary 的网格后再计算覆盖率。
+2. `L_values` 或 `hue_values` 网格不同。
+   函数会发出 `UserWarning`，并把 test boundary 插值到 reference boundary 的网格上再计算。
 
-严格报告中，建议使用相同白点和相同网格生成待比较边界。
+严谨比较时，建议使用相同白点和相同网格生成待比较边界。
 
-注意：xy 覆盖率、Lab 体积覆盖率和 `projected_area()` 是不同指标，不能直接比较数值大小。
+## GamutAnalysis
+
+`analyze_gamut(...)` 是全量分析入口，用来把常用指标集中到一个结果对象中。
+
+```python
+from color.gamut import analyze_gamut
+
+analysis = analyze_gamut("sRGB")
+
+analysis.xy_area
+analysis.xy_coverage_rec2020
+analysis.xy_coverage_pointer
+analysis.xy_coverage_macadam_d65
+
+analysis.lab_volume
+analysis.projected_ab_area
+analysis.ring_area
+analysis.volume_coverage_rec2020
+analysis.volume_coverage_pointer
+analysis.volume_coverage_macadam_d65
+analysis.warnings
+```
+
+输入可以是：
+
+```python
+analyze_gamut("sRGB")
+analyze_gamut(DisplayPrimaries(...))
+analyze_gamut(existing_boundary)
+```
+
+如果输入是 RGB 名称或 `DisplayPrimaries`，函数会先调用 `compute_LCH_gamut_boundary(...)`。如果输入已经是 `GamutBoundary`，则直接分析这个对象，不重复构造。
+
+当前固定参考体系：
+
+- Rec.2020：显示色域上限参考。
+- Pointer：真实物体表面颜色参考。
+- D65 MacAdam limits：D65 下理论物体色极限参考。
+
+所有覆盖率都是单向：
+
+```text
+coverage(current, reference) = 当前色域覆盖参考色域的比例
+```
+
+第一版不计算 `xy_coverage_visible_locus`，也不计算马蹄形光谱轨迹覆盖率。MacAdam D65 xy boundary 和 CIE 1931 visible locus 不是同一个对象。
+
+`analyze_gamut(...)` 不做自动色适应。底层 `lab_gamut_coverage(...)` 发出的白点或网格 warning 会同步记录到：
+
+```python
+analysis.warnings
+```
 
 ## Pointer 色域
 
-Pointer 色域是经验物体色域，描述真实表面颜色的大致范围。它不是显示器基色色域，因此没有 `DisplayPrimaries`。
+Pointer gamut 描述真实表面颜色的大致经验范围，不是显示器基色色域。
 
 ```python
 from color.gamut import (
     is_within_pointer_gamut,
-    pointer_gamut_boundary,
-    pointer_gamut_xy_boundary,
+    pointer_gamut,
+    pointer_gamut_published_xy_boundary,
 )
 
-pointer = pointer_gamut_boundary()
-pointer_xy = pointer_gamut_xy_boundary()
+pointer = pointer_gamut()
+pointer_xy = pointer_gamut_published_xy_boundary()
 inside = is_within_pointer_gamut([32.05, 41.31, 51.00])
 ```
 
-Pointer 的 `GamutBoundary` 来自 `color.datasets.gamut_data.get_gamut_data("pointer")` 中的规则 `L* × hue` 数据：
+`pointer_gamut()` 返回 `PointerGamutBoundary`，其 `C_max` 来自 `color.datasets.gamut_data.get_gamut_data("pointer")` 中的规则 `L* x hue` 表。
 
-```text
-L*: 20, 30, ..., 90
-hue: 0, 10, ..., 360
-```
+Pointer 的 `xy_boundary()` 与 `pointer_gamut_published_xy_boundary()` 返回同一组 published 32 点 xy 边界。这个边界用于 xy 图和 xy 面积覆盖率；不是从 Lab 边界投影得到的。
 
-它可以用于：
+Pointer 可用于：
 
 ```python
 pointer.volume()
-pointer.projected_ab()
+pointer.projected_ab_boundary()
 lab_gamut_coverage(display_boundary, pointer)
+is_within_pointer_gamut(XYZ)
 ```
 
-但不能使用：
+`is_within_pointer_gamut(...)` 基于 Pointer 体积 mesh 判断输入 `XYZ(Y=100)` 是否位于 Pointer 色域内。
+
+## MacAdam limits
+
+MacAdam limits 描述给定照明体下 optimal colour stimuli 的理论物体色边界。
+
+普通用户只需要使用统一入口：
 
 ```python
-pointer.primary_xy_hull()
+from color.gamut import (
+    is_within_macadam_limits,
+    macadam_limits,
+    macadam_limits_published_xy_boundary,
+)
+
+boundary = macadam_limits("D65")
+xy = macadam_limits_published_xy_boundary("D65")
+inside = is_within_macadam_limits([39.57, 51.0, 32.89], "A")
 ```
 
-因为 Pointer 不是显示基色凸包。
+### source 分发
 
-`pointer_gamut_xy_boundary()` 返回和 `colour.models.CCS_POINTER_GAMUT_BOUNDARY` 一致的 32 点 published Pointer xy 边界，并闭合首尾。它用于 CIE 1931 xy 图展示，不用于 Lab 体积判断。
+`macadam_limits(...)` 和 `is_within_macadam_limits(...)` 都支持：
 
-`is_within_pointer_gamut(...)` 使用 Pointer 体积 mesh 判断输入 `XYZ(Y=100)` 是否位于 Pointer real-surface gamut 内。
+```python
+source="auto"       # 默认
+source="published"  # 强制使用缓存 A/C/D65 数据
+source="computed"   # 强制实时计算
+```
+
+默认 `source="auto"`：
+
+- `illuminant="A" | "C" | "D65"` 且没有传入 `cmfs` 或 `shape` 时，使用缓存数据。
+- 传入自定义 CMFs、照明体对象或 spectral shape 时，使用 computed 路线。
+
+`source="published"` 只接受 `A / C / D65`，不接受 `cmfs` 或 `shape`。
+
+### 缓存数据
+
+缓存数据位于：
+
+```text
+color/data/gamut_data/MacAdamLimits_A.csv
+color/data/gamut_data/MacAdamLimits_C.csv
+color/data/gamut_data/MacAdamLimits_D65.csv
+```
+
+字段包括：
+
+```text
+x, y, Y, X, Z, L, a, b, C, h
+```
+
+其中 `x/y/Y` 是 xyY 语义，`X/Z` 由 xyY 派生，`L/a/b/C/h` 用对应照明体白点派生。数据使用项目统一 `Y=100` 标度。
+
+### computed 路线
+
+computed MacAdam 使用 `docs/macadam_limits.md` 中描述的亮度因子法，不再使用旧的 0/1 pulse-wave 枚举。
+
+核心链路：
+
+```text
+L* -> R = Y / Yn
+   -> 求 Type 1 / Type 2 矩形反射谱
+   -> 在 illuminant × CMFs 空间积分得到 XYZ
+   -> 转换到 Lab/LCHab
+   -> 重采样为规则 C_max[L, h]
+```
+
+这里 `R` 由 `L*` 唯一决定，不是额外自由参数。
+
+示例：
+
+```python
+from color.gamut import macadam_limits
+from color.spectra import SpectralShape
+
+boundary = macadam_limits(
+    "D65",
+    source="computed",
+    shape=SpectralShape(400, 700, 5),
+    L_values=range(0, 101, 10),
+    hue_values=range(0, 361, 10),
+)
+```
+
+高级接口仍保留在 `color.gamut.macadam` 子包中：
+
+```python
+from color.gamut.macadam import (
+    computed_macadam_limits,
+    computed_macadam_limits_data,
+    computed_macadam_limits_XYZ,
+)
+```
+
+这些接口用于开发、数据再生成和研究，不作为 `color.gamut` 顶层常用 API。
+
+当前 computed 默认值以代码为准：
+
+- CMFs：`cie1931_xyz_1nm`
+- illuminant：`D65`
+- spectral shape：`SpectralShape(400, 700, 2)`
+- XYZ 标度：`Y=100`
 
 ## mesh 工具
 
-`is_within_mesh_volume(XYZ, vertices_XYZ)` 是通用 mesh inside 判断工具。Pointer inside 判断就是基于它实现的。它要求 `vertices_XYZ` 是三维点云，并使用 `scipy.spatial.Delaunay.find_simplex(...)`。
+`is_within_mesh_volume(XYZ, vertices_XYZ)` 位于 `color.gamut.mesh`。它是底层体积 inside 判断工具，基于 `scipy.spatial.Delaunay.find_simplex(...)`。
+
+Pointer inside 判断和部分 MacAdam 内部逻辑会用到 mesh 或凸包工具，但该函数不从 `color.gamut` 顶层导出。
 
 ## examples
 
-`examples/gamut` 提供六个示例：
+`examples/gamut` 目前包含九个示例：
 
-- `example_01_display_primary_gamut.py`：三基色 / 多基色 inside 判断和权重求解。
-- `example_02_lch_boundary_metrics.py`：LCH 边界、切片面积和体积。
-- `example_03_gamut_solids_3d.py`：Lab 三维色立体绘制。
-- `example_04_projected_plane_and_rings.py`：平面投影、固定 L 切片和 gamut rings。
+- `example_01_display_primary_gamut.py`：三基色/多基色 inside 判断和权重求解。
+- `example_02_lch_boundary_metrics.py`：LCH 边界、切片面积、体积和投影面积。
+- `example_03_gamut_solids_3d.py`：Lab 三维色立体。
+- `example_04_projected_plane_and_rings.py`：xy、LCH 极坐标、Lab 平面、gamut rings。
 - `example_05_gamut_coverage.py`：xy 和 Lab 覆盖率矩阵。
-- `example_06_pointer_gamut.py`：Pointer 色域、Pointer xy 边界和显示器覆盖率。
+- `example_06_pointer_gamut.py`：Pointer 色域、Pointer xy boundary 和显示器覆盖率。
+- `example_07_macadam_limits.py`：A/C/D65 MacAdam limits 与 Pointer/显示色域比较。
+- `example_08_computed_macadam_limits.py`：computed MacAdam 与缓存数据对比。
+- `example_09_gamut_analysis.py`：`analyze_gamut(...)` 汇总分析。
+
+## 当前未覆盖内容
+
+当前 `gamut` 模块还没有实现：
+
+- 多基色真实驱动策略优化。
+- 非凸 xy 多边形覆盖率。

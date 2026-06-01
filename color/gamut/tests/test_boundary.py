@@ -7,6 +7,7 @@ import pytest
 
 from color.gamut import (
     DisplayPrimaries,
+    GamutBoundary,
     compute_LCH_gamut_boundary,
     is_within_primary_gamut,
 )
@@ -130,11 +131,11 @@ def test_boundary_projected_plane_gamut():
         iterations=8,
     )
 
-    projected_C = boundary.projected_chroma()
-    projected_L = boundary.projected_lightness()
-    projected_LCHab = boundary.projected_LCHab()
-    projected_ab = boundary.projected_ab()
-    projected_area = boundary.projected_area()
+    projected_C = boundary.projected_chroma_boundary()
+    projected_L = boundary.projected_lightness_boundary()
+    projected_LCHab = boundary.projected_LCHab_boundary()
+    projected_ab = boundary.projected_ab_boundary()
+    projected_area = boundary.projected_ab_area()
 
     assert projected_C.shape == boundary.hue_values.shape
     assert projected_L.shape == boundary.hue_values.shape
@@ -144,13 +145,23 @@ def test_boundary_projected_plane_gamut():
     np.testing.assert_allclose(projected_C, np.max(boundary.C_max, axis=0))
     np.testing.assert_allclose(projected_LCHab[:, 1], projected_C)
     np.testing.assert_allclose(projected_LCHab[:, 2], boundary.hue_values)
+    hue_rad = np.radians(boundary.hue_values)
+    expected_ab = np.stack(
+        (
+            projected_C * np.cos(hue_rad),
+            projected_C * np.sin(hue_rad),
+        ),
+        axis=-1,
+    )
+    np.testing.assert_allclose(projected_ab, expected_ab, atol=1e-12)
+    assert np.all(boundary.C_max <= projected_C[np.newaxis, :] + 1e-12)
 
 
-def test_primary_xy_hull_is_closed_and_finite():
+def test_xy_boundary_is_closed_and_finite():
     primaries = DisplayPrimaries.from_RGB_colourspace("sRGB")
     boundary = compute_LCH_gamut_boundary(primaries)
 
-    primary_hull = boundary.primary_xy_hull()
+    primary_hull = boundary.xy_boundary()
     assert primary_hull.shape[1] == 2
     assert np.all(np.isfinite(primary_hull))
     np.testing.assert_allclose(primary_hull[0], primary_hull[-1])
@@ -159,6 +170,21 @@ def test_primary_xy_hull_is_closed_and_finite():
         - np.dot(primary_hull[:, 1], np.roll(primary_hull[:, 0], -1))
     )
     assert primary_area > 0
+
+
+def test_xy_boundary_fallback_without_primaries():
+    boundary = GamutBoundary(
+        C_max=np.full((3, 4), 20.0),
+        L_values=np.array([25.0, 50.0, 75.0]),
+        hue_values=np.array([0.0, 120.0, 240.0, 360.0]),
+        whitepoint_XYZ=np.array([95.047, 100.0, 108.883]),
+        primaries=None,
+    )
+
+    xy = boundary.xy_boundary()
+    assert xy.shape[1] == 2
+    assert np.all(np.isfinite(xy))
+    np.testing.assert_allclose(xy[0], xy[-1])
 
 
 def test_boundary_summary_methods_validate_inputs():

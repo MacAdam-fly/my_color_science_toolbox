@@ -21,5 +21,8 @@ def test_gamut_examples_run():
         "example_04_projected_plane_and_rings.py",
         "example_05_gamut_coverage.py",
         "example_06_pointer_gamut.py",
+        "example_07_macadam_limits.py",
+        "example_08_computed_macadam_limits.py",
+        "example_09_gamut_analysis.py",
     ):
         runpy.run_path(str(_EXAMPLES / filename), run_name="__main__")

@@ -7,6 +7,7 @@ import pytest
 
 from color.datasets import describe
 from color.datasets.gamut_data import get_gamut_data, list_gamut_data
+from color.colorimetry import XYZ_to_xyY
 
 
 class TestListGamutData:
@@ -20,6 +21,9 @@ class TestListGamutData:
         result = list_gamut_data()
         assert "pointer" in result
         assert "pointer_raw" in result
+        assert "macadam_limits_A" in result
+        assert "macadam_limits_C" in result
+        assert "macadam_limits_D65" in result
 
 
 class TestPointer:
@@ -92,3 +96,39 @@ class TestPointerRaw:
         assert "coerce_numeric" not in entry.metadata
         assert entry.metadata["coerces_non_numeric_to_nan"] is True
         assert "SpecLoc" in entry.metadata["sheets"]
+
+
+class TestMacAdamLimits:
+    """Tests for MacAdam optimal colour stimuli datasets."""
+
+    @pytest.mark.parametrize("name", ["macadam_limits_A", "macadam_limits_C", "macadam_limits_D65"])
+    def test_dataset_fields_and_shape(self, name):
+        data = get_gamut_data(name)
+
+        expected = {"x", "y", "Y", "X", "Z", "L", "a", "b", "C", "h"}
+        assert set(data) == expected
+        row_count = len(data["Y"])
+        assert row_count > 0
+        for values in data.values():
+            assert values.shape == (row_count,)
+            assert np.all(np.isfinite(values))
+
+    @pytest.mark.parametrize("name", ["macadam_limits_A", "macadam_limits_C", "macadam_limits_D65"])
+    def test_xyz_columns_restore_xyY(self, name):
+        data = get_gamut_data(name)
+        XYZ = np.stack((data["X"], data["Y"], data["Z"]), axis=-1)
+        nonzero = np.sum(XYZ, axis=-1) > 0
+        xyY = XYZ_to_xyY(XYZ[nonzero])
+
+        np.testing.assert_allclose(xyY[:, 0], data["x"][nonzero], atol=1e-10)
+        np.testing.assert_allclose(xyY[:, 1], data["y"][nonzero], atol=1e-10)
+        np.testing.assert_allclose(xyY[:, 2], data["Y"][nonzero], atol=1e-10)
+        assert np.all(np.isfinite(data["x"][~nonzero]))
+        assert np.all(np.isfinite(data["y"][~nonzero]))
+
+    def test_metadata(self):
+        entry = describe("gamut_data", "macadam_limits_D65")
+
+        assert entry.metadata["quantity"] == "macadam_optimal_colour_stimuli"
+        assert entry.metadata["illuminant"] == "D65"
+        assert entry.metadata["data_origin"] == "computed_optimal_colour_stimuli_cache"

@@ -1,33 +1,35 @@
-# color_agent
+# color
 
-This package is a clean landing zone for color-related agent tools and models.
+Core package for the colour-science toolbox.
 
-New layout blueprint:
+The package is organised by domain modules. Users should import from the
+specific module they need, for example:
 
-```
-color_agent/
-	constants/   # matrices, white points, primaries
-	core/        # shared types and small abstractions
-	data/        # static datasets (CMF, spectra tables)
-	generators/  # formula/procedural data generation
-	icc/         # ICC profile parsing and transforms
-	io/          # file readers/writers for spectra, CMF, ICC
-	math/        # solvers, interpolation, fitting, simulation
-	models/      # appearance/opponent/observer models
-	plot/        # 2D/3D visualization helpers
-	spectra/     # spectral object wrappers, interpolation, alignment
-	spaces/      # color space definitions and conversions (XYZ centered)
-	tools/       # high-level workflow toolkits
-	utils/       # legacy helpers used during refactor
+```python
+from color.spectra import from_cie1931_xyz_cmfs
+from color.colorimetry import reflectance_to_XYZ
+from color.spaces import convert_color
+from color.gamut import compute_LCH_gamut_boundary
 ```
 
-Entry points and naming:
+Main modules:
 
-- High-level workflows: `color_agent.tools.<module>`
-- Common toolkit exports: `color_agent.tools` (e.g. `DeltaEToolkit`)
-- Legacy underscore modules should add a thin alias module (e.g. `deltae` -> `delta_e`).
-- Classes use CapWords; functions use snake_case; module names are lowercase ASCII.
+- `datasets`: static reference data loading from `color/data`.
+- `generators`: formula/procedural spectrum generation.
+- `spectra`: spectral object wrappers, interpolation, extrapolation and alignment.
+- `colorimetry`: spectral integration, chromaticity, photometry, lightness, temperature, dominant wavelength and LMS/XYZ transforms.
+- `adaptation`: explicit XYZ chromatic adaptation.
+- `appearance`: CIECAM02 and CIECAM16 colour appearance models.
+- `spaces`: colour-space definitions and conversion routing.
+- `difference`: colour-difference metrics.
+- `gamut`: display-primary gamuts, Pointer gamut and MacAdam limits.
+- `quality`: spectral quality metrics such as SSI.
+- `individual_cone_fundamentals`: Stockman/Rider individual LMS fundamentals.
+- `plot`: low-level plotting components for colour-science visualisation.
+- `math`: interpolation and extrapolation helpers.
+- `constants`: shared scientific constants and matrices.
+- `utils`: low-level shared utility functions.
 
-Directory docs:
-
-Each top-level directory has a README with purpose and naming rules. Keep new features out of `utils/` and migrate into `spaces`, `models`, `math`, or `tools` instead.
+`color.core` has been removed because it only contained unused type aliases and
+an unused context object. Shared behaviour now lives in the concrete modules
+above.

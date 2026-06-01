@@ -31,6 +31,9 @@ color/data/
 │   └── readme.md
 ├── gamut_data/
 │   ├── PointerData.xls
+│   ├── MacAdamLimits_A.csv
+│   ├── MacAdamLimits_C.csv
+│   ├── MacAdamLimits_D65.csv
 │   └── readme.md
 ├── color_systems/
 │   ├── real_sRGB.xls
@@ -86,6 +89,9 @@ Formula-generated blackbody and daylight data are provided by
 | File | Dataset name | Description |
 | --- | --- | --- |
 | `PointerData.xls` | `pointer`, `pointer_raw` | Pointer real-surface color gamut data |
+| `MacAdamLimits_A.csv` | `macadam_limits_A` | Cached MacAdam optimal colour stimuli for Illuminant A |
+| `MacAdamLimits_C.csv` | `macadam_limits_C` | Cached MacAdam optimal colour stimuli for Illuminant C |
+| `MacAdamLimits_D65.csv` | `macadam_limits_D65` | Cached MacAdam optimal colour stimuli for Illuminant D65 |
 
 ### Color Systems
 

@@ -48,17 +48,20 @@ __all__ = [
     "D65_UPVP1976",  # rounded D65 u'v'1976 whitepoint used for plotting
     "D65_UV1960",  # rounded D65 uv1960 whitepoint used for plotting
     "D65_XY",  # rounded D65 xy whitepoint used for plotting
+]
+
+__all__ += [
     "as_2d_points",  # validate row-wise plotting points
     "as_rgb_rows",  # validate RGB rows for plotting
-    "chromaticity_background_image",  # compute chromaticity background RGB image
     "finish_figure",  # apply final figure layout
-    "get_3d_figure_axes",  # create or reuse matplotlib 3D axes
     "get_figure_axes",  # create or reuse matplotlib axes
+]
+
+__all__ += [
+    "chromaticity_background_image",  # compute chromaticity background RGB image
     "load_cie1931_locus_upvp1976",  # load CIE 1931 spectral locus u'v' coordinates
     "load_cie1931_locus_uv1960",  # load CIE 1931 spectral locus uv coordinates
     "load_cie1931_locus_xy",  # load CIE 1931 spectral locus xy coordinates
-    "PLOT_STYLE_PRESETS",  # named matplotlib style presets for plotting
-    "colour_cycle",  # return an infinite cycle of plotting colours
     "plot_chromaticity_background",  # plot a chromaticity background image
     "plot_cie1931_diagram",  # plot CIE 1931 xy chromaticity diagram
     "plot_cie1960_ucs_diagram",  # plot CIE 1960 uv chromaticity diagram
@@ -67,10 +70,16 @@ __all__ = [
     "plot_locus_wavelength_labels",  # label wavelengths along a spectral locus
     "plot_xy_chromaticity_background",  # plot the CIE 1931 xy background
     "plot_xy_points",  # compatibility wrapper for xy chromaticity points
-    "plot_3d_lines",  # plot one or more three-dimensional line series
-    "plot_3d_points",  # plot one or more three-dimensional point groups
-    "plot_3d_surface",  # plot a three-dimensional surface grid
-    "plot_3d_wireframe",  # plot a three-dimensional wireframe grid
+]
+
+__all__ += [
+    "PLOT_STYLE_PRESETS",  # named matplotlib style presets for plotting
+    "colour_cycle",  # return an infinite cycle of plotting colours
+    "plot_style",  # temporarily apply a plotting style
+    "set_plot_style",  # apply a plotting style to global matplotlib rcParams
+]
+
+__all__ += [
     "plot_arrows",  # plot one or more two-dimensional arrows
     "plot_bars",  # plot one or more groups of bars
     "plot_image",  # plot a scalar image or RGB(A) image
@@ -79,12 +88,21 @@ __all__ = [
     "plot_points",  # plot one or more two-dimensional point groups
     "plot_polygons",  # plot one or more two-dimensional polygons
     "plot_segments",  # plot one or more two-dimensional line-segment groups
-    "plot_style",  # temporarily apply a plotting style
-    "set_3d_axis_limits_from_data",  # set axis limits from finite three-dimensional data
     "set_axis_limits_from_data",  # set axis limits from finite two-dimensional data
-    "set_plot_style",  # apply a plotting style to global matplotlib rcParams
     "style_2d_axis",  # apply common two-dimensional axes styling
+]
+
+__all__ += [
+    "get_3d_figure_axes",  # create or reuse matplotlib 3D axes
+    "plot_3d_lines",  # plot one or more three-dimensional line series
+    "plot_3d_points",  # plot one or more three-dimensional point groups
+    "plot_3d_surface",  # plot a three-dimensional surface grid
+    "plot_3d_wireframe",  # plot a three-dimensional wireframe grid
+    "set_3d_axis_limits_from_data",  # set axis limits from finite three-dimensional data
     "style_3d_axis",  # apply common three-dimensional axes styling
+]
+
+__all__ += [
     "preview_sRGB_from_XYZ",  # clipped sRGB preview values from XYZ
     "plot_swatch_grid",  # plot a labelled sRGB swatch grid
     "plot_swatch_strip",  # plot a horizontal sRGB swatch strip

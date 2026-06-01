@@ -41,7 +41,7 @@ color/datasets/
 ├── illuminants.py           # 静态标准光源
 ├── color_cards.py           # Macbeth、PMC、BCRA 色卡
 ├── standard_observers.py    # CVRL 标准观察者数据自动发现
-├── gamut_data.py            # Pointer 色域数据
+├── gamut_data.py            # Pointer 和 MacAdam 色域数据
 ├── color_systems.py         # Munsell sRGB 数据
 └── tests/                   # pytest 测试
 ```
@@ -155,12 +155,19 @@ v_lambda = get_standard_observer("vl", "cie2008_v2_linE_1nm")
 | --- | --- |
 | `pointer` | Pointer Calculations sheet 解析后的 L\* 分层边界数据 |
 | `pointer_raw` | PointerData.xls 的原始 sheet 读取入口 |
+| `macadam_limits_A` | Illuminant A 下缓存的 MacAdam optimal colour stimuli |
+| `macadam_limits_C` | Illuminant C 下缓存的 MacAdam optimal colour stimuli |
+| `macadam_limits_D65` | Illuminant D65 下缓存的 MacAdam optimal colour stimuli |
 
 ```python
 pointer = get_gamut_data("pointer")
 pointer_50 = get_gamut_data("pointer", L=50)
 specloc = get_gamut_data("pointer_raw", sheet="SpecLoc")
+macadam = get_gamut_data("macadam_limits_D65")
 ```
+
+MacAdam 数据字段为 `x, y, Y, X, Z, L, a, b, C, h`。其中 `x, y, Y`
+是缓存的 xyY 数据，`X/Z` 和 Lab/LCHab 字段是为了后续 gamut 分析派生出来的。
 
 ### Color Systems
 

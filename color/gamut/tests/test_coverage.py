@@ -11,12 +11,14 @@ from color.gamut import (
     DisplayPrimaries,
     compute_LCH_gamut_boundary,
     lab_gamut_coverage,
-    lab_gamut_overlap_volume,
     lab_gamut_volume,
-    xy_gamut_area,
-    xy_gamut_area_from_xy,
     xy_gamut_coverage,
     xy_gamut_coverage_from_xy,
+)
+from color.gamut.coverage import (
+    lab_gamut_overlap_volume,
+    xy_gamut_area,
+    xy_gamut_area_from_xy,
     xy_gamut_intersection_area,
     xy_gamut_intersection_area_from_xy,
 )
