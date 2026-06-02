@@ -278,10 +278,12 @@ def _validate_boundary_pair(
     """Validate two comparable boundaries."""
     test = _validate_boundary(test, name="test_boundary")
     reference = _validate_boundary(reference, name="reference_boundary")
-    if not np.allclose(test.whitepoint_XYZ, reference.whitepoint_XYZ):
+    test_whitepoint_xy = XYZ_to_xy(test.whitepoint_XYZ)
+    reference_whitepoint_xy = XYZ_to_xy(reference.whitepoint_XYZ)
+    if not np.allclose(test_whitepoint_xy, reference_whitepoint_xy):
         warnings.warn(
-            "GamutBoundary whitepoint_XYZ values differ; Lab coverage will compare "
-            "the stored C_max boundaries directly without chromatic adaptation.",
+            "GamutBoundary whitepoint chromaticities differ; Lab coverage will "
+            "compare the stored C_max boundaries directly without chromatic adaptation.",
             UserWarning,
             stacklevel=3,
         )

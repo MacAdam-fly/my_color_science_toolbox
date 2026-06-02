@@ -25,5 +25,6 @@ def test_gamut_examples_run():
         "example_08_computed_macadam_limits.py",
         "example_09_gamut_analysis.py",
         "example_10_macadam_rgbc_solids.py",
+        "example_11_custom_rgb_colourspace_gamut.py",
     ):
         runpy.run_path(str(_EXAMPLES / filename), run_name="__main__")

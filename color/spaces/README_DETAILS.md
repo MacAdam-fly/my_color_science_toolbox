@@ -174,6 +174,57 @@ CAT16
 
 这个能力只放在 `RGB_to_RGB(...)` 中。通用 `convert_color(...)` 不接受 `chromatic_adaptation` 参数。
 
+### 自定义三基色 RGB 空间
+
+`spaces.rgb` 现在支持用户创建三基色 RGB 空间。它适合描述一台具体显示设备、一个实验用三基色系统，或者一个经过测量/配平的 RGB 原型空间。多基色显示器、ICC、LUT 和任意 callable transfer 仍不属于这一层。
+
+两条创建路径语义不同：
+
+```python
+from color.spaces import (
+    RGB_colourspace_from_primaries_xy,
+    RGB_colourspace_from_primaries_XYZ,
+    register_RGB_colourspace,
+)
+
+custom = RGB_colourspace_from_primaries_xy(
+    "Custom Display",
+    primaries_xy=[
+        [0.690, 0.310],
+        [0.210, 0.720],
+        [0.145, 0.055],
+    ],
+    whitepoint_xy=[0.3127, 0.3290],
+    transfer=("gamma", (2.2, 2.3, 2.1)),
+    aliases=("CustomDisplay",),
+)
+
+register_RGB_colourspace(custom)
+```
+
+`RGB_colourspace_from_primaries_xy(...)` 使用三基色 `xy` 和白点求解 `RGB -> XYZ` 矩阵。传入 `whitepoint_xy` 时会生成 `Y=100` 白点；传入 `whitepoint_XYZ` 时会保留给定的 XYZ 标度。
+
+`RGB_colourspace_from_primaries_XYZ(...)` 则把每一行当作已经测量或配平好的 `R/G/B` 基色 XYZ 刺激，矩阵列直接等于这些基色刺激，白点等于三行相加。这个路径不会重新配平，也不会静默归一化。如果白点 `Y` 不是 100，会给出 `UserWarning`，提醒普通 `spaces` 链路默认使用 `Y=100` 参考域；但对于自洽的设备色域计算，这种原始尺度仍然是允许的。
+
+自定义 RGB 空间不会自动注册。创建后可以直接作为对象传给 `RGB_to_XYZ(...)` / `XYZ_to_RGB(...)`；只有显式调用 `register_RGB_colourspace(...)` 后，字符串名称和别名才会进入：
+
+```text
+get_RGB_colourspace(...)
+convert_color(...)
+DisplayPrimaries.from_RGB_colourspace(...)
+compute_LCH_gamut_boundary(...)
+analyze_gamut(...)
+```
+
+动态 gamma 支持两种形式：
+
+```python
+transfer=("gamma", 2.2)              # 三通道相同 gamma
+transfer=("gamma", (2.2, 2.3, 2.1))  # R/G/B 三通道独立 gamma
+```
+
+标准空间名称和别名不能被自定义空间覆盖。`overwrite=True` 只允许替换同名的已注册自定义空间。
+
 ## Basic Spaces
 
 当前基础空间和辅助色度坐标包括：
@@ -531,6 +582,7 @@ example_03_cam_uniform_spaces.py
 example_04_reference_accuracy.py
 example_05_conversion_paths.py
 example_06_image_lchab_edit.py
+example_07_custom_rgb_colourspace.py
 ```
 
 它们分别覆盖：
@@ -553,6 +605,8 @@ example_06_image_lchab_edit.py
 .\.venv\Scripts\python.exe examples\spaces\example_04_reference_accuracy.py
 .\.venv\Scripts\python.exe examples\spaces\example_05_conversion_paths.py
 .\.venv\Scripts\python.exe examples\spaces\example_06_image_lchab_edit.py
+.\.venv\Scripts\python.exe examples\spaces\example_07_custom_rgb_colourspace.py
+example_07_custom_rgb_colourspace.py
 ```
 
 输出图像位于：

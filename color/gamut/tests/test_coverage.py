@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import warnings
+
 import numpy as np
 import pytest
 
@@ -135,10 +137,35 @@ def test_lab_gamut_coverage_warns_when_whitepoints_differ():
         iterations=8,
     )
 
-    with pytest.warns(UserWarning, match="whitepoint_XYZ"):
+    with pytest.warns(UserWarning, match="whitepoint chromaticities"):
         coverage = lab_gamut_coverage(srgb, d50)
 
     assert np.isfinite(coverage)
+
+
+def test_lab_gamut_coverage_does_not_warn_when_only_whitepoint_Y_scale_differs():
+    base = DisplayPrimaries.from_RGB_colourspace("sRGB")
+    scaled = DisplayPrimaries(
+        base.primaries_XYZ * 2.0,
+        names=base.names,
+        whitepoint_XYZ=base.whitepoint_XYZ * 2.0,
+    )
+    common = dict(
+        L_values=np.arange(0.0, 101.0, 10.0),
+        hue_values=np.arange(0.0, 361.0, 10.0),
+        C_upper=180.0,
+        iterations=8,
+    )
+    boundary_100 = compute_LCH_gamut_boundary(base, **common)
+    boundary_200 = compute_LCH_gamut_boundary(scaled, **common)
+
+    np.testing.assert_allclose(boundary_100.C_max, boundary_200.C_max)
+    with warnings.catch_warnings(record=True) as record:
+        warnings.simplefilter("always", UserWarning)
+        coverage = lab_gamut_coverage(boundary_100, boundary_200)
+
+    assert coverage == pytest.approx(1.0)
+    assert not record
 
 
 def test_lab_gamut_coverage_rejects_non_boundary_inputs():

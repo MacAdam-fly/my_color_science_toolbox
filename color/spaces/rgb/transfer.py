@@ -3,13 +3,17 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from typing import Tuple, Union
 
 import numpy as np
 
 from color.utils.arrays import as_float_array
+from color.utils.names import canonical_method_name
+
+RGBTransfer = Union[str, Tuple[str, Union[float, Tuple[float, float, float]]]]
 
 
-def _signed_power(value: np.ndarray, exponent: float) -> np.ndarray:
+def _signed_power(value: np.ndarray, exponent: float | np.ndarray) -> np.ndarray:
     """Apply a sign-preserving power function."""
     return np.sign(value) * np.abs(value) ** exponent
 
@@ -112,24 +116,82 @@ _TRANSFER_FUNCTIONS: dict[str, tuple[Callable[[np.ndarray], np.ndarray], Callabl
     "bt2020": (_bt2020_decode, _bt2020_encode),
 }
 
+_TRANSFER_NAME_INDEX = {
+    canonical_method_name(name): name for name in _TRANSFER_FUNCTIONS
+}
 
-def decode_transfer(value, transfer: str) -> np.ndarray:
+
+def _gamma_exponents(exponent: float | tuple[float, ...] | list[float] | np.ndarray) -> float | tuple[float, float, float]:
+    """Validate and normalise scalar or per-channel gamma exponents."""
+    arr = np.asarray(exponent, dtype=np.float64)
+    if arr.shape == ():
+        value = float(arr)
+        if not np.isfinite(value) or value <= 0:
+            raise ValueError("gamma exponent must be finite and positive")
+        return value
+
+    if arr.shape != (3,):
+        raise ValueError("per-channel gamma exponent must have 3 values")
+    if not np.all(np.isfinite(arr)) or np.any(arr <= 0):
+        raise ValueError("gamma exponents must be finite and positive")
+    return tuple(float(value) for value in arr)
+
+
+def normalize_transfer(transfer: RGBTransfer) -> RGBTransfer:
+    """Return a validated transfer description.
+
+    Named transfer functions are returned as their canonical string key.
+    Dynamic gamma transfer functions are returned as ``("gamma", exponent)``.
+    """
+    if isinstance(transfer, str):
+        key = canonical_method_name(transfer)
+        try:
+            return _TRANSFER_NAME_INDEX[key]
+        except KeyError as exc:
+            raise ValueError(f"unknown RGB transfer function {transfer!r}") from exc
+
+    if not isinstance(transfer, tuple) or len(transfer) != 2:
+        raise ValueError("RGB transfer must be a known name or ('gamma', exponent)")
+
+    kind, exponent = transfer
+    if canonical_method_name(kind) != "gamma":
+        raise ValueError("only dynamic ('gamma', exponent) transfer tuples are supported")
+    return ("gamma", _gamma_exponents(exponent))
+
+
+def _dynamic_gamma_decode(value: np.ndarray, exponent: float | tuple[float, float, float]) -> np.ndarray:
+    if isinstance(exponent, tuple):
+        if value.shape[-1:] != (3,):
+            raise ValueError("per-channel gamma transfer requires RGB values with last axis size 3")
+        return _signed_power(value, np.asarray(exponent, dtype=np.float64))
+    return _signed_power(value, exponent)
+
+
+def _dynamic_gamma_encode(value: np.ndarray, exponent: float | tuple[float, float, float]) -> np.ndarray:
+    if isinstance(exponent, tuple):
+        if value.shape[-1:] != (3,):
+            raise ValueError("per-channel gamma transfer requires RGB values with last axis size 3")
+        return _signed_power(value, 1.0 / np.asarray(exponent, dtype=np.float64))
+    return _signed_power(value, 1.0 / exponent)
+
+
+def decode_transfer(value, transfer: RGBTransfer) -> np.ndarray:
     """Decode encoded RGB values to linear RGB."""
     arr = as_float_array(value, name="RGB values")
-    try:
-        decode, _encode = _TRANSFER_FUNCTIONS[transfer]
-    except KeyError as exc:
-        raise ValueError(f"unknown RGB transfer function {transfer!r}") from exc
+    transfer = normalize_transfer(transfer)
+    if isinstance(transfer, tuple):
+        return _dynamic_gamma_decode(arr, transfer[1])
+    decode, _encode = _TRANSFER_FUNCTIONS[transfer]
     return decode(arr)
 
 
-def encode_transfer(value, transfer: str) -> np.ndarray:
+def encode_transfer(value, transfer: RGBTransfer) -> np.ndarray:
     """Encode linear RGB values."""
     arr = as_float_array(value, name="RGB values")
-    try:
-        _decode, encode = _TRANSFER_FUNCTIONS[transfer]
-    except KeyError as exc:
-        raise ValueError(f"unknown RGB transfer function {transfer!r}") from exc
+    transfer = normalize_transfer(transfer)
+    if isinstance(transfer, tuple):
+        return _dynamic_gamma_encode(arr, transfer[1])
+    _decode, encode = _TRANSFER_FUNCTIONS[transfer]
     return encode(arr)
 
 
@@ -142,4 +204,5 @@ __all__ = [
     "decode_transfer",
     "encode_transfer",
     "list_transfer_functions",
+    "normalize_transfer",
 ]

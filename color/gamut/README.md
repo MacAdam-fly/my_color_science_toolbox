@@ -42,6 +42,25 @@ srgb = DisplayPrimaries.from_RGB_colourspace("sRGB")
 rec2020 = DisplayPrimaries.from_RGB_colourspace("Rec.2020")
 ```
 
+Registered custom three-primary RGB colour spaces work the same way. Create and
+register them in `color.spaces.rgb`, then pass their name to gamut APIs:
+
+```python
+from color.spaces import RGB_colourspace_from_primaries_xy, register_RGB_colourspace
+
+custom = RGB_colourspace_from_primaries_xy(
+    "Custom Display",
+    primaries_xy=[[0.690, 0.310], [0.210, 0.720], [0.145, 0.055]],
+    whitepoint_xy=[0.3127, 0.3290],
+    transfer=("gamma", (2.2, 2.3, 2.1)),
+)
+register_RGB_colourspace(custom)
+
+custom_primaries = DisplayPrimaries.from_RGB_colourspace("Custom Display")
+custom_boundary = compute_LCH_gamut_boundary("Custom Display")
+custom_analysis = analyze_gamut("Custom Display")
+```
+
 ## Primary Feasibility
 
 ```python
@@ -193,10 +212,12 @@ It is also directional:
 coverage(test, reference) = overlap_volume(test, reference) / volume(reference)
 ```
 
-If the two boundaries use different `whitepoint_XYZ`, a `UserWarning` is
-emitted and no chromatic adaptation is performed. If the L/hue grids differ,
-a `UserWarning` is emitted and the test boundary is interpolated onto the
-reference grid.
+If the two boundaries use different whitepoint chromaticities, a `UserWarning`
+is emitted and no chromatic adaptation is performed. A pure `Y` scale
+difference, e.g. `D65_XYZ` versus `2 * D65_XYZ`, does not trigger this warning
+because Lab depends on `XYZ / XYZn` ratios when each boundary is internally
+self-consistent. If the L/hue grids differ, a `UserWarning` is emitted and the
+test boundary is interpolated onto the reference grid.
 
 ## Gamut Analysis
 
@@ -317,4 +338,5 @@ See `examples/gamut` for end-to-end usage:
 - Pointer gamut;
 - cached and computed MacAdam limits;
 - high-level gamut analysis;
-- D65 MacAdam and RGBC 3D solids in xyY and Lab.
+- D65 MacAdam and RGBC 3D solids in xyY and Lab;
+- custom RGB colour-space registration and gamut analysis.

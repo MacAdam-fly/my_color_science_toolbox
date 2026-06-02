@@ -87,12 +87,15 @@ from .rgb import (
     RGBColorSpace,
     RGB_COLORSPACES,
     RGB_COLOURSPACE_DEFINITIONS,
+    RGB_colourspace_from_primaries_XYZ,
+    RGB_colourspace_from_primaries_xy,
     RGB_to_RGB,
     RGB_to_XYZ,
     XYZ_to_RGB,
     XYZ_to_sRGB,
     get_RGB_colourspace,
     list_RGB_colourspaces,
+    register_RGB_colourspace,
     sRGB_to_XYZ,
 )
 from .spec import SpaceSpec
@@ -127,6 +130,9 @@ __all__ += [
     "RGB_COLORSPACES",  # registered RGB colour spaces
     "get_RGB_colourspace",  # resolve an RGB colour space by name or alias
     "list_RGB_colourspaces",  # list registered RGB colour-space names
+    "register_RGB_colourspace",  # register a custom RGB colour space
+    "RGB_colourspace_from_primaries_xy",  # create custom RGB space from primary xy coordinates
+    "RGB_colourspace_from_primaries_XYZ",  # create custom RGB space from measured primary XYZ values
     "RGB_to_XYZ",  # convert RGB values to XYZ
     "XYZ_to_RGB",  # convert XYZ values to RGB
     "RGB_to_RGB",  # convert between RGB colour spaces

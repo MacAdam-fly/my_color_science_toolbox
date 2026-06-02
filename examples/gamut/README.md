@@ -17,6 +17,7 @@ analysis.
 .\.venv\Scripts\python.exe examples\gamut\example_08_computed_macadam_limits.py
 .\.venv\Scripts\python.exe examples\gamut\example_09_gamut_analysis.py
 .\.venv\Scripts\python.exe examples\gamut\example_10_macadam_rgbc_solids.py
+.\.venv\Scripts\python.exe examples\gamut\example_11_custom_rgb_colourspace_gamut.py
 ```
 
 Open the 3D solid comparison in an interactive matplotlib window:
@@ -205,3 +206,25 @@ you only want interactive inspection and do not want to write a PNG.
 This figure shows the sampled boundary after `GamutBoundary` conversion. It is
 not the exact display-primary convex body in `XYZ` or `xyY`; that would require
 a separate plot based directly on primary-gamut vertices.
+
+## Example 11: Custom RGB Colourspace Gamut
+
+`example_11_custom_rgb_colourspace_gamut.py`
+
+Demonstrates a user-defined three-primary RGB colour space:
+
+- creates a custom space from primary `xy` coordinates plus D65 white;
+- creates a measured-primary variant from `primaries_XYZ`;
+- uses independent per-channel gamma, e.g. `("gamma", (2.2, 2.3, 2.1))`;
+- manually registers the custom RGB space;
+- routes it through `RGB_to_XYZ(...)`, `convert_color(...)`,
+  `DisplayPrimaries.from_RGB_colourspace(...)`,
+  `compute_LCH_gamut_boundary(...)`, and `analyze_gamut(...)`;
+- compares the custom xy boundary against sRGB and Rec.2020;
+- plots selected xy and Lab volume coverage metrics.
+
+Output:
+
+```text
+examples/gamut/output/11_custom_rgb_colourspace_gamut.png
+```

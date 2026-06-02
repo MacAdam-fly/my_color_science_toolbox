@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Mapping, Sequence
+from typing import Mapping, Sequence, Tuple, Union
 
 import numpy as np
+
+RGBTransfer = Union[str, Tuple[str, Union[float, Tuple[float, float, float]]]]
 
 
 def _readonly_array(
@@ -33,7 +35,7 @@ class RGBColorSpace:
     primaries: np.ndarray
     white_xy: np.ndarray
     white_name: str
-    transfer: str
+    transfer: RGBTransfer
     matrix_RGB_to_XYZ: np.ndarray
     matrix_XYZ_to_RGB: np.ndarray
     reference: str = ""

@@ -115,6 +115,59 @@ RGB_target = RGB_to_RGB(
 Supported adaptation transforms are provided by `color.adaptation`: `Von Kries`,
 `Bradford`, `CAT02` and `CAT16`.
 
+### Custom RGB Colourspaces
+
+Three-primary custom RGB colour spaces can be created from either primary
+chromaticity coordinates or measured primary tristimulus values:
+
+```python
+from color.spaces import (
+    RGB_colourspace_from_primaries_XYZ,
+    RGB_colourspace_from_primaries_xy,
+    register_RGB_colourspace,
+)
+
+custom = RGB_colourspace_from_primaries_xy(
+    "Custom Display",
+    primaries_xy=[
+        [0.690, 0.310],
+        [0.210, 0.720],
+        [0.145, 0.055],
+    ],
+    whitepoint_xy=[0.3127, 0.3290],
+    transfer=("gamma", (2.2, 2.3, 2.1)),
+    aliases=("CustomDisplay",),
+)
+register_RGB_colourspace(custom)
+```
+
+Registration is manual. Before registration, the object can be passed directly
+to `RGB_to_XYZ(...)` and `XYZ_to_RGB(...)`; after registration, the name and
+aliases work in `convert_color(...)`, `DisplayPrimaries.from_RGB_colourspace(...)`
+and gamut analysis functions.
+
+`RGB_colourspace_from_primaries_xy(...)` solves a balanced `RGB -> XYZ` matrix
+from three primary `xy` coordinates and a whitepoint. Passing `whitepoint_xy`
+creates a `Y=100` whitepoint; passing `whitepoint_XYZ` preserves the supplied
+XYZ scale.
+
+`RGB_colourspace_from_primaries_XYZ(...)` treats each row as a measured
+`R/G/B` primary stimulus. It does not re-balance or normalise the data; the
+whitepoint is the sum of the three primary XYZ rows. If the resulting whitepoint
+does not have `Y≈100`, a warning is emitted because ordinary `spaces` workflows
+usually assume the project `Y=100` reference domain. The measured scale is still
+preserved, which is useful for self-consistent device or gamut calculations.
+
+Dynamic gamma transfer is supported for custom spaces:
+
+```python
+transfer=("gamma", 2.2)              # same exponent for R/G/B
+transfer=("gamma", (2.2, 2.3, 2.1))  # independent R/G/B exponents
+```
+
+Callable transfer functions, LUTs, ICC profiles and multi-primary spaces are
+not part of this RGB v1 layer.
+
 ## Basic Spaces
 
 Current basic spaces and chromaticity helpers:

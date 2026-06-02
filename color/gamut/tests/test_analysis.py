@@ -97,7 +97,7 @@ def test_analyze_gamut_accepts_reference_boundaries():
 
     assert analysis.boundary is boundary
     _assert_finite_analysis(analysis)
-    assert any("whitepoint_XYZ" in message for message in analysis.warnings)
+    assert any("whitepoint chromaticities" in message for message in analysis.warnings)
 
 
 def test_analyze_gamut_uses_custom_reference_boundaries_for_xy_coverage():

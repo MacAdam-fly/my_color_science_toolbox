@@ -12,6 +12,7 @@ Run from the project root:
 .\.venv\Scripts\python.exe examples\spaces\example_04_reference_accuracy.py
 .\.venv\Scripts\python.exe examples\spaces\example_05_conversion_paths.py
 .\.venv\Scripts\python.exe examples\spaces\example_06_image_lchab_edit.py
+.\.venv\Scripts\python.exe examples\spaces\example_07_custom_rgb_colourspace.py
 ```
 
 ## Example 01 - RGB Colour-Space Conversion
@@ -103,3 +104,22 @@ Outputs:
 
 - `06_image_lchab_boost.jpg`
 - `06_image_lchab_boost_comparison.png`
+
+## Example 07 - Custom RGB Colourspace
+
+Creates a custom three-primary RGB colour space, registers it manually, and
+uses it in the same routing APIs as standard RGB spaces.
+
+Demonstrates:
+
+- `RGB_colourspace_from_primaries_xy(...)`
+- `RGB_colourspace_from_primaries_XYZ(...)`
+- `register_RGB_colourspace(...)`
+- dynamic per-channel gamma, e.g. `("gamma", (2.2, 2.3, 2.1))`
+- `RGB_to_XYZ(...)`, `XYZ_to_RGB(...)`, `RGB_to_RGB(...)`
+- `convert_color(...)` and `describe_conversion_path(...)`
+
+Outputs:
+
+- `07_custom_rgb_conversion_swatches.png`
+- `07_custom_rgb_dynamic_gamma.png`
