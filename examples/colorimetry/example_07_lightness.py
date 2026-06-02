@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from color.colorimetry import Lstar_to_Y, Y_to_Lstar
+from color.plot import plot_labels, plot_lines, plot_points, plot_style
 from _plot_helpers import example_output_dir
 
 
@@ -31,26 +32,25 @@ def main() -> None:
     dense_Y = np.linspace(0.0, 100.0, 256)
     dense_Lstar = Y_to_Lstar(dense_Y)
 
-    fig, ax = plt.subplots(figsize=(7.2, 4.8))
-    ax.plot(dense_Y, dense_Lstar, color="tab:blue", linewidth=2.0)
-    ax.scatter(Y, Lstar, color="tab:orange", s=48, zorder=3)
-    for y_value, lstar_value in zip(Y, Lstar):
-        ax.annotate(
-            f"{y_value:g}",
-            xy=(y_value, lstar_value),
-            xytext=(6, 6),
-            textcoords="offset points",
-            fontsize=8,
+    with plot_style("journal"):
+        fig, ax = plt.subplots(figsize=(7.2, 4.8))
+        plot_lines(
+            (dense_Y, dense_Lstar),
+            ax=ax,
+            colors="tab:blue",
+            linewidth=2.0,
+            title="CIE 1976 Lightness",
+            xlabel="Relative luminance Y",
+            ylabel="L*",
         )
-    ax.set_title("CIE 1976 Lightness")
-    ax.set_xlabel("Relative luminance Y")
-    ax.set_ylabel("L*")
-    ax.grid(True, alpha=0.3)
+        points = np.column_stack([Y, Lstar])
+        plot_points(points, ax=ax, colors="tab:orange", sizes=48)
+        plot_labels(points, [f"{value:g}" for value in Y], ax=ax, grid=False)
 
-    fig.tight_layout()
-    output_path = output_dir / "07_lightness.png"
-    fig.savefig(output_path, dpi=150)
-    plt.close(fig)
+        fig.tight_layout()
+        output_path = output_dir / "07_lightness.png"
+        fig.savefig(output_path, dpi=150)
+        plt.close(fig)
     print(f"Plot saved to {output_path}")
 
 

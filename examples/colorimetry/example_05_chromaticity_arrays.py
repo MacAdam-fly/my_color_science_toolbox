@@ -13,7 +13,15 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from color.colorimetry import XYZ_to_xy, XYZ_to_xyY, xyY_to_XYZ
-from _plot_helpers import example_output_dir, plot_srgb_swatches
+from color.plot import (
+    plot_chromaticity_points,
+    plot_image,
+    plot_labels,
+    plot_style,
+    plot_swatch_strip,
+    preview_sRGB_from_XYZ,
+)
+from _plot_helpers import example_output_dir
 
 
 def main() -> None:
@@ -42,46 +50,45 @@ def main() -> None:
     print("First pixel xyY:", np.round(xyY[0, 0], 6))
     print("First pixel xy:", np.round(xy[0, 0], 6))
 
-    fig, axes = plt.subplots(1, 3, figsize=(13.5, 4.4))
+    with plot_style("journal_double"):
+        fig, axes = plt.subplots(1, 3, figsize=(13.5, 4.4))
 
-    ax = axes[0]
-    ax.imshow(XYZ[..., 1], cmap="viridis")
-    ax.set_title("Y Channel from XYZ")
-    ax.set_xticks(range(XYZ.shape[1]))
-    ax.set_yticks(range(XYZ.shape[0]))
+        ax = axes[0]
+        plot_image(
+            XYZ[..., 1],
+            ax=ax,
+            title="Y Channel from XYZ",
+            cmap="viridis",
+            colorbar=True,
+        )
+        ax.set_xticks(range(XYZ.shape[1]))
+        ax.set_yticks(range(XYZ.shape[0]))
 
-    ax = axes[1]
-    ax.scatter(xy[..., 0].ravel(), xy[..., 1].ravel(), s=70, color="tab:blue")
-    for row in range(xy.shape[0]):
-        for col in range(xy.shape[1]):
-            ax.annotate(
-                f"{row},{col}",
-                xy=xy[row, col],
-                xytext=(6, 6),
-                textcoords="offset points",
-                fontsize=8,
-            )
-    ax.set_title("xy Coordinates")
-    ax.set_xlabel("x")
-    ax.set_ylabel("y")
-    ax.set_xlim(0.0, 0.8)
-    ax.set_ylim(0.0, 0.9)
-    ax.grid(True, alpha=0.3)
+        ax = axes[1]
+        xy_rows = xy.reshape(-1, 2)
+        labels = [f"{row},{col}" for row in range(XYZ.shape[0]) for col in range(XYZ.shape[1])]
+        plot_chromaticity_points(
+            xy_rows,
+            ax=ax,
+            color="tab:blue",
+            title="xy Coordinates",
+        )
+        plot_labels(xy_rows, labels, ax=ax, grid=False)
+        ax.set_xlim(0.0, 0.8)
+        ax.set_ylim(0.0, 0.9)
 
-    ax = axes[2]
-    labels = [f"{row},{col}" for row in range(XYZ.shape[0]) for col in range(XYZ.shape[1])]
-    plot_srgb_swatches(
-        ax,
-        labels,
-        XYZ.reshape(-1, 3),
-        white_Y=100.0,
-        title="Approximate sRGB Preview",
-    )
+        ax = axes[2]
+        plot_swatch_strip(
+            preview_sRGB_from_XYZ(XYZ.reshape(-1, 3), white_Y=100.0),
+            ax=ax,
+            labels=labels,
+            title="Approximate sRGB Preview",
+        )
 
-    fig.tight_layout()
-    output_path = output_dir / "05_chromaticity_arrays.png"
-    fig.savefig(output_path, dpi=150)
-    plt.close(fig)
+        fig.tight_layout()
+        output_path = output_dir / "05_chromaticity_arrays.png"
+        fig.savefig(output_path, dpi=150)
+        plt.close(fig)
     print(f"Plot saved to {output_path}")
 
 

@@ -1,32 +1,45 @@
 # Examples
 
-Minimal examples for the color package.
+Minimal examples for the `color` package. Each subdirectory focuses on one
+module family and writes generated figures to its own `output/` directory.
 
-## Color Space Conversions
-
-- `lab_luv_basic.py` — Lab/Luv round-trip via XYZ.
-- `cam02_basic.py` — XYZ ↔ CAM02 (QMh) using a context.
+Generated output images are ignored by Git; rerun the examples to regenerate
+them locally.
 
 ## Database Examples (`database/`)
 
-Usage examples for the `color.datasets` data loading module.
+Examples for `color.datasets` and runtime dataset registration.
 
-- `example_illuminants.py` — Load static CIE illuminants, generate blackbody and CIE D-series daylight SPDs, plot SPDs.
-- `example_color_cards.py` — Load Macbeth ColorChecker and BCRA calibration tiles, print reflectance at specific wavelengths, plot spectral reflectance curves.
-- `example_standard_observers.py` — Load CIE XYZ CMFs, CIE 2006 LMS cone fundamentals, CIE 2008 V(λ), prereceptoral filters, chromaticity coordinates, photopigments. Demonstrates category aliases (`"lms"`, `"vl"`, `"filter"`, `"xy"`, `"pigment"`).
-- `example_gamut_data.py` — Load Pointer's real surface colour gamut, inspect chromaticity data.
-- `example_color_systems.py` — Load Munsell renotation data, inspect CIELAB distributions.
+- `example_01_illuminants.py` - Static illuminants, blackbody SPDs and CIE D daylight generators.
+- `example_02_color_cards.py` - Macbeth, BCRA and colour-card reflectance spectra.
+- `example_03_standard_observers.py` - CMFs, LMS fundamentals, luminous efficiency, filters, chromaticity and photopigments.
+- `example_04_gamut_data.py` - Pointer gamut and MacAdam gamut datasets.
+- `example_05_color_systems.py` - Munsell renotation data and sRGB fields.
+- `example_06_custom_data.py` - Temporary CSV/XLSX/parser/generator registration without adding files to `color/data/`.
 
-Run any example:
+Run one example:
 
 ```bash
-python examples/database/example_illuminants.py
+python examples/database/example_01_illuminants.py
 ```
 
-Each plotting example saves a PNG to `examples/database/`.
+## Generator Examples (`generators/`)
+
+Examples for `color.generators` and generated spectral data.
+
+- `example_01_registry_and_illuminants.py` - Generator registry lookup, direct calls and `generate(...)` calls for common illuminants.
+- `example_02_ideal_spectra.py` - Zero, equal-energy, constant and Gaussian ideal spectral generators.
+- `example_03_illuminant_a_comparison.py` - CIE Illuminant A formula compared with the static dataset.
+- `example_04_led_spectra.py` - Single LED components and weighted RGB LED mixture.
+
+Run one example:
+
+```bash
+python examples/generators/example_02_ideal_spectra.py
+```
 
 ## Integration Examples (`integration/`)
 
-- `example_01_long_colour_pipeline.py` — Generated LED spectrum and sRGB signal
+- `example_01_long_colour_pipeline.py` - Generated LED spectrum and sRGB signal
   through XYZ/LMS, Luv, CAM02-UCS with D50 viewing white, explicit chromatic
-  adaptation for Oklab, final Lab, and CIEDE2000.
+  adaptation for Oklab, final Lab, CIEDE2000, CCT and dominant-wavelength analysis.

@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from color.colorimetry import LMS_to_XYZ, XYZ_to_LMS
+from color.plot import plot_bars, plot_style
 from _plot_helpers import example_output_dir
 
 
@@ -34,33 +35,33 @@ def main() -> None:
     print("Round-trip OK:", np.allclose(LMS_roundtrip, LMS))
 
     labels = ["sample 1", "sample 2"]
-    channels = np.arange(3)
-    width = 0.35
+    with plot_style("journal_double"):
+        fig, axes = plt.subplots(1, 2, figsize=(11.5, 4.8))
 
-    fig, axes = plt.subplots(1, 2, figsize=(11.5, 4.8))
+        ax = axes[0]
+        plot_bars(
+            LMS,
+            ax=ax,
+            labels=("L", "M", "S"),
+            group_labels=labels,
+            title="Input LMS",
+            ylabel="Response",
+        )
 
-    ax = axes[0]
-    for index, label in enumerate(labels):
-        ax.bar(channels + (index - 0.5) * width, LMS[index], width=width, label=label)
-    ax.set_title("Input LMS")
-    ax.set_xticks(channels, ("L", "M", "S"))
-    ax.set_ylabel("Response")
-    ax.legend()
-    ax.grid(True, axis="y", alpha=0.3)
+        ax = axes[1]
+        plot_bars(
+            XYZ,
+            ax=ax,
+            labels=("X", "Y", "Z"),
+            group_labels=labels,
+            title="Converted XYZ",
+            ylabel="Tristimulus value",
+        )
 
-    ax = axes[1]
-    for index, label in enumerate(labels):
-        ax.bar(channels + (index - 0.5) * width, XYZ[index], width=width, label=label)
-    ax.set_title("Converted XYZ")
-    ax.set_xticks(channels, ("X", "Y", "Z"))
-    ax.set_ylabel("Tristimulus value")
-    ax.legend()
-    ax.grid(True, axis="y", alpha=0.3)
-
-    fig.tight_layout()
-    output_path = output_dir / "08_lms_xyz_transformations.png"
-    fig.savefig(output_path, dpi=150)
-    plt.close(fig)
+        fig.tight_layout()
+        output_path = output_dir / "08_lms_xyz_transformations.png"
+        fig.savefig(output_path, dpi=150)
+        plt.close(fig)
     print(f"Plot saved to {output_path}")
 
 

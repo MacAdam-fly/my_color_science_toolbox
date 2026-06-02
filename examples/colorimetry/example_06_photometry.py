@@ -21,7 +21,9 @@ from color.colorimetry import (
 from color.generators.blackbody import blackbody_spd
 from color.generators.ideal import gaussian_spd
 from color.generators.illuminants import daylight_spd
+from color.plot import plot_bars, plot_lines, plot_style
 from color.spectra import SpectralDistribution
+from _plot_helpers import example_output_dir
 
 
 def _normalised_sd(raw: dict[str, np.ndarray], y: str, name: str) -> SpectralDistribution:
@@ -33,8 +35,7 @@ def _normalised_sd(raw: dict[str, np.ndarray], y: str, name: str) -> SpectralDis
 
 
 def main() -> None:
-    output_dir = Path(__file__).resolve().parent / "output"
-    output_dir.mkdir(exist_ok=True)
+    output_dir = example_output_dir()
 
     photopic = photopic_luminous_efficiency_function(name="cie2008_v10_linE_1nm")
     scotopic = scotopic_luminous_efficiency_function()
@@ -58,34 +59,39 @@ def main() -> None:
             f"scotopic={scotopic_eta:.3f} lm/W"
         )
 
-    fig, axes = plt.subplots(1, 2, figsize=(13, 4.8))
+    with plot_style("journal_double"):
+        fig, axes = plt.subplots(1, 2, figsize=(13, 4.8))
 
-    ax = axes[0]
-    ax.plot(photopic.wavelengths, photopic.values, label="Photopic V(lambda)")
-    ax.plot(scotopic.wavelengths, scotopic.values, label="Scotopic V'(lambda)")
-    ax.set_title("Luminous Efficiency Functions")
-    ax.set_xlabel("Wavelength (nm)")
-    ax.set_ylabel("Relative response")
-    ax.legend()
-    ax.grid(True, alpha=0.3)
+        ax = axes[0]
+        plot_lines(
+            [
+                (photopic.wavelengths, photopic.values),
+                (scotopic.wavelengths, scotopic.values),
+            ],
+            ax=ax,
+            labels=["Photopic V(lambda)", "Scotopic V'(lambda)"],
+            title="Luminous Efficiency Functions",
+            xlabel="Wavelength (nm)",
+            ylabel="Relative response",
+        )
 
-    ax = axes[1]
-    x = np.arange(len(spectra))
-    photopic_values = [photopic_luminous_efficacy(sd) for sd in spectra]
-    scotopic_values = [scotopic_luminous_efficacy(sd) for sd in spectra]
-    width = 0.35
-    ax.bar(x - width / 2, photopic_values, width=width, label="Photopic")
-    ax.bar(x + width / 2, scotopic_values, width=width, label="Scotopic")
-    ax.set_title("Luminous Efficacy of Example Spectra")
-    ax.set_xticks(x, [sd.name for sd in spectra], rotation=20, ha="right")
-    ax.set_ylabel("lm/W")
-    ax.legend()
-    ax.grid(True, axis="y", alpha=0.3)
+        ax = axes[1]
+        photopic_values = [photopic_luminous_efficacy(sd) for sd in spectra]
+        scotopic_values = [scotopic_luminous_efficacy(sd) for sd in spectra]
+        plot_bars(
+            [photopic_values, scotopic_values],
+            ax=ax,
+            labels=[sd.name for sd in spectra],
+            group_labels=["Photopic", "Scotopic"],
+            title="Luminous Efficacy of Example Spectra",
+            ylabel="lm/W",
+        )
+        ax.tick_params(axis="x", labelrotation=20)
 
-    fig.tight_layout()
-    output_path = output_dir / "06_photometry.png"
-    fig.savefig(output_path, dpi=150)
-    plt.close(fig)
+        fig.tight_layout()
+        output_path = output_dir / "06_photometry.png"
+        fig.savefig(output_path, dpi=150)
+        plt.close(fig)
     print(f"Plot saved to {output_path}")
 
 

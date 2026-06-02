@@ -12,14 +12,13 @@ if str(_PROJECT_ROOT) not in sys.path:
 import matplotlib.pyplot as plt
 import numpy as np
 
+from _generators_plot_helpers import save_figure
 from color.datasets import get_illuminant
 from color.generators.illuminants import illuminant_a_spd
+from color.plot import plot_lines, plot_style
 
 
 def main() -> None:
-    output_dir = Path(__file__).resolve().parent / "output"
-    output_dir.mkdir(exist_ok=True)
-
     dataset = get_illuminant("A")
     generated = illuminant_a_spd(wavelength_nm=dataset["wavelength"])
 
@@ -37,27 +36,19 @@ def main() -> None:
     print(f"Max absolute difference: {np.max(np.abs(difference)):.8g}")
     print(f"Max relative difference: {np.max(relative):.8g}")
 
-    fig, ax = plt.subplots(1, 1, figsize=(9, 7), sharex=True)
-
-    ax.plot(wavelength, dataset_spd, label="dataset A", linewidth=2.0)
-    ax.plot(
-        wavelength,
-        generated_spd,
-        "--",
-        label="formula A",
-        linewidth=1.6,
-    )
-    ax.set_title("CIE Illuminant A: Dataset vs Formula")
-    ax.set_ylabel("Relative SPD")
-    ax.legend()
-    ax.grid(True, alpha=0.3)
-
-
-    fig.tight_layout()
-    output_path = output_dir / "illuminant_a_formula_vs_dataset.png"
-    fig.savefig(output_path, dpi=150)
-    plt.close(fig)
-    print(f"Plot saved to {output_path}")
+    with plot_style("journal_double"):
+        fig, ax = plt.subplots(figsize=(7.16, 4.0))
+        plot_lines(
+            [(wavelength, dataset_spd), (wavelength, generated_spd)],
+            ax=ax,
+            labels=["dataset A", "formula A"],
+            linestyles=["-", "--"],
+            linewidth=1.4,
+            title="CIE Illuminant A: Dataset vs Formula",
+            xlabel="Wavelength (nm)",
+            ylabel="Relative SPD",
+        )
+        save_figure(fig, "03_illuminant_a_comparison.png")
 
 
 if __name__ == "__main__":

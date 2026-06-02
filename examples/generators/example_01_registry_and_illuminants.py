@@ -1,4 +1,4 @@
-"""Generate blackbody and CIE illuminant spectral data."""
+"""Demonstrate generator registry access and common illuminant generators."""
 
 from __future__ import annotations
 
@@ -23,40 +23,56 @@ def main() -> None:
 
     wavelengths = np.arange(400, 701, 10.0)
 
-    blackbody = blackbody_spd(temperature=6500, wavelength_nm=wavelengths) # Direct call to the blackbody_spd function
-    blackbody_ = generate("blackbody", "blackbody_spd", temperature=6500, wavelength_nm=wavelengths) # Using the generate function to call the same generator
+    blackbody = blackbody_spd(temperature=6500, wavelength_nm=wavelengths)
+    blackbody_generated = generate(
+        "blackbody",
+        "blackbody_spd",
+        temperature=6500,
+        wavelength_nm=wavelengths,
+    )
 
     illuminant_a = illuminant_a_spd(wavelength_nm=wavelengths)
-    illuminant_a_ = generate("illuminants", "A", wavelength_nm=wavelengths)
+    illuminant_a_generated = generate("illuminants", "A", wavelength_nm=wavelengths)
 
     daylight = daylight_spd(cct=5000, wavelength_nm=wavelengths)
-    daylight_ = generate(
+    daylight_generated = generate(
         "illuminants",
         "cie_d_daylight",
         cct=5000,
         wavelength_nm=wavelengths,
     )
 
-
     blackbody_sd = from_columns(blackbody, y="radiance", name="blackbody 6500 K")
-    blackbody__sd = from_columns(blackbody_, y="radiance", name="blackbody 6500 K (generated)")
+    blackbody_generated_sd = from_columns(
+        blackbody_generated,
+        y="radiance",
+        name="blackbody 6500 K (generated)",
+    )
 
     illuminant_a_sd = from_columns(illuminant_a, y="spd", name="CIE Illuminant A")
-    illuminant_a__sd = from_columns(illuminant_a_, y="spd", name="CIE Illuminant A (generated)")
+    illuminant_a_generated_sd = from_columns(
+        illuminant_a_generated,
+        y="spd",
+        name="CIE Illuminant A (generated)",
+    )
 
     daylight_sd = from_columns(daylight, y="spd", name="daylight 5000 K")
-    daylight__sd = from_columns(daylight_, y="spd", name="daylight 5000 K (generated)")
+    daylight_generated_sd = from_columns(
+        daylight_generated,
+        y="spd",
+        name="daylight 5000 K (generated)",
+    )
 
     print("Blackbody samples:", blackbody_sd.to_numpy().shape)
-    print("Generated Blackbody samples:", blackbody__sd.to_numpy().shape)
+    print("Generated blackbody samples:", blackbody_generated_sd.to_numpy().shape)
 
     print("Illuminant A samples:", illuminant_a_sd.to_numpy().shape)
-    print("Generated Illuminant A samples:", illuminant_a__sd.to_numpy().shape)
+    print("Generated Illuminant A samples:", illuminant_a_generated_sd.to_numpy().shape)
 
     print("Daylight samples:", daylight_sd.to_numpy().shape)
-    print("Generated Daylight samples:", daylight__sd.to_numpy().shape)
+    print("Generated daylight samples:", daylight_generated_sd.to_numpy().shape)
 
-    print("D50 first values:", daylight_sd.values[:5])
+    print("Daylight 5000 K first values:", daylight_sd.values[:5])
 
 
 if __name__ == "__main__":

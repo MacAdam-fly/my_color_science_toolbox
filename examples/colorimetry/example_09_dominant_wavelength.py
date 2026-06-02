@@ -20,7 +20,14 @@ from color.colorimetry import (
     excitation_purity,
     xy_from_dominant_wavelength_pc,
 )
-from color.spectra import from_dataset
+from color.plot import (
+    plot_chromaticity_points,
+    plot_cie1931_diagram,
+    plot_labels,
+    plot_points,
+    plot_segments,
+    plot_style,
+)
 
 
 def _plot_sample(
@@ -29,7 +36,6 @@ def _plot_sample(
     name: str,
     xy: np.ndarray,
     xy_n: np.ndarray,
-    locus_xy: np.ndarray,
     sample_color: str,
 ) -> None:
     result = analyze_chromaticity(xy, xy_n=xy_n)
@@ -48,65 +54,62 @@ def _plot_sample(
         else np.array([np.nan, np.nan])
     )
 
-    closed_locus = np.vstack([locus_xy, locus_xy[0]])
-    ax.plot(closed_locus[:, 0], closed_locus[:, 1], color="0.25", linewidth=1.4)
-    ax.scatter(locus_xy[::40, 0], locus_xy[::40, 1], s=12, color="0.45", alpha=0.7)
-    ax.scatter(*xy_n, s=45, color="black", label="D65 white")
-    ax.scatter(*xy, s=55, color=sample_color, label="sample")
+    plot_cie1931_diagram(ax=ax, title="", whitepoint_xy=xy_n)
+    plot_chromaticity_points(
+        xy,
+        ax=ax,
+        labels=["sample"],
+        color=sample_color,
+    )
     if np.all(np.isfinite(reconstructed)):
-        ax.scatter(
-            *reconstructed,
-            s=95,
+        plot_points(
+            reconstructed,
+            ax=ax,
+            labels=["reconstructed"],
+            sizes=95,
             facecolors="none",
             edgecolors="black",
             linewidths=1.2,
-            label="reconstructed",
         )
 
     if np.all(np.isfinite(xy_wl)):
-        ax.plot(
-            [xy_n[0], xy_wl[0]],
-            [xy_n[1], xy_wl[1]],
+        plot_segments(
+            np.array([[xy_n, xy_wl]]),
+            ax=ax,
+            labels=["dominant ray"],
             color=sample_color,
             linewidth=1.6,
-            label="dominant ray",
         )
-        ax.scatter(*xy_wl, s=55, color=sample_color, marker="x")
-        ax.annotate(
-            f"{wavelength:.1f} nm",
-            xy=xy_wl,
-            xytext=(8, 8),
-            textcoords="offset points",
-            fontsize=9,
-        )
+        plot_points(xy_wl, ax=ax, colors=sample_color, markers="x", sizes=55)
+        plot_labels(xy_wl, [f"{wavelength:.1f} nm"], ax=ax, grid=False)
 
     if np.all(np.isfinite(xy_comp)) and not np.allclose(xy_comp, xy_wl, equal_nan=True):
-        ax.plot(
-            [xy_n[0], xy_comp[0]],
-            [xy_n[1], xy_comp[1]],
-            color="tab:purple",
+        plot_segments(
+            np.array([[xy_n, xy_comp]]),
+            ax=ax,
+            labels=["complementary ray"],
+            colors="tab:purple",
             linewidth=1.4,
-            linestyle="--",
-            label="complementary ray",
+            linestyles="--",
         )
-        ax.scatter(*xy_comp, s=55, color="tab:purple", marker="x")
-        ax.annotate(
-            f"{abs(wavelength):.1f} nm",
-            xy=xy_comp,
-            xytext=(8, -16),
-            textcoords="offset points",
-            fontsize=9,
+        plot_points(xy_comp, ax=ax, colors="tab:purple", markers="x", sizes=55)
+        plot_labels(
+            xy_comp,
+            [f"{abs(wavelength):.1f} nm"],
+            ax=ax,
+            offset=(8, -16),
+            grid=False,
         )
 
     if np.all(np.isfinite(xy_comp)):
-        ax.scatter(*xy_comp, s=45, color="tab:blue", marker="+")
-        ax.annotate(
-            f"cw {complementary:.1f} nm",
-            xy=xy_comp,
-            xytext=(8, 8),
-            textcoords="offset points",
-            fontsize=9,
+        plot_points(xy_comp, ax=ax, colors="tab:blue", markers="+", sizes=45)
+        plot_labels(
+            xy_comp,
+            [f"cw {complementary:.1f} nm"],
+            ax=ax,
+            offset=(8, 8),
             color="tab:blue",
+            grid=False,
         )
 
     ax.set_title(f"{name}\nPe={purity_e:.3f}")
@@ -167,32 +170,27 @@ def main() -> None:
             print("  reconstructed from Pc:", np.round(reconstructed, 6))
             print("  reconstruction error:", f"{error:.3e}")
 
-    locus = from_dataset("standard_observers.chromaticity_coordinates", "cie1931_chro_1nm")
-    x_index = locus.labels.index("x")
-    y_index = locus.labels.index("y")
-    locus_xy = locus.values[:, (x_index, y_index)]
+    with plot_style("journal_double"):
+        fig, axes = plt.subplots(2, 3, figsize=(14, 9.5))
+        for ax, name in zip(axes.ravel(), samples):
+            _plot_sample(
+                ax,
+                name=name,
+                xy=samples[name],
+                xy_n=xy_n,
+                sample_color=sample_colors[name],
+            )
 
-    fig, axes = plt.subplots(2, 3, figsize=(14, 9.5))
-    for ax, name in zip(axes.ravel(), samples):
-        _plot_sample(
-            ax,
-            name=name,
-            xy=samples[name],
-            xy_n=xy_n,
-            locus_xy=locus_xy,
-            sample_color=sample_colors[name],
-        )
-
-    legend_items = {}
-    for ax in axes.ravel():
-        handles, labels = ax.get_legend_handles_labels()
-        legend_items.update(zip(labels, handles))
-    fig.legend(legend_items.values(), legend_items.keys(), loc="lower center", ncol=4)
-    fig.suptitle("Dominant and Complementary Wavelength on CIE 1931 xy")
-    fig.tight_layout(rect=(0, 0.08, 1, 0.95))
-    output_path = output_dir / "09_dominant_wavelength.png"
-    fig.savefig(output_path, dpi=150)
-    plt.close(fig)
+        legend_items = {}
+        for ax in axes.ravel():
+            handles, labels = ax.get_legend_handles_labels()
+            legend_items.update(zip(labels, handles))
+        fig.legend(legend_items.values(), legend_items.keys(), loc="lower center", ncol=4)
+        fig.suptitle("Dominant and Complementary Wavelength on CIE 1931 xy")
+        fig.tight_layout(rect=(0, 0.08, 1, 0.95))
+        output_path = output_dir / "09_dominant_wavelength.png"
+        fig.savefig(output_path, dpi=150)
+        plt.close(fig)
     print(f"Plot saved to {output_path}")
 
     # test the analyze_chromaticity function with a non-standard xy sample

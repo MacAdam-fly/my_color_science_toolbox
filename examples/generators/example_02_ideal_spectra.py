@@ -1,4 +1,4 @@
-"""Plot ideal spectral generator examples."""
+"""Plot ideal spectral generator examples using basic plot components."""
 
 from __future__ import annotations
 
@@ -12,18 +12,17 @@ if str(_PROJECT_ROOT) not in sys.path:
 import matplotlib.pyplot as plt
 import numpy as np
 
+from _generators_plot_helpers import save_figure
 from color.generators.ideal import (
     constant_spd,
     equal_energy_spd,
     gaussian_spd,
     zero_spd,
 )
+from color.plot import plot_lines, plot_style
 
 
 def main() -> None:
-    output_dir = Path(__file__).resolve().parent / "output"
-    output_dir.mkdir(exist_ok=True)
-
     wavelength = np.arange(400, 701, 1.0)
     curves = {
         "zero": zero_spd(wavelength_nm=wavelength),
@@ -43,21 +42,18 @@ def main() -> None:
         ),
     }
 
-    fig, ax = plt.subplots(figsize=(9, 5))
-    for label, data in curves.items():
-        ax.plot(data["wavelength"], data["spd"], label=label, linewidth=1.8)
-
-    ax.set_title("Ideal Spectral Generators")
-    ax.set_xlabel("Wavelength (nm)")
-    ax.set_ylabel("Relative value")
-    ax.legend()
-    ax.grid(True, alpha=0.3)
-
-    fig.tight_layout()
-    output_path = output_dir / "ideal_generators.png"
-    fig.savefig(output_path, dpi=150)
-    plt.close(fig)
-    print(f"Plot saved to {output_path}")
+    with plot_style("journal_double"):
+        fig, ax = plt.subplots(figsize=(7.16, 4.2))
+        plot_lines(
+            [(data["wavelength"], data["spd"]) for data in curves.values()],
+            ax=ax,
+            labels=list(curves),
+            linewidth=1.4,
+            title="Ideal Spectral Generators",
+            xlabel="Wavelength (nm)",
+            ylabel="Relative value",
+        )
+        save_figure(fig, "02_ideal_spectra.png")
 
 
 if __name__ == "__main__":

@@ -13,10 +13,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from _plot_helpers import (
-    annotate_xy_points,
     example_output_dir,
-    plot_srgb_swatches,
-    plot_xy_locus,
     print_xyY_table,
     xy_from_XYZ_rows,
 )
@@ -25,6 +22,15 @@ from color.generators.blackbody import blackbody_spd
 from color.generators.ideal import gaussian_spd
 from color.generators.illuminants import daylight_spd
 from color.generators.leds import multi_led_spd
+from color.plot import (
+    plot_bars,
+    plot_chromaticity_points,
+    plot_cie1931_diagram,
+    plot_lines,
+    plot_style,
+    plot_swatch_strip,
+    preview_sRGB_from_XYZ,
+)
 from color.spectra import SpectralDistribution, SpectralShape, from_dataset
 
 
@@ -76,47 +82,49 @@ def main() -> None:
     print("LMS rows match spectrum order:")
     print(np.round(lms, 5))
 
-    fig, axes = plt.subplots(2, 2, figsize=(13.5, 9.2))
+    with plot_style("journal_double"):
+        fig, axes = plt.subplots(2, 2, figsize=(13.5, 9.2))
 
-    ax = axes[0, 0]
-    for sd in spectra:
-        ax.plot(sd.wavelengths, sd.values, label=sd.name)
-    ax.set_title("Normalised Emission Spectra")
-    ax.set_xlabel("Wavelength (nm)")
-    ax.set_ylabel("Relative SPD")
-    ax.legend(fontsize=7)
-    ax.grid(True, alpha=0.3)
+        ax = axes[0, 0]
+        plot_lines(
+            [(sd.wavelengths, sd.values) for sd in spectra],
+            ax=ax,
+            labels=names,
+            title="Normalised Emission Spectra",
+            xlabel="Wavelength (nm)",
+            ylabel="Relative SPD",
+        )
+        ax.legend(fontsize=7)
 
-    ax = axes[0, 1]
-    plot_xy_locus(ax, title="Emission Chromaticity")
-    annotate_xy_points(ax, xy, names, color="tab:red")
-    ax.legend(loc="upper right", fontsize=8)
+        ax = axes[0, 1]
+        plot_cie1931_diagram(ax=ax, title="Emission Chromaticity")
+        plot_chromaticity_points(xy, ax=ax, labels=names, color="tab:red")
+        ax.legend(loc="upper right", fontsize=8)
 
-    ax = axes[1, 0]
-    x = np.arange(len(names))
-    width = 0.24
-    for offset, label in zip((-width, 0, width), fundamentals.labels):
-        ax.bar(x + offset, lms[:, fundamentals.labels.index(label)], width, label=label)
-    ax.set_title("Cone Responses")
-    ax.set_xticks(x, names, rotation=25, ha="right")
-    ax.set_ylabel("Integrated LMS")
-    ax.legend()
-    ax.grid(True, axis="y", alpha=0.3)
+        ax = axes[1, 0]
+        plot_bars(
+            lms.T,
+            ax=ax,
+            labels=names,
+            group_labels=fundamentals.labels,
+            title="Cone Responses",
+            ylabel="Integrated LMS",
+        )
+        ax.tick_params(axis="x", labelrotation=25)
 
-    ax = axes[1, 1]
-    white_Y = max(float(np.max(xyz[:, 1])) / 0.85, 1.0)
-    plot_srgb_swatches(
-        ax,
-        names,
-        xyz,
-        white_Y=white_Y,
-        title="Approximate sRGB Preview",
-    )
+        ax = axes[1, 1]
+        white_Y = max(float(np.max(xyz[:, 1])) / 0.85, 1.0)
+        plot_swatch_strip(
+            preview_sRGB_from_XYZ(xyz, white_Y=white_Y),
+            ax=ax,
+            labels=names,
+            title="Approximate sRGB Preview",
+        )
 
-    fig.tight_layout()
-    output_path = output_dir / "03_emission_spectra.png"
-    fig.savefig(output_path, dpi=150)
-    plt.close(fig)
+        fig.tight_layout()
+        output_path = output_dir / "03_emission_spectra.png"
+        fig.savefig(output_path, dpi=150)
+        plt.close(fig)
     print(f"Plot saved to {output_path}")
 
 
