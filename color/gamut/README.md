@@ -99,6 +99,7 @@ Useful boundary methods:
 boundary.to_LCHab()
 boundary.to_Lab()
 boundary.to_XYZ()
+boundary.to_xyY()
 boundary.slice_L(50)
 
 boundary.area_at_L(50)
@@ -106,6 +107,12 @@ boundary.lab_volume()
 boundary.gamut_rings([25, 50, 75, 100])
 boundary.ring_area()
 ```
+
+`to_xyY()` converts the sampled boundary through `to_XYZ()` and returns
+`[x, y, Y]` rows with the same grid shape. Black or zero-XYZ boundary points use
+the boundary whitepoint chromaticity as fallback xy. Use this for 3D
+visualisation and luminance-chromaticity inspection; use `xy_boundary()` for
+xy-plane boundary geometry.
 
 ## xy Boundary vs Lab Projection
 
@@ -309,4 +316,5 @@ See `examples/gamut` for end-to-end usage:
 - xy and Lab coverage matrices;
 - Pointer gamut;
 - cached and computed MacAdam limits;
-- high-level gamut analysis.
+- high-level gamut analysis;
+- D65 MacAdam and RGBC 3D solids in xyY and Lab.

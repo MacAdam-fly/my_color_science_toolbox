@@ -16,6 +16,13 @@ analysis.
 .\.venv\Scripts\python.exe examples\gamut\example_07_macadam_limits.py
 .\.venv\Scripts\python.exe examples\gamut\example_08_computed_macadam_limits.py
 .\.venv\Scripts\python.exe examples\gamut\example_09_gamut_analysis.py
+.\.venv\Scripts\python.exe examples\gamut\example_10_macadam_rgbc_solids.py
+```
+
+Open the 3D solid comparison in an interactive matplotlib window:
+
+```powershell
+.\.venv\Scripts\python.exe examples\gamut\example_10_macadam_rgbc_solids.py --show --no-save
 ```
 
 ## Example 01: Display Primary Gamut
@@ -132,6 +139,7 @@ Demonstrates cached A / C / D65 MacAdam optimal-colour limits:
 - compares their xy boundaries on the CIE 1931 diagram;
 - resamples MacAdam D65 as a `MacAdamLimitsBoundary`;
 - compares MacAdam D65, Pointer, sRGB and Rec.2020 in projected Lab `a*b*`;
+- compares several D65 MacAdam fixed `L*` slices in xyY and Lab views;
 - demonstrates `is_within_macadam_limits(...)`.
 
 Output:
@@ -173,3 +181,27 @@ Output:
 ```text
 examples/gamut/output/09_gamut_analysis_summary.png
 ```
+
+## Example 10: MacAdam And RGBC 3D Solids
+
+`example_10_macadam_rgbc_solids.py`
+
+Compares the D65 MacAdam optimal-colour limit with a synthetic RGBC display
+gamut as sampled `GamutBoundary` surfaces:
+
+- left subplot: CIE `xyY` surface with axes `x / y / Y`;
+- right subplot: CIE Lab surface with axes `a* / b* / L*`;
+- prints Lab volume and projected Lab `a*b*` area for both gamuts.
+
+Output:
+
+```text
+examples/gamut/output/10_macadam_rgbc_xyY_lab_solids.png
+```
+
+Use `--show` to open a rotatable 3D matplotlib window. Add `--no-save` when
+you only want interactive inspection and do not want to write a PNG.
+
+This figure shows the sampled boundary after `GamutBoundary` conversion. It is
+not the exact display-primary convex body in `XYZ` or `xyY`; that would require
+a separate plot based directly on primary-gamut vertices.

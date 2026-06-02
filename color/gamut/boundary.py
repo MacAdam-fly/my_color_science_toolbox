@@ -8,7 +8,7 @@ from typing import Sequence
 import numpy as np
 from scipy.spatial import ConvexHull
 
-from color.colorimetry import XYZ_to_xy
+from color.colorimetry import XYZ_to_xy, XYZ_to_xyY
 from color.spaces.basic.lab import Lab_to_LCHab, LCHab_to_Lab, Lab_to_XYZ
 
 from .primaries import DisplayPrimaries, as_display_primaries
@@ -99,6 +99,16 @@ class GamutBoundary:
     def to_XYZ(self) -> np.ndarray:
         """Return boundary points as XYZ rows."""
         return Lab_to_XYZ(self.to_Lab(), whitepoint_XYZ=self.whitepoint_XYZ)
+
+    def to_xyY(self) -> np.ndarray:
+        """Return boundary points as CIE xyY rows.
+
+        Zero-XYZ boundary points use the boundary whitepoint chromaticity as
+        fallback xy, which avoids drawing black points at the artificial
+        ``(0, 0)`` chromaticity.
+        """
+        fallback_xy = XYZ_to_xy(self.whitepoint_XYZ)
+        return XYZ_to_xyY(self.to_XYZ(), fallback_xy=fallback_xy)
 
     def xy_boundary(self) -> np.ndarray:
         """Return the preferred CIE xy-plane boundary for this gamut."""

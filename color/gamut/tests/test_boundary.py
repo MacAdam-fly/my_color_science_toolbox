@@ -11,6 +11,7 @@ from color.gamut import (
     compute_LCH_gamut_boundary,
     is_within_primary_gamut,
 )
+from color.colorimetry import XYZ_to_xy
 from color.spaces.basic.lab import Lab_to_XYZ, LCHab_to_Lab
 
 
@@ -30,6 +31,41 @@ def test_compute_lch_boundary_shape_and_values():
     assert boundary.to_LCHab().shape == (3, 4, 3)
     assert boundary.to_Lab().shape == (3, 4, 3)
     assert boundary.to_XYZ().shape == (3, 4, 3)
+    assert boundary.to_xyY().shape == (3, 4, 3)
+
+
+def test_boundary_to_xyy_keeps_luminance_and_finite_values():
+    primaries = DisplayPrimaries.from_RGB_colourspace("sRGB")
+    boundary = compute_LCH_gamut_boundary(
+        primaries,
+        L_values=np.array([0.0, 50.0, 100.0]),
+        hue_values=np.array([0.0, 120.0, 240.0, 360.0]),
+        C_upper=180.0,
+        iterations=8,
+    )
+
+    XYZ = boundary.to_XYZ()
+    xyY = boundary.to_xyY()
+    assert xyY.shape == XYZ.shape
+    assert np.all(np.isfinite(xyY))
+    np.testing.assert_allclose(xyY[..., 2], XYZ[..., 1])
+
+
+def test_boundary_to_xyy_zero_xyz_uses_whitepoint_fallback():
+    boundary = GamutBoundary(
+        C_max=np.zeros((1, 3)),
+        L_values=np.array([0.0]),
+        hue_values=np.array([0.0, 180.0, 360.0]),
+        whitepoint_XYZ=np.array([95.047, 100.0, 108.883]),
+        primaries=None,
+    )
+
+    xyY = boundary.to_xyY()
+    fallback_xy = XYZ_to_xy(boundary.whitepoint_XYZ)
+    assert np.all(np.isfinite(xyY))
+    expected_xy = np.broadcast_to(fallback_xy, xyY[..., :2].shape)
+    np.testing.assert_allclose(xyY[..., :2], expected_xy)
+    np.testing.assert_allclose(xyY[..., 2], 0.0)
 
 
 def test_boundary_points_are_inside_and_expanded_points_are_mostly_outside():

@@ -24,6 +24,8 @@ from color.gamut import (
     macadam_limits_published_xy_boundary,
     pointer_gamut,
 )
+from color.colorimetry import XYZ_to_xy, XYZ_to_xyY
+from color.spaces.basic.lab import Lab_to_XYZ, LCHab_to_Lab
 from color.plot import plot_cie1931_diagram, plot_style
 
 from _example_helpers import COLOURS, compute_example_boundaries, save_figure
@@ -31,9 +33,9 @@ from _example_helpers import COLOURS, compute_example_boundaries, save_figure
 
 def _plot_macadam_comparison(macadam_d65, pointer, displays) -> None:
     with plot_style("journal_double"):
-        fig, axes = plt.subplots(1, 2, figsize=(8.6, 4.1), constrained_layout=True)
+        fig, axes = plt.subplots(2, 2, figsize=(8.6, 7.0), constrained_layout=True)
 
-        ax = axes[0]
+        ax = axes[0, 0]
         plot_cie1931_diagram(
             ax=ax,
             show_background=True,
@@ -45,7 +47,7 @@ def _plot_macadam_comparison(macadam_d65, pointer, displays) -> None:
             ax.plot(xy[:, 0], xy[:, 1], linewidth=1.4, color=color, label=f"MacAdam {illuminant}")
         ax.legend(fontsize=7, loc="upper right")
 
-        ax = axes[1]
+        ax = axes[0, 1]
         for name in ("sRGB", "Rec.2020"):
             ab = displays[name].projected_ab_boundary()
             ax.plot(ab[:, 0], ab[:, 1], color=COLOURS[name], linewidth=1.1, label=name)
@@ -59,6 +61,34 @@ def _plot_macadam_comparison(macadam_d65, pointer, displays) -> None:
         ax.set_aspect("equal", adjustable="box")
         ax.grid(True, alpha=0.25)
         ax.legend(fontsize=7)
+
+        slice_L_values = (20.0, 40.0, 60.0, 80.0)
+        slice_colors = plt.cm.viridis(np.linspace(0.12, 0.88, len(slice_L_values)))
+        whitepoint_xy = XYZ_to_xy(macadam_d65.whitepoint_XYZ)
+
+        ax = axes[1, 0]
+        for L, color in zip(slice_L_values, slice_colors):
+            LCHab = macadam_d65.slice_L(L)
+            XYZ = Lab_to_XYZ(LCHab_to_Lab(LCHab), whitepoint_XYZ=macadam_d65.whitepoint_XYZ)
+            xyY = XYZ_to_xyY(XYZ, fallback_xy=whitepoint_xy)
+            ax.plot(xyY[:, 0], xyY[:, 1], color=color, linewidth=1.2, label=f"L*={L:.0f}")
+        ax.set_title("D65 MacAdam L* Slices in xyY")
+        ax.set_xlabel("x")
+        ax.set_ylabel("y")
+        ax.set_aspect("equal", adjustable="box")
+        ax.grid(True, alpha=0.25)
+        ax.legend(fontsize=7, ncol=2)
+
+        ax = axes[1, 1]
+        for L, color in zip(slice_L_values, slice_colors):
+            Lab = LCHab_to_Lab(macadam_d65.slice_L(L))
+            ax.plot(Lab[:, 1], Lab[:, 2], color=color, linewidth=1.2, label=f"L*={L:.0f}")
+        ax.set_title("D65 MacAdam L* Slices in Lab")
+        ax.set_xlabel("a*")
+        ax.set_ylabel("b*")
+        ax.set_aspect("equal", adjustable="box")
+        ax.grid(True, alpha=0.25)
+        ax.legend(fontsize=7, ncol=2)
 
         save_figure(fig, "07_macadam_limits_comparison.png")
 
