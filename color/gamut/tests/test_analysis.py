@@ -14,6 +14,7 @@ from color.gamut import (
     pointer_gamut,
     xy_gamut_area_from_xy,
 )
+from color.gamut.coverage import xy_gamut_coverage_from_xy
 
 
 def _small_grid_kwargs():
@@ -99,3 +100,24 @@ def test_analyze_gamut_accepts_reference_boundaries():
     assert analysis.boundary is boundary
     _assert_finite_analysis(analysis)
     assert any("whitepoint_XYZ" in message for message in analysis.warnings)
+
+
+def test_analyze_gamut_uses_custom_reference_boundaries_for_xy_coverage():
+    kwargs = _small_grid_kwargs()
+    boundary = compute_LCH_gamut_boundary("sRGB", **kwargs)
+
+    analysis = analyze_gamut(
+        boundary,
+        rec2020_boundary=boundary,
+        pointer_boundary=boundary,
+        macadam_d65_boundary=boundary,
+        **kwargs,
+    )
+
+    expected = xy_gamut_coverage_from_xy(
+        boundary.xy_boundary(),
+        boundary.xy_boundary(),
+    )
+    np.testing.assert_allclose(analysis.xy_coverage_rec2020, expected)
+    np.testing.assert_allclose(analysis.xy_coverage_pointer, expected)
+    np.testing.assert_allclose(analysis.xy_coverage_macadam_d65, expected)

@@ -15,8 +15,8 @@ from .coverage import (
     xy_gamut_area_from_xy,
     xy_gamut_coverage_from_xy,
 )
-from .macadam import macadam_limits, macadam_limits_published_xy_boundary
-from .pointer import pointer_gamut, pointer_gamut_published_xy_boundary
+from .macadam import macadam_limits
+from .pointer import pointer_gamut
 from .primaries import DisplayPrimaries
 
 
@@ -82,6 +82,33 @@ def _record_warning_call(warning_messages: list[str], function, *args, **kwargs)
     return result
 
 
+def _default_macadam_d65_boundary(
+    *,
+    L_values: Sequence[float] | np.ndarray,
+    hue_values: Sequence[float] | np.ndarray,
+    C_upper: float,
+    iterations: int,
+) -> GamutBoundary:
+    """Return the default D65 MacAdam reference boundary.
+
+    Plain ``macadam_limits("D65")`` uses the cached A/C/D65 MacAdam data via
+    ``source="auto"``.  This avoids the longer computed route during routine
+    analysis and keeps the reference stable.  The cached tables were generated
+    from the computed MacAdam method, then this call resamples them onto the
+    requested ``L_values`` and ``hue_values`` grid.  Forcing
+    ``source="computed"`` is useful for custom CMFs, illuminants or spectral
+    shapes, but a coarse computed grid can differ noticeably from the cached
+    reference.
+    """
+    return macadam_limits(
+        "D65",
+        L_values=L_values,
+        hue_values=hue_values,
+        C_upper=C_upper,
+        iterations=iterations,
+    )
+
+
 def analyze_gamut(
     gamut: str | DisplayPrimaries | GamutBoundary,
     *,
@@ -115,8 +142,7 @@ def analyze_gamut(
     )
     pointer = pointer_gamut() if pointer_boundary is None else pointer_boundary
     macadam_d65 = (
-        macadam_limits(
-            "D65",
+        _default_macadam_d65_boundary(
             L_values=L_values,
             hue_values=hue_values,
             C_upper=C_upper,
@@ -158,11 +184,11 @@ def analyze_gamut(
         ),
         xy_coverage_pointer=xy_gamut_coverage_from_xy(
             xy_boundary,
-            pointer_gamut_published_xy_boundary(),
+            pointer.xy_boundary(),
         ),
         xy_coverage_macadam_d65=xy_gamut_coverage_from_xy(
             xy_boundary,
-            macadam_limits_published_xy_boundary("D65"),
+            macadam_d65.xy_boundary(),
         ),
         lab_volume=lab_gamut_volume(boundary),
         projected_ab_area=boundary.projected_ab_area(),
