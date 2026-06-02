@@ -5,3 +5,5 @@ venv/**/*
 .pytest_tmp/
 __pycache__/
 .git/
+examples/**/output/*
+!examples/**/output/.gitkeep

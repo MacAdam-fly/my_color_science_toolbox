@@ -19,7 +19,7 @@ import numpy as np
 from color.colorimetry import Y_to_Lstar
 from color.gamut import macadam_limits, macadam_limits_published_xy_boundary
 from color.gamut.macadam import computed_macadam_limits_data
-from color.plot import plot_cie1931_diagram, plot_style
+from color.plot import plot_cie1931_diagram, plot_lines, plot_style, style_2d_axis
 from color.spectra import SpectralShape, from_columns
 from color.generators import generate_illuminant
 from _example_helpers import save_figure
@@ -80,63 +80,34 @@ def _plot_computed_vs_published() -> None:
         # The xy boundary for C/A/D65 can be directly obtained from the published data, while the boundary for D80 needs to be obtained from the computed data since it's not in the published data
         published_xy = macadam_limits_published_xy_boundary("D65")
         computed_xy = computed.xy_boundary()
-        ax.plot(published_xy[:, 0], published_xy[:, 1], color="black", linewidth=1.2, label="published/cache")
-        ax.plot(computed_xy[:, 0], computed_xy[:, 1], color="#D55E00", linewidth=1.2, label="computed")
-        ax.plot(
-            computed_D80.xy_boundary()[:, 0],
-            computed_D80.xy_boundary()[:, 1],
-            color="#0072B2",
-            linewidth=1.2,
-            label="computed (D80)",
-        )
+        for label, xy, color in (
+            ("published/cache", published_xy, "black"),
+            ("computed", computed_xy, "#D55E00"),
+            ("computed (D80)", computed_D80.xy_boundary(), "#0072B2"),
+        ):
+            plot_lines((xy[:, 0], xy[:, 1]), ax=ax, labels=[label], colors=[color], linewidth=1.2, grid=False)
         ax.legend(fontsize=7)
 
         ax = axes[1]
-        ax.plot(
-            published.projected_ab_boundary()[:, 0],
-            published.projected_ab_boundary()[:, 1],
-            color="black",
-            linewidth=1.2,
-            label="published/cache",
-        )
-        ax.plot(
-            computed.projected_ab_boundary()[:, 0],
-            computed.projected_ab_boundary()[:, 1],
-            color="#D55E00",
-            linewidth=1.2,
-            label="computed",
-        )
-        ax.plot(
-            computed_D80.projected_ab_boundary()[:, 0],
-            computed_D80.projected_ab_boundary()[:, 1],
-            color="#0072B2",
-            linewidth=1.2,
-            label="computed (D80)",
-        )
-
-        ax.set_title("Projected Lab a*b* Boundary")
-        ax.set_xlabel("a*")
-        ax.set_ylabel("b*")
-        ax.set_aspect("equal", adjustable="box")
-        ax.grid(True, alpha=0.25)
+        for label, ab, color in (
+            ("published/cache", published.projected_ab_boundary(), "black"),
+            ("computed", computed.projected_ab_boundary(), "#D55E00"),
+            ("computed (D80)", computed_D80.projected_ab_boundary(), "#0072B2"),
+        ):
+            plot_lines((ab[:, 0], ab[:, 1]), ax=ax, labels=[label], colors=[color], linewidth=1.2, grid=False)
+        style_2d_axis(ax, title="Projected Lab a*b* Boundary", xlabel="a*", ylabel="b*", equal_aspect=True)
         ax.legend(fontsize=7)
 
         ax = axes[2]
         published_lch = published.slice_L(50.0)
         computed_lch = computed.slice_L(50.0)
-        ax.plot(published_lch[:, 2], published_lch[:, 1], color="black", linewidth=1.2, label="published/cache")
-        ax.plot(computed_lch[:, 2], computed_lch[:, 1], color="#D55E00", linewidth=1.2, label="computed")
-        ax.plot(
-            computed_D80.slice_L(50.0)[:, 2],
-            computed_D80.slice_L(50.0)[:, 1],
-            color="#0072B2",
-            linewidth=1.2,
-            label="computed (D80)",
-        )
-        ax.set_title("L*=50 Chroma Boundary")
-        ax.set_xlabel("hue angle (deg)")
-        ax.set_ylabel("C*")
-        ax.grid(True, alpha=0.25)
+        for label, lch, color in (
+            ("published/cache", published_lch, "black"),
+            ("computed", computed_lch, "#D55E00"),
+            ("computed (D80)", computed_D80.slice_L(50.0), "#0072B2"),
+        ):
+            plot_lines((lch[:, 2], lch[:, 1]), ax=ax, labels=[label], colors=[color], linewidth=1.2, grid=False)
+        style_2d_axis(ax, title="L*=50 Chroma Boundary", xlabel="hue angle (deg)", ylabel="C*")
         ax.legend(fontsize=7)
 
         save_figure(fig, "08_computed_macadam_limits.png")

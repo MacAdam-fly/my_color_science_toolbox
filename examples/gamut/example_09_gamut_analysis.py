@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from color.gamut import analyze_gamut
-from color.plot import plot_style
+from color.plot import plot_bars, plot_style
 
 from _example_helpers import rgbc_primaries, save_figure
 
@@ -76,29 +76,39 @@ def _print_table(results) -> None:
 def _plot_coverage_bars(results) -> None:
     """Plot selected coverage metrics."""
     names = [item.name for item in results]
-    x = np.arange(len(names))
-    width = 0.26
     with plot_style("journal_double"):
         fig, axes = plt.subplots(1, 2, figsize=(7.16, 3.2), constrained_layout=True)
 
-        axes[0].bar(x - width, [r.xy_coverage_rec2020 for r in results], width, label="Rec.2020")
-        axes[0].bar(x, [r.xy_coverage_pointer for r in results], width, label="Pointer")
-        axes[0].bar(x + width, [r.xy_coverage_macadam_d65 for r in results], width, label="MacAdam D65")
-        axes[0].set_title("xy Area Coverage")
-        axes[0].set_xticks(x, names, rotation=25, ha="right")
+        plot_bars(
+            [
+                [r.xy_coverage_rec2020 for r in results],
+                [r.xy_coverage_pointer for r in results],
+                [r.xy_coverage_macadam_d65 for r in results],
+            ],
+            ax=axes[0],
+            labels=names,
+            group_labels=("Rec.2020", "Pointer", "MacAdam D65"),
+            title="xy Area Coverage",
+            ylabel="coverage",
+        )
+        axes[0].tick_params(axis="x", rotation=25)
         axes[0].set_ylim(0.0, 1.1)
-        axes[0].set_ylabel("coverage")
-        axes[0].grid(True, axis="y", alpha=0.25)
         axes[0].legend(fontsize=7)
 
-        axes[1].bar(x - width, [r.volume_coverage_rec2020 for r in results], width, label="Rec.2020")
-        axes[1].bar(x, [r.volume_coverage_pointer for r in results], width, label="Pointer")
-        axes[1].bar(x + width, [r.volume_coverage_macadam_d65 for r in results], width, label="MacAdam D65")
-        axes[1].set_title("Lab Volume Coverage")
-        axes[1].set_xticks(x, names, rotation=25, ha="right")
+        plot_bars(
+            [
+                [r.volume_coverage_rec2020 for r in results],
+                [r.volume_coverage_pointer for r in results],
+                [r.volume_coverage_macadam_d65 for r in results],
+            ],
+            ax=axes[1],
+            labels=names,
+            group_labels=("Rec.2020", "Pointer", "MacAdam D65"),
+            title="Lab Volume Coverage",
+            ylabel="coverage",
+        )
+        axes[1].tick_params(axis="x", rotation=25)
         axes[1].set_ylim(0.0, 1.1)
-        axes[1].set_ylabel("coverage")
-        axes[1].grid(True, axis="y", alpha=0.25)
         axes[1].legend(fontsize=7)
 
         save_figure(fig, "09_gamut_analysis_summary.png")

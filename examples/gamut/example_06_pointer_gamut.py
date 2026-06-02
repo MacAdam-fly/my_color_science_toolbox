@@ -23,7 +23,7 @@ from color.gamut import (
     pointer_gamut_published_xy_boundary,
     xy_gamut_coverage_from_xy,
 )
-from color.plot import plot_cie1931_diagram, plot_style
+from color.plot import plot_cie1931_diagram, plot_lines, plot_style, style_2d_axis
 
 from _example_helpers import COLOURS, compute_example_boundaries, save_figure
 
@@ -34,15 +34,32 @@ def _plot_pointer_comparison(pointer, displays) -> None:
 
         ax = axes[0]
         pointer_ab = pointer.projected_ab_boundary()
-        ax.plot(pointer_ab[:, 0], pointer_ab[:, 1], color="black", linewidth=1.6, label="Pointer")
+        plot_lines(
+            (pointer_ab[:, 0], pointer_ab[:, 1]),
+            ax=ax,
+            labels=["Pointer"],
+            colors=["black"],
+            linewidth=1.6,
+            grid=False,
+        )
         for name in ("sRGB", "Rec.2020"):
             ab = displays[name].projected_ab_boundary()
-            ax.plot(ab[:, 0], ab[:, 1], color=COLOURS[name], linewidth=1.2, label=name)
-        ax.set_title("Pointer Gamut and Display Projected Plane Gamuts")
-        ax.set_xlabel("a*")
-        ax.set_ylabel("b*")
+            plot_lines(
+                (ab[:, 0], ab[:, 1]),
+                ax=ax,
+                labels=[name],
+                colors=[COLOURS[name]],
+                linewidth=1.2,
+                grid=False,
+            )
+        style_2d_axis(
+            ax,
+            title="Pointer Gamut and Display Projected Plane Gamuts",
+            xlabel="a*",
+            ylabel="b*",
+            equal_aspect=True,
+        )
         ax.set_aspect("equal", adjustable="box")
-        ax.grid(True, alpha=0.25)
         ax.legend()
 
         ax = axes[1]
@@ -53,22 +70,24 @@ def _plot_pointer_comparison(pointer, displays) -> None:
             title="Pointer Gamut in CIE 1931 xy",
         )
         pointer_xy = pointer_gamut_published_xy_boundary()
-        ax.plot(
-            pointer_xy[:, 0],
-            pointer_xy[:, 1],
-            color="black",
+        plot_lines(
+            (pointer_xy[:, 0], pointer_xy[:, 1]),
+            ax=ax,
+            labels=["Pointer xy boundary"],
+            colors=["black"],
             linewidth=1.6,
-            label="Pointer xy boundary",
+            grid=False,
         )
         for index, name in enumerate(("sRGB", "Rec.2020")):
             xy = displays[name].xy_boundary()
-            ax.plot(
-                xy[:, 0],
-                xy[:, 1],
-                color=COLOURS[name],
-                linestyle=("-", "-.")[index],
+            plot_lines(
+                (xy[:, 0], xy[:, 1]),
+                ax=ax,
+                labels=[f"{name} primary hull"],
+                colors=[COLOURS[name]],
+                linestyles=[("-", "-.")[index]],
                 linewidth=1.2,
-                label=f"{name} primary hull",
+                grid=False,
             )
         ax.legend(fontsize=7, loc="upper right")
 

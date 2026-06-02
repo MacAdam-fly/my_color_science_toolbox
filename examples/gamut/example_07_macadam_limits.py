@@ -26,7 +26,7 @@ from color.gamut import (
 )
 from color.colorimetry import XYZ_to_xy, XYZ_to_xyY
 from color.spaces.basic.lab import Lab_to_XYZ, LCHab_to_Lab
-from color.plot import plot_cie1931_diagram, plot_style
+from color.plot import plot_cie1931_diagram, plot_lines, plot_style, style_2d_axis
 
 from _example_helpers import COLOURS, compute_example_boundaries, save_figure
 
@@ -44,22 +44,25 @@ def _plot_macadam_comparison(macadam_d65, pointer, displays) -> None:
         )
         for illuminant, color in (("A", "#D55E00"), ("C", "#0072B2"), ("D65", "#009E73")):
             xy = macadam_limits_published_xy_boundary(illuminant)
-            ax.plot(xy[:, 0], xy[:, 1], linewidth=1.4, color=color, label=f"MacAdam {illuminant}")
+            plot_lines(
+                (xy[:, 0], xy[:, 1]),
+                ax=ax,
+                labels=[f"MacAdam {illuminant}"],
+                colors=[color],
+                linewidth=1.4,
+                grid=False,
+            )
         ax.legend(fontsize=7, loc="upper right")
 
         ax = axes[0, 1]
         for name in ("sRGB", "Rec.2020"):
             ab = displays[name].projected_ab_boundary()
-            ax.plot(ab[:, 0], ab[:, 1], color=COLOURS[name], linewidth=1.1, label=name)
+            plot_lines((ab[:, 0], ab[:, 1]), ax=ax, labels=[name], colors=[COLOURS[name]], linewidth=1.1, grid=False)
         pointer_ab = pointer.projected_ab_boundary()
-        ax.plot(pointer_ab[:, 0], pointer_ab[:, 1], color="black", linewidth=1.2, label="Pointer")
+        plot_lines((pointer_ab[:, 0], pointer_ab[:, 1]), ax=ax, labels=["Pointer"], colors=["black"], linewidth=1.2, grid=False)
         macadam_ab = macadam_d65.projected_ab_boundary()
-        ax.plot(macadam_ab[:, 0], macadam_ab[:, 1], color="#009E73", linewidth=1.5, label="MacAdam D65")
-        ax.set_title("Projected Lab a*b* Boundaries")
-        ax.set_xlabel("a*")
-        ax.set_ylabel("b*")
-        ax.set_aspect("equal", adjustable="box")
-        ax.grid(True, alpha=0.25)
+        plot_lines((macadam_ab[:, 0], macadam_ab[:, 1]), ax=ax, labels=["MacAdam D65"], colors=["#009E73"], linewidth=1.5, grid=False)
+        style_2d_axis(ax, title="Projected Lab a*b* Boundaries", xlabel="a*", ylabel="b*", equal_aspect=True)
         ax.legend(fontsize=7)
 
         slice_L_values = (20.0, 40.0, 60.0, 80.0)
@@ -71,23 +74,15 @@ def _plot_macadam_comparison(macadam_d65, pointer, displays) -> None:
             LCHab = macadam_d65.slice_L(L)
             XYZ = Lab_to_XYZ(LCHab_to_Lab(LCHab), whitepoint_XYZ=macadam_d65.whitepoint_XYZ)
             xyY = XYZ_to_xyY(XYZ, fallback_xy=whitepoint_xy)
-            ax.plot(xyY[:, 0], xyY[:, 1], color=color, linewidth=1.2, label=f"L*={L:.0f}")
-        ax.set_title("D65 MacAdam L* Slices in xyY")
-        ax.set_xlabel("x")
-        ax.set_ylabel("y")
-        ax.set_aspect("equal", adjustable="box")
-        ax.grid(True, alpha=0.25)
+            plot_lines((xyY[:, 0], xyY[:, 1]), ax=ax, labels=[f"L*={L:.0f}"], colors=[color], linewidth=1.2, grid=False)
+        style_2d_axis(ax, title="D65 MacAdam L* Slices in xyY", xlabel="x", ylabel="y", equal_aspect=True)
         ax.legend(fontsize=7, ncol=2)
 
         ax = axes[1, 1]
         for L, color in zip(slice_L_values, slice_colors):
             Lab = LCHab_to_Lab(macadam_d65.slice_L(L))
-            ax.plot(Lab[:, 1], Lab[:, 2], color=color, linewidth=1.2, label=f"L*={L:.0f}")
-        ax.set_title("D65 MacAdam L* Slices in Lab")
-        ax.set_xlabel("a*")
-        ax.set_ylabel("b*")
-        ax.set_aspect("equal", adjustable="box")
-        ax.grid(True, alpha=0.25)
+            plot_lines((Lab[:, 1], Lab[:, 2]), ax=ax, labels=[f"L*={L:.0f}"], colors=[color], linewidth=1.2, grid=False)
+        style_2d_axis(ax, title="D65 MacAdam L* Slices in Lab", xlabel="a*", ylabel="b*", equal_aspect=True)
         ax.legend(fontsize=7, ncol=2)
 
         save_figure(fig, "07_macadam_limits_comparison.png")

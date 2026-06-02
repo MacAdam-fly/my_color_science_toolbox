@@ -14,9 +14,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from color.constants import D65_XYZ
+from color.plot import plot_swatch_grid, preview_sRGB_from_XYZ
 from color.spaces import SpaceSpec, convert_color
 
-from _spaces_plot_helpers import output_dir, plot_swatch_grid, preview_sRGB_from_XYZ
+from _spaces_plot_helpers import output_dir
 
 
 SAMPLE_SRGB = np.array(
@@ -157,7 +158,6 @@ def _print_summary(values: dict[str, np.ndarray]) -> None:
 
 def _plot_swatches(values: dict[str, np.ndarray], out: Path) -> None:
     """Plot input and selected round-trip preview swatches."""
-    fig, ax = plt.subplots(figsize=(8.4, 3.6))
     rows = [
         ("input sRGB", SAMPLE_SRGB),
         ("after xyY", preview_sRGB_from_XYZ(values["XYZ_from_xyY"])),
@@ -165,8 +165,7 @@ def _plot_swatches(values: dict[str, np.ndarray], out: Path) -> None:
         ("after CAM02", preview_sRGB_from_XYZ(values["XYZ_from_CAM02"])),
         ("final sRGB", np.clip(values["sRGB_final"], 0.0, 1.0)),
     ]
-    plot_swatch_grid(ax, rows, title="Long Closed Chain Preview")
-    fig.tight_layout()
+    fig, _ax = plot_swatch_grid(rows, title="Long Closed Chain Preview")
     path = out / "02_long_chain_swatches.png"
     fig.savefig(path, dpi=150)
     plt.close(fig)

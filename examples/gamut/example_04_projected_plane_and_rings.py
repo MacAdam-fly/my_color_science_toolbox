@@ -18,8 +18,10 @@ import numpy as np
 
 from color.spaces import LCHab_to_Lab, SpaceSpec, convert_color, xyY_to_xy
 from color.plot import (
+    plot_lines,
     plot_cie1931_diagram,
     plot_style,
+    style_2d_axis,
 )
 
 from _example_helpers import (
@@ -175,15 +177,20 @@ def _plot_gamut_rings(boundaries) -> None:
         for index, (ax, (name, boundary)) in enumerate(zip(axes, boundaries.items())):
             rings, steps = boundary.gamut_rings(L_steps)
             for ring, step in zip(rings, steps):
-                ax.plot(ring[:, 0], ring[:, 1], label=f"L* <= {step:g}", linewidth=1.1)
-            ax.set_title(name)
-            ax.set_xlabel("a*")
-            if index == 0:
-                ax.set_ylabel("b*")
-            else:
-                ax.set_ylabel("")
-            ax.set_aspect("equal", adjustable="box")
-            ax.grid(True, alpha=0.25)
+                plot_lines(
+                    (ring[:, 0], ring[:, 1]),
+                    ax=ax,
+                    labels=[f"L* <= {step:g}"],
+                    linewidth=1.1,
+                    grid=False,
+                )
+            style_2d_axis(
+                ax,
+                title=name,
+                xlabel="a*",
+                ylabel="b*" if index == 0 else "",
+                equal_aspect=True,
+            )
             ax.legend(fontsize=6)
         fig.suptitle("Cumulative Gamut Rings in Lab a*b*")
         save_figure(fig, "04_gamut_rings_comparison.png")

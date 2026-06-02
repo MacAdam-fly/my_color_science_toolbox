@@ -21,7 +21,7 @@ from color.gamut import (
     analyze_gamut,
     compute_LCH_gamut_boundary,
 )
-from color.plot import plot_cie1931_diagram, plot_lines, plot_style
+from color.plot import plot_bars, plot_cie1931_diagram, plot_lines, plot_style
 from color.spaces import (
     RGB_colourspace_from_primaries_XYZ,
     RGB_colourspace_from_primaries_xy,
@@ -163,13 +163,17 @@ def _plot_custom_gamut(boundary, analysis) -> None:
             analysis.volume_coverage_pointer,
             analysis.volume_coverage_macadam_d65,
         ]
-        x = np.arange(len(labels))
-        axes[1].bar(x, values, color="#4C72B0")
-        axes[1].set_title("Custom RGB Coverage Summary")
-        axes[1].set_xticks(x, labels, rotation=35, ha="right")
-        axes[1].set_ylabel("coverage")
+        plot_bars(
+            values,
+            ax=axes[1],
+            labels=labels,
+            colors=["#4C72B0"],
+            title="Custom RGB Coverage Summary",
+            ylabel="coverage",
+            legend=False,
+        )
+        axes[1].tick_params(axis="x", rotation=35)
         axes[1].set_ylim(0.0, max(1.05, max(values) * 1.15))
-        axes[1].grid(True, axis="y", alpha=0.25)
 
         save_figure(fig, "11_custom_rgb_colourspace_gamut.png")
 

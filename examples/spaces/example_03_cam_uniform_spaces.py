@@ -13,9 +13,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from color.constants import D65_XYZ
+from color.plot import plot_swatch_grid
 from color.spaces import SpaceSpec, convert_color
 
-from _spaces_plot_helpers import output_dir, plot_swatch_grid
+from _spaces_plot_helpers import output_dir
 
 
 SAMPLE_SRGB = np.array(
@@ -86,9 +87,7 @@ def _plot_roundtrip_swatches(
     cam16: dict[str, np.ndarray],
     out: Path,
 ) -> None:
-    fig, ax = plt.subplots(figsize=(9.2, 3.4))
-    plot_swatch_grid(
-        ax,
+    fig, _ax = plot_swatch_grid(
         [
             ("input sRGB", SAMPLE_SRGB),
             ("CAM02 round-trip", np.clip(cam02["sRGB_roundtrip"], 0.0, 1.0)),
@@ -96,7 +95,6 @@ def _plot_roundtrip_swatches(
         ],
         title="CAM02/CAM16 Uniform Space Long-Chain Round Trip",
     )
-    fig.tight_layout()
     path = out / "03_cam_uniform_roundtrip_swatches.png"
     fig.savefig(path, dpi=150)
     plt.close(fig)

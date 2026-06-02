@@ -12,15 +12,17 @@ if str(_PROJECT_ROOT) not in sys.path:
 import matplotlib.pyplot as plt
 import numpy as np
 
-from color.spaces import RGB_to_RGB, RGB_to_XYZ
-
-from _spaces_plot_helpers import (
-    output_dir,
-    plot_rgb_gamuts,
+from color.plot import (
+    plot_cie1931_diagram,
+    plot_labels,
+    plot_lines,
+    plot_points,
     plot_swatch_grid,
     preview_sRGB_from_XYZ,
-    xy_from_XYZ,
 )
+from color.spaces import RGB_to_RGB, RGB_to_XYZ, XYZ_to_xy, get_RGB_colourspace
+
+from _spaces_plot_helpers import output_dir
 
 
 SAMPLE_SRGB = np.array(
@@ -36,11 +38,58 @@ SAMPLE_SRGB = np.array(
 RGB_SPACES = ["sRGB", "Display P3", "Rec.2020", "DCI-P3"]
 
 
+def _plot_rgb_gamuts(ax, names: list[str]) -> None:
+    """Plot RGB primary triangles on a CIE 1931 diagram using color.plot primitives."""
+    colors = {
+        "sRGB": "tab:blue",
+        "Display P3": "tab:green",
+        "Rec.2020": "tab:red",
+        "DCI-P3": "tab:purple",
+    }
+    for name in names:
+        space = get_RGB_colourspace(name)
+        primaries_XYZ = RGB_to_XYZ(
+            np.identity(3),
+            colourspace=space,
+            apply_decoding=False,
+        )
+        primaries_xy = XYZ_to_xy(primaries_XYZ)
+        closed = np.vstack((primaries_xy, primaries_xy[0]))
+        color = colors.get(name)
+        plot_lines(
+            (closed[:, 0], closed[:, 1]),
+            ax=ax,
+            labels=[name],
+            colors=[color],
+            linewidth=1.5,
+            grid=False,
+        )
+        plot_points(
+            primaries_xy,
+            ax=ax,
+            colors=color,
+            sizes=26,
+            grid=False,
+            legend=False,
+            zorder=4,
+        )
+        plot_points(
+            space.white_xy,
+            ax=ax,
+            colors=color,
+            markers="x",
+            sizes=55,
+            grid=False,
+            legend=False,
+            zorder=4,
+        )
+
+
 def main() -> None:
     out = output_dir()
 
     XYZ = RGB_to_XYZ(SAMPLE_SRGB, colourspace="sRGB")
-    xy = xy_from_XYZ(XYZ)
+    xy = XYZ_to_xy(XYZ)
     converted = {
         name: RGB_to_RGB(SAMPLE_SRGB, "sRGB", name)
         for name in RGB_SPACES
@@ -61,19 +110,25 @@ def main() -> None:
     print("DCI-P3 white to sRGB without adaptation:", np.round(no_adapt, 6))
     print("DCI-P3 white to sRGB with Bradford adaptation:", np.round(bradford, 6))
 
-    fig, ax = plt.subplots(figsize=(7.4, 6.0))
-    plot_rgb_gamuts(ax, RGB_SPACES)
-    ax.scatter(
-        xy[:, 0],
-        xy[:, 1],
+    fig, ax = plot_cie1931_diagram(
+        title="RGB Gamuts And Sample Colours In CIE xy",
+        show_background=True,
+        background_samples=180,
+        show_sample_points=False,
+    )
+    _plot_rgb_gamuts(ax, RGB_SPACES)
+    plot_points(
+        xy,
+        ax=ax,
+        sizes=70,
+        grid=False,
+        legend=False,
         c=np.clip(SAMPLE_SRGB, 0.0, 1.0),
         edgecolors="black",
         linewidths=0.8,
-        s=70,
-        label="sRGB samples",
+        zorder=5,
     )
-    for index, point in enumerate(xy, start=1):
-        ax.annotate(f"C{index}", point + np.array([0.008, 0.006]), fontsize=8)
+    plot_labels(xy, [f"C{i + 1}" for i in range(xy.shape[0])], ax=ax, grid=False, offset=(5, 5))
     ax.set_title("RGB Gamuts And Sample Colours In CIE xy")
     ax.legend(loc="upper right", fontsize=9)
     fig.tight_layout()
@@ -87,9 +142,7 @@ def main() -> None:
         preview_XYZ = RGB_to_XYZ(values, colourspace=name)
         preview_rows.append((name, preview_sRGB_from_XYZ(preview_XYZ)))
 
-    fig, ax = plt.subplots(figsize=(8.4, 3.3))
-    plot_swatch_grid(ax, preview_rows, title="Same XYZ Stimuli Previewed In sRGB")
-    fig.tight_layout()
+    fig, _ax = plot_swatch_grid(preview_rows, title="Same XYZ Stimuli Previewed In sRGB")
     path = out / "01_rgb_conversion_swatches.png"
     fig.savefig(path, dpi=150)
     plt.close(fig)

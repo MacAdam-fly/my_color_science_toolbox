@@ -25,8 +25,9 @@ from color.spaces import (
     register_RGB_colourspace,
 )
 from color.spaces.rgb.transfer import decode_transfer
+from color.plot import plot_lines, plot_swatch_grid, preview_sRGB_from_XYZ
 
-from _spaces_plot_helpers import output_dir, plot_swatch_grid, preview_sRGB_from_XYZ
+from _spaces_plot_helpers import output_dir
 
 
 CUSTOM_NAME = "Example Custom RGB"
@@ -112,9 +113,10 @@ def _plot_custom_conversion(custom) -> None:
         ("Display P3 coords", preview_sRGB_from_XYZ(RGB_to_XYZ(display_p3, colourspace="Display P3"))),
         ("Rec.2020 coords", preview_sRGB_from_XYZ(RGB_to_XYZ(rec2020, colourspace="Rec.2020"))),
     ]
-    fig, ax = plt.subplots(figsize=(8.5, 2.8))
-    plot_swatch_grid(ax, rows, title="Custom RGB Stimuli Routed Through Standard RGB Spaces")
-    fig.tight_layout()
+    fig, _ax = plot_swatch_grid(
+        rows,
+        title="Custom RGB Stimuli Routed Through Standard RGB Spaces",
+    )
     path = out / "07_custom_rgb_conversion_swatches.png"
     fig.savefig(path, dpi=150)
     plt.close(fig)
@@ -128,15 +130,18 @@ def _plot_dynamic_gamma_curves() -> None:
     rgb = np.stack([encoded, encoded, encoded], axis=-1)
     decoded_per_channel = decode_transfer(rgb, ("gamma", (2.2, 2.3, 2.1)))
 
-    fig, ax = plt.subplots(figsize=(4.8, 3.4), constrained_layout=True)
-    ax.plot(encoded, decoded_per_channel[:, 0], label="R gamma 2.2", color="tab:red")
-    ax.plot(encoded, decoded_per_channel[:, 1], label="G gamma 2.3", color="tab:green")
-    ax.plot(encoded, decoded_per_channel[:, 2], label="B gamma 2.1", color="tab:blue")
-    ax.set_title("Per-channel Gamma Decoding")
-    ax.set_xlabel("encoded RGB")
-    ax.set_ylabel("linear RGB")
-    ax.grid(True, alpha=0.25)
-    ax.legend(fontsize=8)
+    fig, _ax = plot_lines(
+        [
+            (encoded, decoded_per_channel[:, 0]),
+            (encoded, decoded_per_channel[:, 1]),
+            (encoded, decoded_per_channel[:, 2]),
+        ],
+        labels=("R gamma 2.2", "G gamma 2.3", "B gamma 2.1"),
+        colors=("tab:red", "tab:green", "tab:blue"),
+        title="Per-channel Gamma Decoding",
+        xlabel="encoded RGB",
+        ylabel="linear RGB",
+    )
 
     path = out / "07_custom_rgb_dynamic_gamma.png"
     fig.savefig(path, dpi=150)

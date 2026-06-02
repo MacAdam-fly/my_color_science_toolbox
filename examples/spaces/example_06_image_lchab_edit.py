@@ -14,6 +14,7 @@ import numpy as np
 from PIL import Image, ImageOps
 
 from color.constants import D65_XYZ
+from color.plot import plot_image
 from color.spaces import SpaceSpec, convert_color
 
 from _spaces_plot_helpers import output_dir
@@ -70,9 +71,13 @@ def _save_comparison_plot(original: np.ndarray, edited: np.ndarray, out: Path) -
         (axes[0], original, "Original sRGB"),
         (axes[1], edited, "LCHab edit: L* x1.2, C x1.2"),
     ):
-        ax.imshow(np.clip(image, 0.0, 1.0))
-        ax.set_title(title)
-        ax.set_axis_off()
+        plot_image(
+            np.clip(image, 0.0, 1.0),
+            ax=ax,
+            title=title,
+            show_ticks=False,
+            aspect="equal",
+        )
     fig.tight_layout()
     path = out / "06_image_lchab_boost_comparison.png"
     fig.savefig(path, dpi=150)
