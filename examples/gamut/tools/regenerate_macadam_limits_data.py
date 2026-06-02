@@ -1,4 +1,4 @@
-"""Regenerate cached MacAdam optimal-colour limits CSV files."""
+"""As a tamplate to Regenerate cached MacAdam optimal-colour limits CSV files."""
 
 from __future__ import annotations
 
@@ -6,12 +6,18 @@ import csv
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
+# 获取所有父级目录的路径，用于定位到项目根目录，以便导入模块
+ROOT = Path(__file__).resolve().parent.parent.parent.parent
+TOOLS_DIR = Path(__file__).resolve().parent
+
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
+if str(TOOLS_DIR) not in sys.path:
+    sys.path.insert(0, str(TOOLS_DIR))
 
 from color.gamut.macadam import computed_macadam_limits_data
 from color.spectra import SpectralDistribution, SpectralShape
+import illuminant_C
 
 
 DATA_DIR = ROOT / "color" / "data" / "gamut_data"
@@ -35,12 +41,12 @@ def _illuminant_source(name: str) -> str | SpectralDistribution:
     if name != "C":
         return name
 
-    import colour
-
-    sd = colour.SDS_ILLUMINANTS["C"]
+    illuminant_C_data = illuminant_C.illuminant_C
+    wavelengths = sorted(illuminant_C_data)
+    values = [illuminant_C_data[wavelength] for wavelength in wavelengths]
     return SpectralDistribution(
-        sd.wavelengths,
-        sd.values,
+        wavelengths,
+        values,
         name="CIE Illuminant C",
         metadata={"source": "colour.SDS_ILLUMINANTS['C']"},
     )
