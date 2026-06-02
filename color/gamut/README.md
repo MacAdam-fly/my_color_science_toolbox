@@ -102,7 +102,7 @@ boundary.to_XYZ()
 boundary.slice_L(50)
 
 boundary.area_at_L(50)
-boundary.volume()
+boundary.lab_volume()
 boundary.gamut_rings([25, 50, 75, 100])
 boundary.ring_area()
 ```

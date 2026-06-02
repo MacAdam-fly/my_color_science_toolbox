@@ -46,13 +46,13 @@ __all__ += [
 
 __all__ += [
     "xy_gamut_coverage",  # compute directional xy coverage from RGB names, primaries or XYZ rows
-    "xy_gamut_area",  # compute xy area from RGB names, primaries or XYZ rows
+    "xy_gamut_area",  # compute xy area from RGB names, primaries or XYZ rows，same as GamutBoundary.xy_area()
     "xy_gamut_coverage_from_xy",  # compute directional xy coverage from xy points or hulls
     "xy_gamut_area_from_xy",  # compute xy area from xy points or hulls
 ]
 
 __all__ += [
-    "lab_gamut_volume",  # compute Lab/LCHab volume of a GamutBoundary
+    "lab_gamut_volume",  # compute Lab/LCHab volume of a GamutBoundary，LCH version differs from GamutBoundary.volume() by using cylindrical coordinates
     "lab_gamut_coverage",  # compute directional Lab/LCHab volume coverage
 ]
 
@@ -64,6 +64,6 @@ __all__ += [
 
 __all__ += [
     "pointer_gamut",  # return Pointer real-surface gamut as a GamutBoundary
-    "pointer_gamut_published_xy_boundary",  # return published Pointer xy boundary
+    "pointer_gamut_published_xy_boundary",  # return cached Pointer xy boundary
     "is_within_pointer_gamut",  # test whether XYZ values are inside Pointer gamut
 ]

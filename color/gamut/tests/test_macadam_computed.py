@@ -107,7 +107,7 @@ def test_computed_macadam_limits_returns_regular_LCH_boundary():
     assert isinstance(boundary, ComputedMacAdamLimitsBoundary)
     assert boundary.C_max.shape == (3, 5)
     assert boundary.vertices_XYZ.shape[1] == 3
-    assert boundary.volume() > 0
+    assert boundary.lab_volume() > 0
     xy = boundary.xy_boundary()
     assert xy.ndim == 2
     assert xy.shape[1] == 2

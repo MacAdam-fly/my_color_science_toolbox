@@ -45,7 +45,7 @@ def main() -> None:
 
     print("=" * 20 + " 3D colour-solid metrics " + "=" * 20)
     for name, boundary in boundaries.items():
-        print(f"{name:8s} Lab volume: {boundary.volume():10.2f}")
+        print(f"{name:8s} Lab volume: {boundary.lab_volume():10.2f}")
         print(f"{name:8s} projected a*b* area: {boundary.projected_ab_area():10.2f}")
 
     with plot_style("journal_double"):
@@ -64,7 +64,7 @@ def main() -> None:
                 cmap="viridis",
                 alpha=0.76,
                 linewidth=0.0,
-                title=f"{name}\nV={boundary.volume():.0f}",
+                title=f"{name}\nV={boundary.lab_volume():.0f}",
                 xlabel="a*",
                 ylabel="b*",
                 zlabel="L*",

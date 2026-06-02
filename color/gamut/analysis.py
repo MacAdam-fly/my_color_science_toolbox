@@ -11,8 +11,6 @@ import numpy as np
 from .boundary import GamutBoundary, compute_LCH_gamut_boundary
 from .coverage import (
     lab_gamut_coverage,
-    lab_gamut_volume,
-    xy_gamut_area_from_xy,
     xy_gamut_coverage_from_xy,
 )
 from .macadam import macadam_limits
@@ -177,7 +175,7 @@ def analyze_gamut(
     return GamutAnalysis(
         name=_name_from_gamut(gamut, name),
         boundary=boundary,
-        xy_area=xy_gamut_area_from_xy(xy_boundary),
+        xy_area = boundary.xy_area(),
         xy_coverage_rec2020=xy_gamut_coverage_from_xy(
             xy_boundary,
             rec2020.xy_boundary(),
@@ -190,7 +188,8 @@ def analyze_gamut(
             xy_boundary,
             macadam_d65.xy_boundary(),
         ),
-        lab_volume=lab_gamut_volume(boundary),
+
+        lab_volume=boundary.lab_volume(),
         projected_ab_area=boundary.projected_ab_area(),
         ring_area=boundary.ring_area(),
         volume_coverage_rec2020=float(volume_coverage_rec2020),
