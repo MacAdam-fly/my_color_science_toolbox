@@ -43,3 +43,8 @@ python examples/generators/example_02_ideal_spectra.py
 - `example_01_long_colour_pipeline.py` - Generated LED spectrum and sRGB signal
   through XYZ/LMS, Luv, CAM02-UCS with D50 viewing white, explicit chromatic
   adaptation for Oklab, final Lab, CIEDE2000, CCT and dominant-wavelength analysis.
+
+## Recovery Examples (`recovery/`)
+
+- `example_01_reflectance_recovery.py` - Recover bounded smooth reflectance
+  spectra from XYZ and xyY targets and verify XYZ closure.
