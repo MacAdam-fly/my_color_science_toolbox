@@ -111,7 +111,7 @@ def test_recover_reflectance_rejects_invalid_XYZ(value) -> None:
     "kwargs",
     [
         {"bounds": (1.0, 0.0)},
-        {"bounds": (0.0, np.inf)},
+        {"bounds": (np.nan, 1.0)},
         {"smoothness": -1.0},
         {"method": "basis"},
     ],

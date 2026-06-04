@@ -48,3 +48,5 @@ python examples/generators/example_02_ideal_spectra.py
 
 - `example_01_reflectance_recovery.py` - Recover bounded smooth reflectance
   spectra from XYZ and xyY targets and verify XYZ closure.
+- `example_02_spectrum_recovery.py` - Recover effective spectra from XYZ and
+  LMS responses and verify response closure.

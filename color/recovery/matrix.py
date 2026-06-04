@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-import numpy as np
 from typing import Union
+
+import numpy as np
 
 from color.spectra import (
     MultiSpectralDistribution,
@@ -36,6 +37,25 @@ def _shape_from_wavelengths(wavelengths: np.ndarray) -> SpectralShape:
     intervals = np.diff(wavelengths)
     interval = float(intervals.min()) if intervals.size else 1.0
     return SpectralShape(float(wavelengths[0]), float(wavelengths[-1]), interval)
+
+
+def response_recovery_matrix(
+    responses: MultiSpectralDistribution,
+    *,
+    shape: SpectralShape | None = None,
+    k: float = 1.0,
+) -> tuple[np.ndarray, np.ndarray, SpectralShape]:
+    """Return ``(A, wavelengths, shape)`` for ``target = A @ spectrum``."""
+    if len(responses.labels) != 3:
+        raise ValueError(
+            "responses must contain exactly three channels, "
+            f"got {len(responses.labels)}"
+        )
+    common_shape = shape or _shape_from_wavelengths(responses.wavelengths)
+    aligned_responses = responses.align(common_shape)
+    matrix = float(k) * common_shape.interval * aligned_responses.values.T
+    wavelengths = np.array(common_shape.wavelengths, copy=True)
+    return matrix, wavelengths, common_shape
 
 
 def reflectance_recovery_matrix(
@@ -71,19 +91,9 @@ def reflectance_recovery_matrix(
     return matrix, wavelengths, common_shape
 
 
-def second_difference_matrix(size: int) -> np.ndarray:
-    """Return a second-difference matrix with shape ``(size - 2, size)``."""
-    if size < 3:
-        raise ValueError("size must be at least 3 for a second-difference matrix")
-    matrix = np.zeros((size - 2, size), dtype=np.float64)
-    rows = np.arange(size - 2)
-    matrix[rows, rows] = 1.0
-    matrix[rows, rows + 1] = -2.0
-    matrix[rows, rows + 2] = 1.0
-    return matrix
-
-
 __all__ = [
+    "ResponseSource",
+    "IlluminantSource",
+    "response_recovery_matrix",
     "reflectance_recovery_matrix",
-    "second_difference_matrix",
 ]

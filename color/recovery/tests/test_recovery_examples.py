@@ -15,7 +15,8 @@ def test_recovery_examples_run() -> None:
     if str(_EXAMPLES) not in sys.path:
         sys.path.insert(0, str(_EXAMPLES))
 
-    runpy.run_path(
-        str(_EXAMPLES / "example_01_reflectance_recovery.py"),
-        run_name="__main__",
-    )
+    for filename in (
+        "example_01_reflectance_recovery.py",
+        "example_02_spectrum_recovery.py",
+    ):
+        runpy.run_path(str(_EXAMPLES / filename), run_name="__main__")
