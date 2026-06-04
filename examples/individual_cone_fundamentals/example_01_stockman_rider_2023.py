@@ -147,7 +147,7 @@ def main() -> None:
     print("2-degree wavelength range:", standard_2["wavelength"][[0, -1]])
     print("2-degree LMS peaks:", [standard_2[k].max() for k in ("l", "m", "s")])
 
-    with plot_style("journal_double"):
+    with plot_style("journal_compact"):
         _plot_standard_dataset_comparison(standard_2, standard_10)
         _plot_individual_parameter_sets(parameter_sets)
 

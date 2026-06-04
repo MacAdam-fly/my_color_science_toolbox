@@ -16,6 +16,7 @@ if str(_PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(_PROJECT_ROOT))
 
 from color.plot import (
+    add_panel_labels,
     plot_3d_lines,
     plot_3d_points,
     plot_3d_surface,
@@ -57,7 +58,6 @@ def _surface_wireframe(out: Path) -> None:
             cmap="viridis",
             alpha=0.78,
             linewidth=0.0,
-            title="3D Surface Primitive for a Colour-Solid Boundary",
             xlabel="a*",
             ylabel="b*",
             zlabel="L*",
@@ -75,6 +75,7 @@ def _surface_wireframe(out: Path) -> None:
             grid=False,
         )
         set_3d_axis_limits_from_data(ax, np.stack([A, B, LL], axis=-1), padding=0.08, equal_aspect=False)
+        add_panel_labels(ax, labels=("a",), x=-0.08, y=1.03)
     _save(fig, out / "08_3d_surface_wireframe.png")
 
 
@@ -98,7 +99,6 @@ def _points_lines(out: Path) -> None:
             labels=("trajectory",),
             colors=("tab:blue",),
             linewidth=1.1,
-            title="3D Lines and Points",
             xlabel="a*",
             ylabel="b*",
             zlabel="L*",
@@ -113,6 +113,7 @@ def _points_lines(out: Path) -> None:
             legend=False,
         )
         set_3d_axis_limits_from_data(ax, samples, padding=0.2, equal_aspect=True)
+        add_panel_labels(ax, labels=("b",), x=-0.08, y=1.03)
     _save(fig, out / "08_3d_points_lines.png")
 
 

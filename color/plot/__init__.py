@@ -41,7 +41,18 @@ from .primitives3d import (
     set_3d_axis_limits_from_data,
     style_3d_axis,
 )
-from .style import PLOT_STYLE_PRESETS, colour_cycle, plot_style, set_plot_style
+from .style import (
+    PLOT_STYLE_PRESETS,
+    add_panel_labels,
+    colour_cycle,
+    label_panel,
+    label_subplots,
+    move_titles_to_panel_labels,
+    panel_label,
+    plot_style,
+    set_panel_labels,
+    set_plot_style,
+)
 from .swatches import preview_sRGB_from_XYZ, plot_swatch_grid, plot_swatch_strip
 
 __all__ = [
@@ -74,8 +85,14 @@ __all__ += [
 
 __all__ += [
     "PLOT_STYLE_PRESETS",  # named matplotlib style presets for plotting
+    "add_panel_labels",  # add journal-style panel labels to axes
     "colour_cycle",  # return an infinite cycle of plotting colours
+    "label_panel",  # compatibility alias for panel_label
+    "label_subplots",  # compatibility alias for add_panel_labels
+    "move_titles_to_panel_labels",  # convert titles into panel labels
+    "panel_label",  # add a journal-style panel label to one axes
     "plot_style",  # temporarily apply a plotting style
+    "set_panel_labels",  # compatibility alias for add_panel_labels
     "set_plot_style",  # apply a plotting style to global matplotlib rcParams
 ]
 

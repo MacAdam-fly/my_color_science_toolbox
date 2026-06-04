@@ -16,6 +16,7 @@ if str(_PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(_PROJECT_ROOT))
 
 from color.plot import plot_lines, plot_points, plot_style
+from color.plot import add_panel_labels
 
 
 def _output_dir() -> Path:
@@ -30,7 +31,7 @@ def _save(fig, path: Path) -> None:
     print(f"Plot saved to {path}")
 
 
-def _draw_panel(ax, *, title: str) -> None:
+def _draw_panel(ax) -> None:
     x = np.linspace(0.0, 1.0, 120)
     y_1 = np.exp(-0.5 * ((x - 0.35) / 0.11) ** 2)
     y_2 = 0.75 * np.exp(-0.5 * ((x - 0.62) / 0.15) ** 2)
@@ -47,7 +48,6 @@ def _draw_panel(ax, *, title: str) -> None:
         [(x, y_1), (x, y_2)],
         ax=ax,
         labels=("curve A", "curve B"),
-        title=title,
         xlabel="x",
         ylabel="value",
     )
@@ -67,13 +67,15 @@ def main() -> None:
 
     fig, axes = plt.subplots(2, 2, figsize=(8.8, 5.8))
     axes = axes.ravel()
-    _draw_panel(axes[0], title="Matplotlib Current Defaults")
+    _draw_panel(axes[0])
     with plot_style("journal_single"):
-        _draw_panel(axes[1], title="plot_style('journal_single')")
+        _draw_panel(axes[1])
     with plot_style("journal_double"):
-        _draw_panel(axes[2], title="plot_style('journal_double')")
+        _draw_panel(axes[2])
     with plot_style("presentation"):
-        _draw_panel(axes[3], title="plot_style('presentation')")
+        _draw_panel(axes[3])
+
+    add_panel_labels(axes, labels=("a", "b", "c", "d"), x=-0.10, y=1.03)
 
     _save(fig, out / "07_plot_style_comparison.png")
 

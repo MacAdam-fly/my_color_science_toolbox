@@ -78,7 +78,7 @@ All plotting functions accept `ax=None` and return `(fig, ax)`.
 - 2D segments, labels, polygons, arrows and data-driven axis limits.
 - 3D points, lines, surfaces, wireframes and data-driven 3D axis limits.
 - Scalar/RGB images and grouped bars.
-- Local or global plotting style helpers for publication-oriented figures.
+- Local or global plotting style helpers for publication-oriented figures. The built-in presets cover compact journal figures, wide multi-panel layouts, poster/presentation output, notebooks, and dark-background plots.
 - CIE 1931 xy, CIE 1960 uv, and CIE 1976 u'v' chromaticity diagrams.
 - Optional wavelength labels along the CIE spectral locus, using diagram-specific default labels inspired by `colour.plotting`.
 - Approximate sRGB preview swatches.

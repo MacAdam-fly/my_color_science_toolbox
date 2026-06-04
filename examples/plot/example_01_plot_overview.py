@@ -16,6 +16,7 @@ if str(_PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(_PROJECT_ROOT))
 
 from color.plot import (
+    add_panel_labels,
     plot_chromaticity_points,
     plot_cie1931_diagram,
     plot_cie1960_ucs_diagram,
@@ -40,23 +41,22 @@ def _save(fig, path: Path) -> None:
 
 def _save_chromaticity_comparison(plotter, *, output_dir: Path, stem: str, title: str) -> None:
     fig, axes = plt.subplots(1, 3, figsize=(14.2, 4.6))
-    plotter(ax=axes[0], title="No background", show_background=False)
+    plotter(ax=axes[0], show_background=False)
     plotter(
         ax=axes[1],
-        title="Approximate sRGB background",
         show_background=True,
         background_samples=160,
         background_alpha=1.0,
     )
     plotter(
         ax=axes[2],
-        title="Background + wavelength labels",
         show_background=True,
         background_samples=160,
         background_alpha=1.0,
         show_wavelength_labels=True,
     )
     fig.suptitle(title)
+    add_panel_labels(axes, labels=("a", "b", "c"), x=-0.10, y=1.03)
     _save(fig, output_dir / f"{stem}_comparison.png")
 
 

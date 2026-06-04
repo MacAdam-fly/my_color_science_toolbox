@@ -319,12 +319,21 @@ set_3d_axis_limits_from_data(ax, xyz_points, padding=0.08, equal_aspect=True)
 ## 绘图风格
 
 `colour_cycle(...)`、`plot_style(...)` 和 `set_plot_style(...)` 用来提供更稳定的
-学术汇报/论文图风格。当前正式预设是：
+学术汇报/论文图风格。当前正式预设覆盖了论文、报告、笔记本、汇报和深色背景等
+常见场景，具体是：
 
 - `journal`：默认预设，等同于 `journal_single`。
 - `journal_single`：约 3.5 inch / 89 mm 单栏宽，适合常规论文插图。
+- `journal_compact`：更紧凑的单栏布局，适合空间更受限的图。
 - `journal_double`：约 7.16 inch / 180-183 mm 双栏宽，适合宽图和多面板图。
+- `journal_large`：更宽松的论文图尺寸，适合元素较多但仍需要学术风格的图。
+- `journal_grid`：更偏网格化排版的论文风格，适合带子图或面板组合的图。
+- `journal_bw` / `monochrome`：黑白风格，适合需要线型区分或灰度输出的图。
+- `report` / `thesis`：适合长报告、论文草稿或学位论文的通用风格。
+- `notebook`：更适合实验记录、数据探索和交互式笔记本。
 - `presentation`：更大字号和线宽，适合汇报/PPT。
+- `poster`：更醒目的展示风格，适合海报或演示大图。
+- `dark`：深色背景风格，适合深色主题展示或截图。
 
 这些风格是 journal-friendly 预设，不是 Nature、IEEE 或其他期刊的官方模板。
 参数参考了常见出版方对最终图宽、字号、分辨率和可读性的要求：单栏约
@@ -349,6 +358,11 @@ with plot_style("journal"):
 `plot_style(...)` 只在 `with` 代码块中临时应用 matplotlib `rcParams`，
 不会永久污染调用方环境。`set_plot_style(...)` 会显式修改全局 `rcParams`，
 适合 notebook 或整份报告都需要统一风格的场景。
+
+多面板论文图通常建议把子图说明放到 panel label 和 caption 里，而不是把
+`ax.set_title(...)` 当成子图标题使用。这个模块提供了 `panel_label(...)`、
+`add_panel_labels(...)` 和 `move_titles_to_panel_labels(...)`，可以直接给现有
+axes 加 `a / b / c ...` 标签，或者把旧脚本的标题式标签迁移过来。
 
 配色默认使用色盲友好的分类色序。论文图不要只依赖颜色区分数据系列；
 建议同时使用线型、marker、直接标签或图例说明。
