@@ -1,4 +1,4 @@
-"""Load Munsell renotation data and inspect its colour-system columns."""
+﻿"""Load Munsell renotation data and inspect its colour-system columns."""
 
 from __future__ import annotations
 
@@ -49,7 +49,7 @@ def main() -> None:
     hist_counts, hist_edges = np.histogram(y_luminance, bins=50)
     hist_centres = 0.5 * (hist_edges[:-1] + hist_edges[1:])
 
-    with plot_style("journal_double"):
+    with plot_style("presentation", font_scale=0.65, line_scale=0.85):
         fig, axes = plt.subplots(1, 3, figsize=(16, 5))
 
         xy = np.column_stack([chrom_x, chrom_y])

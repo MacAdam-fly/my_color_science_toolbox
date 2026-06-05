@@ -1,4 +1,4 @@
-"""Load and plot standard observer datasets."""
+﻿"""Load and plot standard observer datasets."""
 
 from __future__ import annotations
 
@@ -57,7 +57,7 @@ def main() -> None:
     print(f"MacLeod-Boynton: {len(mb['wavelength'])} points")
     print(f"Suction electrode cones: {len(cones['wavelength'])} points")
 
-    with plot_style("journal_double"):
+    with plot_style("presentation", font_scale=0.65, line_scale=0.85):
         fig, axes = plt.subplots(2, 3, figsize=(16, 10))
 
         plot_lines(

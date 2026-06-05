@@ -1,4 +1,4 @@
-"""Plot photopic and scotopic LEFs and compare luminous efficacy."""
+﻿"""Plot photopic and scotopic LEFs and compare luminous efficacy."""
 
 from __future__ import annotations
 
@@ -59,7 +59,7 @@ def main() -> None:
             f"scotopic={scotopic_eta:.3f} lm/W"
         )
 
-    with plot_style("journal_double"):
+    with plot_style("presentation", font_scale=0.65, line_scale=0.85):
         fig, axes = plt.subplots(1, 2, figsize=(13, 4.8))
 
         ax = axes[0]

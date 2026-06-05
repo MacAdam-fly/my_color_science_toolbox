@@ -1,4 +1,4 @@
-"""Small gallery for plot components not covered by the overview example."""
+﻿"""Small gallery for plot components not covered by the overview example."""
 
 from __future__ import annotations
 
@@ -81,7 +81,7 @@ def _bar_component(out: Path) -> None:
     )
     colours = colour_cycle("journal")
     journal_colours = tuple(next(colours) for _ in range(2))
-    with plot_style("journal"):
+    with plot_style("presentation", font_scale=0.75, line_scale=0.9):
         fig, _ax = plot_bars(
             values,
             labels=("sample A", "sample B", "sample C", "sample D"),
@@ -90,7 +90,7 @@ def _bar_component(out: Path) -> None:
             title="Grouped Bar Primitive with Journal Style",
             ylabel="relative value",
         )
-    _save(fig, out / "05_bars_journal_style.png")
+    _save(fig, out / "05_bars_presentation_style.png")
 
 
 def _axis_limits_and_annotations(out: Path) -> None:

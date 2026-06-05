@@ -1,4 +1,4 @@
-"""Compare default plotting style with color.plot journal style presets."""
+﻿"""Compare default plotting style with presentation scaling variants."""
 
 from __future__ import annotations
 
@@ -68,9 +68,9 @@ def main() -> None:
     fig, axes = plt.subplots(2, 2, figsize=(8.8, 5.8))
     axes = axes.ravel()
     _draw_panel(axes[0])
-    with plot_style("journal_single"):
+    with plot_style("presentation", font_scale=0.75, line_scale=0.9):
         _draw_panel(axes[1])
-    with plot_style("journal_double"):
+    with plot_style("presentation", font_scale=0.65, line_scale=0.85):
         _draw_panel(axes[2])
     with plot_style("presentation"):
         _draw_panel(axes[3])

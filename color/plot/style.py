@@ -1,17 +1,8 @@
 """Opinionated Matplotlib style helpers for scientific figures.
 
-This module is designed as a drop-in replacement for the earlier
-``Plot style helpers`` module.  The public API intentionally keeps the old
-names alive:
-
-    - ``PLOT_STYLE_PRESETS``
-    - ``colour_cycle``
-    - ``plot_style``
-    - ``set_plot_style``
-
-The visual system has been redesigned around larger, more balanced default
-fonts, CJK/Chinese font fallbacks, real monochrome styles, and journal-oriented
-rcParams.
+The visual system is intentionally small: public styles express broad output
+targets, while minor size and line variations are handled through
+``font_scale``, ``line_scale`` and local ``rc`` overrides.
 
 Journal-oriented presets intentionally suppress axes titles.  Publication
 figures should use panel labels plus captions instead of in-axes titles; users
@@ -49,17 +40,6 @@ _ACADEMIC_COLOURS = (
     "#882255",  # wine
 )
 
-_MUTED_COLOURS = (
-    "#4C78A8",
-    "#F58518",
-    "#54A24B",
-    "#B279A2",
-    "#E45756",
-    "#72B7B2",
-    "#9D755D",
-    "#79706E",
-)
-
 _PRESENTATION_COLOURS = (
     "#006BA4",
     "#FF800E",
@@ -78,35 +58,10 @@ _MONOCHROME_COLOURS = (
     "#B2B2B2",
 )
 
-_DARK_COLOURS = (
-    "#66C2FF",
-    "#FFB000",
-    "#00C48C",
-    "#FF6B8A",
-    "#C9A0FF",
-    "#6EE7F9",
-    "#F7C59F",
-    "#B8B8B8",
-)
-
-# Backwards-compatible old name plus newer descriptive names.
 _COLOUR_CYCLES: dict[str, tuple[str, ...]] = {
     "journal": _ACADEMIC_COLOURS,
-    "journal_single": _ACADEMIC_COLOURS,
-    "journal_double": _ACADEMIC_COLOURS,
-    "paper": _ACADEMIC_COLOURS,
-    "academic": _ACADEMIC_COLOURS,
-    "muted": _MUTED_COLOURS,
     "presentation": _PRESENTATION_COLOURS,
-    "slide": _PRESENTATION_COLOURS,
-    "slides": _PRESENTATION_COLOURS,
-    "talk": _PRESENTATION_COLOURS,
     "monochrome": _MONOCHROME_COLOURS,
-    "mono": _MONOCHROME_COLOURS,
-    "bw": _MONOCHROME_COLOURS,
-    "gray": _MONOCHROME_COLOURS,
-    "grey": _MONOCHROME_COLOURS,
-    "dark": _DARK_COLOURS,
 }
 
 _REFERENCE_COLOURS = {
@@ -217,19 +172,6 @@ _JOURNAL_SINGLE_RAW = {
     "ytick.minor.width": 0.55,
 }
 
-_JOURNAL_COMPACT_RAW = {
-    **_JOURNAL_SINGLE_RAW,
-    "figure.figsize": (3.35, 2.25),
-    "font.size": 8.0,
-    "axes.labelsize": 8.3,
-    "xtick.labelsize": 7.4,
-    "ytick.labelsize": 7.4,
-    "legend.fontsize": 7.0,
-    "legend.title_fontsize": 7.0,
-    "lines.linewidth": 1.15,
-    "lines.markersize": 3.7,
-}
-
 _JOURNAL_DOUBLE_RAW = {
     **_JOURNAL_SINGLE_RAW,
     "figure.figsize": (7.16, 3.85),  # about 182 mm wide, double-column friendly.
@@ -241,69 +183,6 @@ _JOURNAL_DOUBLE_RAW = {
     "legend.title_fontsize": 8.2,
     "lines.linewidth": 1.45,
     "lines.markersize": 4.5,
-}
-
-_JOURNAL_LARGE_RAW = {
-    **_JOURNAL_SINGLE_RAW,
-    "figure.figsize": (4.6, 3.25),
-    "font.size": 9.6,
-    "axes.labelsize": 10.2,
-    "xtick.labelsize": 8.8,
-    "ytick.labelsize": 8.8,
-    "legend.fontsize": 8.6,
-    "legend.title_fontsize": 8.6,
-    "lines.linewidth": 1.55,
-    "lines.markersize": 4.8,
-}
-
-_JOURNAL_GRID_RAW = {
-    **_JOURNAL_SINGLE_RAW,
-    "axes.grid": True,
-    "grid.alpha": 0.36,
-    "grid.linewidth": 0.50,
-}
-
-_REPORT_RAW = {
-    **_BASE_STYLE,
-    "figure.figsize": (5.9, 3.8),
-    "figure.dpi": 125,
-    "savefig.dpi": 320,
-    "font.size": 10.0,
-    "axes.titlesize": 11.0,
-    "axes.labelsize": 11.0,
-    "xtick.labelsize": 9.2,
-    "ytick.labelsize": 9.2,
-    "legend.fontsize": 9.0,
-    "legend.title_fontsize": 9.0,
-    "axes.linewidth": 0.9,
-    "lines.linewidth": 1.65,
-    "lines.markersize": 5.0,
-    "xtick.major.size": 3.5,
-    "ytick.major.size": 3.5,
-    "xtick.major.width": 0.8,
-    "ytick.major.width": 0.8,
-    "xtick.minor.size": 2.0,
-    "ytick.minor.size": 2.0,
-    "xtick.minor.width": 0.6,
-    "ytick.minor.width": 0.6,
-}
-
-_NOTEBOOK_RAW = {
-    **_REPORT_RAW,
-    "figure.figsize": (6.8, 4.2),
-    "figure.dpi": 110,
-    "savefig.dpi": 220,
-    "font.size": 11.0,
-    "axes.titlesize": 12.5,
-    "axes.labelsize": 12.0,
-    "xtick.labelsize": 10.0,
-    "ytick.labelsize": 10.0,
-    "legend.fontsize": 9.8,
-    "legend.title_fontsize": 9.8,
-    "axes.grid": True,
-    "grid.alpha": 0.30,
-    "lines.linewidth": 1.85,
-    "lines.markersize": 5.5,
 }
 
 _PRESENTATION_RAW = {
@@ -331,38 +210,6 @@ _PRESENTATION_RAW = {
     "ytick.minor.width": 0.8,
 }
 
-_POSTER_RAW = {
-    **_PRESENTATION_RAW,
-    "figure.figsize": (9.2, 5.6),
-    "font.size": 17.0,
-    "axes.titlesize": 20.0,
-    "axes.labelsize": 18.5,
-    "xtick.labelsize": 15.0,
-    "ytick.labelsize": 15.0,
-    "legend.fontsize": 14.5,
-    "legend.title_fontsize": 14.5,
-    "axes.linewidth": 1.35,
-    "lines.linewidth": 3.0,
-    "lines.markersize": 8.0,
-}
-
-_DARK_RAW = {
-    **_NOTEBOOK_RAW,
-    "figure.facecolor": "#111111",
-    "axes.facecolor": "#111111",
-    "savefig.facecolor": "#111111",
-    "savefig.edgecolor": "#111111",
-    "axes.edgecolor": "#E6E6E6",
-    "axes.labelcolor": "#F0F0F0",
-    "axes.titlecolor": "#F0F0F0",
-    "text.color": "#F0F0F0",
-    "xtick.color": "#E6E6E6",
-    "ytick.color": "#E6E6E6",
-    "grid.color": "#FFFFFF",
-    "grid.alpha": 0.16,
-    "axes.grid": True,
-}
-
 
 def _line_cycler(palette_name: str, *, monochrome: bool = False):
     """Return a Matplotlib property cycler for a palette."""
@@ -379,50 +226,12 @@ def _with_cycle(params: Mapping[str, Any], palette_name: str, *, monochrome: boo
     return styled
 
 
-# Public preset mapping.  It deliberately contains valid rcParams only, so old
-# code such as ``plt.rcParams.update(PLOT_STYLE_PRESETS["journal"])`` continues
-# to work.  The previous ``axes.prop_cycle: None`` placeholder has been removed.
+# Preset mapping.  It deliberately contains valid rcParams only.
 PLOT_STYLE_PRESETS: dict[str, dict[str, Any]] = {
     "journal": _with_cycle(_JOURNAL_SINGLE_RAW, "journal"),
-    "journal_single": _with_cycle(_JOURNAL_SINGLE_RAW, "journal"),
-    "journal_compact": _with_cycle(_JOURNAL_COMPACT_RAW, "journal"),
     "journal_double": _with_cycle(_JOURNAL_DOUBLE_RAW, "journal"),
-    "journal_large": _with_cycle(_JOURNAL_LARGE_RAW, "journal"),
-    "journal_grid": _with_cycle(_JOURNAL_GRID_RAW, "journal"),
-    "journal_bw": _with_cycle(_JOURNAL_SINGLE_RAW, "monochrome", monochrome=True),
-    "monochrome": _with_cycle(_JOURNAL_SINGLE_RAW, "monochrome", monochrome=True),
-    "report": _with_cycle(_REPORT_RAW, "academic"),
-    "thesis": _with_cycle(_REPORT_RAW, "academic"),
-    "notebook": _with_cycle(_NOTEBOOK_RAW, "muted"),
     "presentation": _with_cycle(_PRESENTATION_RAW, "presentation"),
-    "poster": _with_cycle(_POSTER_RAW, "presentation"),
-    "dark": _with_cycle(_DARK_RAW, "dark"),
-}
-
-_STYLE_ALIASES = {
-    # Original/backwards-compatible alias.
-    "paper": "journal",
-    # Common shorthand.
-    "single": "journal_single",
-    "double": "journal_double",
-    "compact": "journal_compact",
-    "large": "journal_large",
-    "grid": "journal_grid",
-    "clean_grid": "journal_grid",
-    "paper_bw": "journal_bw",
-    "bw": "journal_bw",
-    "mono": "monochrome",
-    "black_white": "journal_bw",
-    "black-and-white": "journal_bw",
-    "gray": "journal_bw",
-    "grey": "journal_bw",
-    "grayscale": "journal_bw",
-    "greyscale": "journal_bw",
-    "slide": "presentation",
-    "slides": "presentation",
-    "talk": "presentation",
-    "screen": "presentation",
-    "lab": "notebook",
+    "monochrome": _with_cycle(_JOURNAL_SINGLE_RAW, "monochrome", monochrome=True),
 }
 
 _FONT_SIZE_KEYS = (
@@ -459,11 +268,10 @@ _LINE_SIZE_KEYS = (
 
 def _resolve_style_name(style: str) -> str:
     """Return the canonical style name for *style*."""
-    name = _STYLE_ALIASES.get(style, style)
-    if name not in PLOT_STYLE_PRESETS:
+    if style not in PLOT_STYLE_PRESETS:
         supported = ", ".join(available_styles(include_aliases=True))
         raise ValueError(f"unknown plot style {style!r}; supported: {supported}")
-    return name
+    return style
 
 
 def available_styles(*, include_aliases: bool = False) -> tuple[str, ...]:
@@ -472,13 +280,9 @@ def available_styles(*, include_aliases: bool = False) -> tuple[str, ...]:
     Parameters
     ----------
     include_aliases:
-        If True, include shorthand and backwards-compatible aliases such as
-        ``paper``, ``bw``, ``talk`` and ``slides``.
+        Kept for call-site compatibility. No extra aliases are exposed.
     """
-    names = list(PLOT_STYLE_PRESETS)
-    if include_aliases:
-        names.extend(_STYLE_ALIASES)
-    return tuple(dict.fromkeys(names))
+    return tuple(PLOT_STYLE_PRESETS)
 
 
 def available_palettes() -> tuple[str, ...]:
@@ -507,7 +311,7 @@ def colour_cycle(name: str = "journal"):
 
 
 def color_cycle(name: str = "journal"):
-    """American-English alias for :func:`colour_cycle`."""
+    """Return an infinite cycle of plotting colours."""
     return colour_cycle(name)
 
 
@@ -560,7 +364,7 @@ def _style_rcparams(
             raise ValueError(f"unknown colour palette {palette_name!r}; supported: {supported}")
         params["axes.prop_cycle"] = _line_cycler(
             palette_name,
-            monochrome=palette_name in {"monochrome", "mono", "bw", "gray", "grey"},
+            monochrome=palette_name == "monochrome",
         )
 
     params = _scale_rcparams(params, font_scale=font_scale, line_scale=line_scale)
@@ -658,11 +462,9 @@ def cm_to_inches(cm: float) -> float:
 
 
 __all__ = [
-    "PLOT_STYLE_PRESETS",
     "available_palettes",
     "available_styles",
     "cm_to_inches",
-    "color_cycle",
     "colour_cycle",
     "despine",
     "mm_to_inches",

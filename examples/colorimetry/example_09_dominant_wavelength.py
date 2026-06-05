@@ -1,4 +1,4 @@
-"""Compute and plot dominant wavelength, complementary wavelength and purity."""
+﻿"""Compute and plot dominant wavelength, complementary wavelength and purity."""
 
 from __future__ import annotations
 
@@ -170,7 +170,7 @@ def main() -> None:
             print("  reconstructed from Pc:", np.round(reconstructed, 6))
             print("  reconstruction error:", f"{error:.3e}")
 
-    with plot_style("journal_double"):
+    with plot_style("presentation", font_scale=0.65, line_scale=0.85):
         fig, axes = plt.subplots(2, 3, figsize=(14, 9.5))
         for ax, name in zip(axes.ravel(), samples):
             _plot_sample(

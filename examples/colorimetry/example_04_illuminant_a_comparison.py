@@ -1,4 +1,4 @@
-"""Compare static and formula-generated CIE Illuminant A with xyY."""
+﻿"""Compare static and formula-generated CIE Illuminant A with xyY."""
 
 from __future__ import annotations
 
@@ -51,7 +51,7 @@ def main() -> None:
     print("Formula - dataset xy:", np.round(xy_delta, 10))
     print("Formula - dataset Y:", np.round(y_delta, 10))
 
-    with plot_style("journal_double"):
+    with plot_style("presentation", font_scale=0.65, line_scale=0.85):
         fig, axes = plt.subplots(1, 3, figsize=(15.2, 4.8))
 
         ax = axes[0]

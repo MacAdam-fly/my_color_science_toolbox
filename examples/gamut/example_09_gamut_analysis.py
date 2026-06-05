@@ -1,4 +1,4 @@
-"""High-level gamut analysis summaries."""
+﻿"""High-level gamut analysis summaries."""
 
 from __future__ import annotations
 
@@ -76,7 +76,7 @@ def _print_table(results) -> None:
 def _plot_coverage_bars(results) -> None:
     """Plot selected coverage metrics."""
     names = [item.name for item in results]
-    with plot_style("journal_double"):
+    with plot_style("presentation", font_scale=0.65, line_scale=0.85):
         fig, axes = plt.subplots(1, 2, figsize=(7.16, 3.2), constrained_layout=True)
 
         plot_bars(

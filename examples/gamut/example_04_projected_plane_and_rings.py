@@ -1,4 +1,4 @@
-"""Projected plane-gamut and gamut-ring comparisons."""
+﻿"""Projected plane-gamut and gamut-ring comparisons."""
 
 from __future__ import annotations
 
@@ -43,7 +43,7 @@ def _slice_xy(boundary, L: float) -> np.ndarray:
 
 def _plot_projection_comparison(boundaries) -> None:
     slice_L = 50.0
-    with plot_style("journal_double"):
+    with plot_style("presentation", font_scale=0.65, line_scale=0.85):
         fig = plt.figure(figsize=(11.8, 7.4), constrained_layout=False)
         grid = fig.add_gridspec(
             2,
@@ -172,7 +172,7 @@ def _plot_projection_comparison(boundaries) -> None:
 
 def _plot_gamut_rings(boundaries) -> None:
     L_steps = [25.0, 50.0, 75.0, 100.0]
-    with plot_style("journal_double"):
+    with plot_style("presentation", font_scale=0.65, line_scale=0.85):
         fig, axes = plt.subplots(1, 3, figsize=(10.2, 3.8), constrained_layout=True)
         for index, (ax, (name, boundary)) in enumerate(zip(axes, boundaries.items())):
             rings, steps = boundary.gamut_rings(L_steps)

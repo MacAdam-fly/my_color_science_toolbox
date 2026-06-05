@@ -33,11 +33,11 @@ The overview example writes images to `examples/plot/output/`:
 | `04_rgb_gamut_comparison_composed.png` | RGB gamut triangles composed from a CIE 1931 diagram and polygon primitives |
 | `05_swatch_grid_from_xyz.png` | `preview_sRGB_from_XYZ` and `plot_swatch_grid` |
 | `05_image_component.png` | `plot_image` with an RGB image array |
-| `05_bars_journal_style.png` | `plot_bars`, `colour_cycle` and `plot_style("journal")` |
+| `05_bars_presentation_style.png` | `plot_bars`, `colour_cycle` and `plot_style("presentation")` |
 | `05_axis_limits_and_annotations.png` | `set_axis_limits_from_data`, arrows, segments and labels |
 | `06_srgb_to_rec2020_image_comparison.png` | sRGB image and Rec.2020 encoded RGB preview drawn with `plot_image` |
 | `06_rec2020_encoded_preview.jpg` | Clipped encoded Rec.2020 values saved as an 8-bit preview |
-| `07_plot_style_comparison.png` | Current matplotlib defaults compared with `journal_single`, `journal_double` and `presentation` style presets |
+| `07_plot_style_comparison.png` | Current matplotlib defaults compared with presentation scaling variants |
 | `08_3d_surface_wireframe.png` | 3D surface and wireframe primitives for colour-solid style boundaries |
 | `08_3d_points_lines.png` | 3D point and line primitives |
 

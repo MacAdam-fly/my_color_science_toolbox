@@ -459,7 +459,14 @@ with plot_style("journal"):
     fig, ax = plot_lines((x, y), xlabel="x", ylabel="value")
 ```
 
-注意：推荐在脚本和 examples 中使用，不污染全局 Matplotlib 设置。
+当前支持的 style 只有 `journal`、`journal_double`、`presentation`、`monochrome`。细微字号/线宽变化使用 `font_scale` 和 `line_scale`：
+
+```python
+with plot_style("journal", font_scale=1.08, line_scale=1.1):
+    fig, ax = plot_lines((x, y), xlabel="x", ylabel="value")
+```
+
+注意：推荐在脚本和 examples 中使用，不污染全局 Matplotlib 设置。旧别名如 `paper`、`journal_single`、`journal_compact`、`bw`、`slide` 不再支持。
 
 ### `set_plot_style(...)`
 
@@ -489,6 +496,12 @@ from color.plot import style_rcparams
 params = style_rcparams("journal")
 ```
 
+局部覆盖：
+
+```python
+params = style_rcparams("journal", rc={"axes.grid": True})
+```
+
 注意：不要直接修改 `color.plot.style.PLOT_STYLE_PRESETS`。
 
 ### `palette(...)`
@@ -503,6 +516,8 @@ from color.plot import palette
 
 colors = palette("journal")
 ```
+
+当前支持的 palette 只有 `journal`、`presentation`、`monochrome`。
 
 ### `colour_cycle(...)`
 
@@ -529,6 +544,13 @@ from color.plot import available_palettes, available_styles
 
 print(available_styles())
 print(available_palettes())
+```
+
+当前结果应为：
+
+```text
+available_styles() -> ("journal", "journal_double", "presentation", "monochrome")
+available_palettes() -> ("journal", "presentation", "monochrome")
 ```
 
 ### `despine(...)`

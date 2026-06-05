@@ -1,4 +1,4 @@
-"""Plot ideal spectral generator examples using basic plot components."""
+﻿"""Plot ideal spectral generator examples using basic plot components."""
 
 from __future__ import annotations
 
@@ -42,7 +42,7 @@ def main() -> None:
         ),
     }
 
-    with plot_style("journal_double"):
+    with plot_style("presentation", font_scale=0.65, line_scale=0.85):
         fig, ax = plt.subplots(figsize=(7.16, 4.2))
         plot_lines(
             [(data["wavelength"], data["spd"]) for data in curves.values()],

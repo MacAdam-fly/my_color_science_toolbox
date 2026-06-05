@@ -1,4 +1,4 @@
-"""Custom RGB colour-space registration and gamut analysis."""
+﻿"""Custom RGB colour-space registration and gamut analysis."""
 
 from __future__ import annotations
 
@@ -120,7 +120,7 @@ def _plot_custom_gamut(boundary, analysis) -> None:
         iterations=7,
     )
 
-    with plot_style("journal_double"):
+    with plot_style("presentation", font_scale=0.65, line_scale=0.85):
         fig, axes = plt.subplots(1, 2, figsize=(7.16, 3.2), constrained_layout=True)
 
         plot_cie1931_diagram(

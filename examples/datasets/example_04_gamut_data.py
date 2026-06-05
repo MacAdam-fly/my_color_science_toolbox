@@ -1,4 +1,4 @@
-"""Load Pointer real-surface colour gamut data."""
+﻿"""Load Pointer real-surface colour gamut data."""
 
 from __future__ import annotations
 
@@ -32,7 +32,7 @@ def main() -> None:
     p50 = get_gamut_data("pointer", L=50)
     print(f"\n  L*=50: {len(p50['L'])} hue angles, C* range [{p50['C'].min():.1f}, {p50['C'].max():.1f}]")
 
-    with plot_style("journal_double"):
+    with plot_style("presentation", font_scale=0.65, line_scale=0.85):
         fig = plt.figure(figsize=(16, 5))
         ax_ab = fig.add_subplot(1, 3, 1)
         ax_polar = fig.add_subplot(1, 3, 2, projection="polar")

@@ -16,7 +16,7 @@ from color.datasets.standard_observers import (
     get_cie2006_lms_10degree_fundamentals,
 )
 from color.individual_cone_fundamentals import generate_individual_cone_fundamentals
-from color.plot import finish_figure, plot_lines, plot_style
+from color.plot import add_panel_labels, finish_figure, plot_lines, plot_style
 
 
 OUTPUT_DIR = Path(__file__).resolve().parent / "output"
@@ -95,6 +95,7 @@ def _plot_standard_dataset_comparison(standard_2, standard_10):
 
     axes[0, 0].legend(loc="upper right", fontsize=6, ncols=2)
     finish_figure(fig)
+    add_panel_labels(axes, labels=("a", "b", "c", "d"), x=0.02, y=0.95, fontsize=12)
     fig.savefig(OUTPUT_DIR / "01_standard_model_vs_dataset.png")
 
 
@@ -118,6 +119,7 @@ def _plot_individual_parameter_sets(parameter_sets):
         )
     axes[-1].set_xlabel("Wavelength (nm)")
     finish_figure(fig)
+    add_panel_labels(axes, labels=("a", "b", "c"), x=0.02, y=0.95, fontsize=12)
     fig.savefig(OUTPUT_DIR / "01_individual_parameter_sets.png")
 
 
@@ -147,9 +149,11 @@ def main() -> None:
     print("2-degree wavelength range:", standard_2["wavelength"][[0, -1]])
     print("2-degree LMS peaks:", [standard_2[k].max() for k in ("l", "m", "s")])
 
-    with plot_style("journal_compact"):
+    with plot_style("presentation", font_scale=0.55, line_scale=0.9):
         _plot_standard_dataset_comparison(standard_2, standard_10)
         _plot_individual_parameter_sets(parameter_sets)
+
+
 
 
 if __name__ == "__main__":

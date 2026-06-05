@@ -1,4 +1,4 @@
-"""Recover effective spectra from XYZ and LMS responses."""
+﻿"""Recover effective spectra from XYZ and LMS responses."""
 
 from __future__ import annotations
 
@@ -67,7 +67,7 @@ def main() -> None:
     print("Recovered spectrum closed LMS:", np.round(closed_LMS, 6))
     print("LMS recovery error:", np.linalg.norm(closed_LMS - target_LMS))
 
-    with plot_style("journal_double"):
+    with plot_style("presentation", font_scale=0.65, line_scale=0.85):
         fig, ax = plt.subplots(figsize=(7.16, 4.2))
         plot_lines(
             [

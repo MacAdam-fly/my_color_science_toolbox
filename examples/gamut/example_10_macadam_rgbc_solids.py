@@ -1,4 +1,4 @@
-"""Compare D65 MacAdam limits and an RGBC display as 3D solids."""
+﻿"""Compare D65 MacAdam limits and an RGBC display as 3D solids."""
 
 from __future__ import annotations
 
@@ -144,7 +144,7 @@ def main() -> None:
         "sRGB": "#D55E00",
     }
 
-    with plot_style("journal_double"):
+    with plot_style("presentation", font_scale=0.65, line_scale=0.85):
         fig = plt.figure(figsize=(10.5, 4.8))
         ax_xyy = fig.add_subplot(1, 2, 1, projection="3d")
         ax_lab = fig.add_subplot(1, 2, 2, projection="3d")

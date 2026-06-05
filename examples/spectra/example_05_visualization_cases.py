@@ -1,4 +1,4 @@
-"""Visualize common spectral object workflows."""
+﻿"""Visualize common spectral object workflows."""
 
 from __future__ import annotations
 
@@ -34,7 +34,7 @@ def _plot_single_distribution() -> None:
         fill_value=0.0,
     )
 
-    with plot_style("journal"):
+    with plot_style("presentation", font_scale=0.75, line_scale=0.9):
         fig, ax = plt.subplots(figsize=(8.2, 4.8))
         plot_points(
             list(zip(signal.wavelengths, signal.values)),
@@ -64,7 +64,7 @@ def _plot_cmfs() -> None:
     cmfs = from_dataset("standard_observers.cmfs", "CIE 1931 XYZ 5 nm")
     cmfs_1nm = cmfs.reshape(SpectralShape(380, 780, 1), method="auto")
 
-    with plot_style("journal_double"):
+    with plot_style("presentation", font_scale=0.65, line_scale=0.85):
         fig, axes = plt.subplots(1, 2, figsize=(13.0, 4.8), sharey=True)
         for ax, data, title in (
             (axes[0], cmfs, "Source 5 nm CMFs"),
@@ -100,7 +100,7 @@ def _plot_pmc_color_card() -> None:
         method="pchip",
     )
 
-    with plot_style("journal"):
+    with plot_style("presentation", font_scale=0.75, line_scale=0.9):
         fig, ax = plt.subplots(figsize=(8.4, 4.8))
         plot_lines(
             [

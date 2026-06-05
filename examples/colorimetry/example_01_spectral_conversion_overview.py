@@ -57,7 +57,7 @@ def main() -> None:
 
     print_xyY_table("Spectral conversion overview", labels, xyz_rows)
 
-    with plot_style("journal_double"):
+    with plot_style("presentation"):
         fig, axes = plt.subplots(1, 3, figsize=(14.5, 4.8))
 
         ax = axes[0]

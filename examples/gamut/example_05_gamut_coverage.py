@@ -1,4 +1,4 @@
-"""xy area and Lab volume coverage comparisons."""
+﻿"""xy area and Lab volume coverage comparisons."""
 
 from __future__ import annotations
 
@@ -78,7 +78,7 @@ def main() -> None:
     _print_matrix("xy area coverage: test covers reference", names, xy_matrix)
     _print_matrix("Lab volume coverage: test covers reference", names, lab_matrix)
 
-    with plot_style("journal_double"):
+    with plot_style("presentation", font_scale=0.65, line_scale=0.85):
         fig, axes = plt.subplots(1, 2, figsize=(7.16, 3.2), constrained_layout=True)
         image = _plot_matrix(axes[0], "xy area coverage", names, xy_matrix)
         _plot_matrix(axes[1], "Lab volume coverage", names, lab_matrix)

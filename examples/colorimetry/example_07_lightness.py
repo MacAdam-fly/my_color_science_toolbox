@@ -1,4 +1,4 @@
-"""Convert relative luminance Y to CIE 1976 L* and back."""
+﻿"""Convert relative luminance Y to CIE 1976 L* and back."""
 
 from __future__ import annotations
 
@@ -32,7 +32,7 @@ def main() -> None:
     dense_Y = np.linspace(0.0, 100.0, 256)
     dense_Lstar = Y_to_Lstar(dense_Y)
 
-    with plot_style("journal"):
+    with plot_style("presentation", font_scale=0.75, line_scale=0.9):
         fig, ax = plt.subplots(figsize=(7.2, 4.8))
         plot_lines(
             (dense_Y, dense_Lstar),

@@ -65,7 +65,16 @@ datasets / generators -> spectra / colorimetry / spaces / difference / quality -
 - 最终图中文字通常需要保持可读。
 - 彩色或灰度位图通常至少 300 dpi。
 
-`journal` 等同于 `journal_single`。宽图或多面板图使用 `journal_double`。
+当前公共 style 只保留四个明确目标：
+
+```text
+journal
+journal_double
+presentation
+monochrome
+```
+
+`journal` 是默认单栏论文图。宽图或多面板图使用 `journal_double`。汇报图使用 `presentation`，黑白打印或灰度论文图使用 `monochrome`。
 
 推荐写法：
 
@@ -77,6 +86,13 @@ with plot_style("journal"):
 ```
 
 `plot_style(...)` 是上下文管理器，不会永久污染 Matplotlib 全局设置。`set_plot_style(...)` 会修改全局 `rcParams`，只建议在 notebook 或整份报告统一风格时使用。
+
+旧别名和细分预设不再保留，例如 `paper`、`journal_single`、`journal_compact`、`bw`、`slide`。细微的字号或线宽变化应通过 `font_scale`、`line_scale` 和 `rc` 表达：
+
+```python
+with plot_style("journal", font_scale=1.08, line_scale=1.1):
+    fig, ax = plot_lines((x, y), xlabel="x", ylabel="value")
+```
 
 ## Title 与 Panel Label
 
@@ -98,6 +114,14 @@ axes.titlepad = 0
 Panel label 使用 `panel_label(...)` 和 `add_panel_labels(...)`，详见 [`API_GUIDE.md`](API_GUIDE.md)。
 
 ## Palette 与颜色使用
+
+当前公共 palette 只保留：
+
+```text
+journal
+presentation
+monochrome
+```
 
 默认 `journal` palette 使用色盲友好的分类色序。论文图不应只依赖颜色区分数据系列，推荐同时使用：
 
@@ -140,21 +164,6 @@ plot_cie1931_diagram(show_wavelength_labels=True)
 ```
 
 默认标注波长采用手选列表，而不是固定波长间隔。原因是光谱轨迹在红端、绿端和蓝紫端的几何密度差异很大，固定间隔容易造成局部拥挤或稀疏。
-
-## 与 color.io 的边界
-
-`color.plot` 不保存文件。保存 figure 使用：
-
-```python
-from color.io import save_figure
-
-save_figure("figure.png", fig=fig)
-```
-
-这样可以保持边界清楚：
-
-- `color.plot`：绘图组件。
-- `color.io`：文件输入输出。
 
 ## 子模块高级入口
 

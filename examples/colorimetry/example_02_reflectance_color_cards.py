@@ -67,7 +67,7 @@ def main() -> None:
     print("LMS rows match patch order:")
     print(np.round(lms, 5))
 
-    with plot_style("journal_double"):
+    with plot_style("presentation"):
         fig, axes = plt.subplots(2, 2, figsize=(12.5, 9.0))
 
         ax = axes[0, 0]

@@ -1,4 +1,4 @@
-"""Pointer real-surface gamut comparison."""
+﻿"""Pointer real-surface gamut comparison."""
 
 from __future__ import annotations
 
@@ -29,7 +29,7 @@ from _example_helpers import COLOURS, compute_example_boundaries, save_figure
 
 
 def _plot_pointer_comparison(pointer, displays) -> None:
-    with plot_style("journal_double"):
+    with plot_style("presentation", font_scale=0.65, line_scale=0.85):
         fig, axes = plt.subplots(1, 2, figsize=(8.6, 4.1), constrained_layout=True)
 
         ax = axes[0]

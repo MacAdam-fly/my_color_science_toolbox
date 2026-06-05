@@ -1,4 +1,4 @@
-"""Convert CIE 2006 LMS values to XYZ and back."""
+﻿"""Convert CIE 2006 LMS values to XYZ and back."""
 
 from __future__ import annotations
 
@@ -35,7 +35,7 @@ def main() -> None:
     print("Round-trip OK:", np.allclose(LMS_roundtrip, LMS))
 
     labels = ["sample 1", "sample 2"]
-    with plot_style("journal_double"):
+    with plot_style("presentation", font_scale=0.65, line_scale=0.85):
         fig, axes = plt.subplots(1, 2, figsize=(11.5, 4.8))
 
         ax = axes[0]

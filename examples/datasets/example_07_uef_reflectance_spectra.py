@@ -1,4 +1,4 @@
-"""Load UEF reflectance spectra, resample them and compute CIE 1931 xy."""
+﻿"""Load UEF reflectance spectra, resample them and compute CIE 1931 xy."""
 
 from __future__ import annotations
 
@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from _datasets_plot_helpers import save_figure
+from _datasets_plot_helpers import example_output_dir
 from color.colorimetry import XYZ_to_xy, reflectance_to_XYZ
 from color.datasets import get_reflectance_spectrum, list_reflectance_spectra
 from color.plot import (
@@ -70,18 +71,40 @@ def _load_resampled_samples(
     return spectra, sample_names
 
 
-def _panel_title(ax, title: str) -> None:
-    """Place a compact subplot title above the axes instead of inside it."""
-    ax.text(
-        0.0,
-        1.08,
+def _panel_title(ax, title: str, *, inside: bool = False) -> None:
+    """Set a compact subplot title.
+
+    Chromaticity diagrams have fixed equal-aspect axes in a dense 3x4 grid.
+    Putting titles outside the axes often causes overlaps after layout
+    adjustment, so those panels use an in-axes label placed in the mostly empty
+    upper-left xy region.
+    """
+    if inside:
+        ax.text(
+            0.03,
+            1.00,
+            title,
+            transform=ax.transAxes,
+            ha="left",
+            va="top",
+            fontsize=8.0,
+            fontweight="bold",
+            bbox={
+                "boxstyle": "round,pad=0.18",
+                "facecolor": "white",
+                "edgecolor": "none",
+                "alpha": 0.78,
+            },
+            zorder=10,
+        )
+        return
+
+    ax.set_title(
         title,
-        transform=ax.transAxes,
-        ha="left",
-        va="bottom",
-        fontsize=9.0,
+        loc="left",
+        fontsize=8.0,
         fontweight="bold",
-        clip_on=False,
+        pad=3.0,
     )
 
 
@@ -112,7 +135,7 @@ def main() -> None:
         for sample_name, xy_row in zip(sample_names, xy):
             print(f"  {sample_name:24s} xy = ({xy_row[0]:.4f}, {xy_row[1]:.4f})")
 
-    with plot_style("journal_double"):
+    with plot_style("journal_double", font_scale=0.85, line_scale=0.85):
         fig, axes = plt.subplots(3, 4, figsize=(13.0, 8.4), sharex=True, sharey=True)
         for ax, (dataset_name, title) in zip(axes.ravel(), _DATASET_GRID):
             spectra = spectra_by_dataset[dataset_name]
@@ -127,13 +150,13 @@ def main() -> None:
                 ylabel="Reflectance",
                 legend=False,
             )
-            _panel_title(ax, title)
+            _panel_title(ax, title, inside=True)
             ax.set_ylim(-0.03, 1.15)
-        fig.suptitle("UEF Reflectance Spectra Resampled to 400-700 nm / 5 nm", y=0.985)
+        # fig.suptitle("UEF Reflectance Spectra Resampled to 400-700 nm / 5 nm", y=0.985)
         save_figure(fig, "07_uef_reflectance_resampled_spectra.png", suptitle_top=0.90)
 
-    with plot_style("journal_double"):
-        fig, axes = plt.subplots(3, 4, figsize=(13.0, 9.0))
+    with plot_style("journal_double", font_scale=0.85, line_scale=0.85):
+        fig, axes = plt.subplots(3, 4, figsize=(14.5, 10.8))
         for ax, (dataset_name, title) in zip(axes.ravel(), _DATASET_GRID):
             plot_cie1931_diagram(
                 ax=ax,
@@ -148,11 +171,13 @@ def main() -> None:
                 color="tab:red",
                 sizes=18,
             )
-            _panel_title(ax, title)
-            ax.set_xlim(0.0, 0.75)
-            ax.set_ylim(0.0, 0.75)
-        fig.suptitle("CIE 1931 xy Coordinates from UEF Reflectance Samples under D65", y=0.985)
-        save_figure(fig, "07_uef_reflectance_cie1931_xy.png", suptitle_top=0.90)
+            _panel_title(ax, title, inside=True)
+            ax.set_xlim(0.0, 0.8)
+            ax.set_ylim(0.0, 0.9)
+        output_path = example_output_dir() / "07_uef_reflectance_cie1931_xy.png"
+        fig.savefig(output_path, dpi=150)
+        plt.close(fig)
+        print(f"Plot saved to {output_path}")
 
 
 if __name__ == "__main__":

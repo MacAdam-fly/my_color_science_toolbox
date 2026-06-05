@@ -1,4 +1,4 @@
-"""Compare an sRGB image with its Rec.2020 encoded RGB representation."""
+﻿"""Compare an sRGB image with its Rec.2020 encoded RGB representation."""
 
 from __future__ import annotations
 
@@ -43,7 +43,7 @@ def _write_preview_jpg(path: Path, image: np.ndarray) -> None:
 
 def _save_comparison(original_srgb: np.ndarray, rec2020_rgb: np.ndarray, out: Path) -> None:
     """Save a side-by-side image comparison."""
-    with plot_style("journal"):
+    with plot_style("presentation", font_scale=0.75, line_scale=0.9):
         fig, axes = plt.subplots(1, 2, figsize=(9.5, 4.0))
         plot_image(
             original_srgb,

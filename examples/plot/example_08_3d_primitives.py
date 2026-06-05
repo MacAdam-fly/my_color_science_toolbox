@@ -1,4 +1,4 @@
-"""3D plotting primitive examples for colour-solid style figures."""
+﻿"""3D plotting primitive examples for colour-solid style figures."""
 
 from __future__ import annotations
 
@@ -50,7 +50,7 @@ def _surface_wireframe(out: Path) -> None:
     A = C * np.cos(H)
     B = C * np.sin(H)
 
-    with plot_style("journal_double"):
+    with plot_style("presentation", font_scale=0.65, line_scale=0.85):
         fig, ax = plot_3d_surface(
             A,
             B,
@@ -93,7 +93,7 @@ def _points_lines(out: Path) -> None:
         ]
     )
 
-    with plot_style("journal"):
+    with plot_style("presentation", font_scale=0.75, line_scale=0.9):
         fig, ax = plot_3d_lines(
             helix,
             labels=("trajectory",),

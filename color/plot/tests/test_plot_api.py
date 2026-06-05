@@ -10,6 +10,8 @@ import numpy as np
 import pytest
 
 from color.plot import (
+    available_palettes,
+    available_styles,
     chromaticity_background_image,
     colour_cycle,
     get_figure_axes,
@@ -400,11 +402,6 @@ def test_plot_style_helpers() -> None:
         assert fig is ax.figure
         _close(fig)
 
-    with plot_style("journal_single"):
-        fig, ax = plot_lines(([0.0, 1.0], [0.0, 1.0]))
-        assert fig is ax.figure
-        _close(fig)
-
     with plot_style("journal_double"):
         fig, ax = plot_lines(([0.0, 1.0], [0.0, 1.0]))
         assert fig is ax.figure
@@ -415,22 +412,39 @@ def test_plot_style_helpers() -> None:
         assert fig is ax.figure
         _close(fig)
 
-    with plot_style("paper"):
-        fig, ax = plot_lines(([0.0, 1.0], [0.0, 1.0]))
-        assert fig is ax.figure
-        _close(fig)
-
     assert isinstance(next(colour_cycle("monochrome")), str)
     assert isinstance(next(colour_cycle("presentation")), str)
+    assert available_styles() == (
+        "journal",
+        "journal_double",
+        "presentation",
+        "monochrome",
+    )
+    assert available_styles(include_aliases=True) == available_styles()
+    assert available_palettes() == ("journal", "presentation", "monochrome")
 
     with plt.rc_context():
         set_plot_style("journal")
+
+    scaled_params = style_rcparams("journal", font_scale=1.2, line_scale=1.3)
+    assert scaled_params["font.size"] > journal_params["font.size"]
+    assert scaled_params["lines.linewidth"] > journal_params["lines.linewidth"]
+
+    grid_params = style_rcparams("journal", rc={"axes.grid": True})
+    assert grid_params["axes.grid"] is True
 
     with pytest.raises(ValueError):
         next(colour_cycle("unknown"))
     with pytest.raises(ValueError):
         with plot_style("unknown"):
             pass
+    for old_style in ("paper", "journal_compact", "journal_single", "bw", "slide"):
+        with pytest.raises(ValueError):
+            with plot_style(old_style):
+                pass
+    for old_palette in ("paper", "academic", "muted", "bw", "slide"):
+        with pytest.raises(ValueError):
+            next(colour_cycle(old_palette))
 
 
 def test_load_cie1931_locus_xy_shape() -> None:

@@ -1,4 +1,4 @@
-"""Load colour-card datasets and plot reflectance spectra."""
+﻿"""Load colour-card datasets and plot reflectance spectra."""
 
 from __future__ import annotations
 
@@ -38,7 +38,7 @@ def main() -> None:
         f"{wl_bcra[0]:.0f}-{wl_bcra[-1]:.0f} nm"
     )
 
-    with plot_style("journal_double"):
+    with plot_style("presentation", font_scale=0.65, line_scale=0.85):
         fig, axes = plt.subplots(1, 2, figsize=(14, 6))
 
         neutral_names = {"White", "Neutral 8", "Neutral 6.5", "Neutral 5", "Neutral 3.5", "Black"}

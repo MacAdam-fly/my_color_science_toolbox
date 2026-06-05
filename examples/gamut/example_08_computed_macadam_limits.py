@@ -1,4 +1,4 @@
-"""Computed MacAdam limits from L*-derived brightness factors."""
+﻿"""Computed MacAdam limits from L*-derived brightness factors."""
 
 from __future__ import annotations
 
@@ -66,7 +66,7 @@ def _plot_computed_vs_published() -> None:
     print(f"Published D65 vertices: {published.vertices_XYZ.shape[0]}")
     print(f"Computed D65 vertices: {computed.vertices_XYZ.shape[0]}")
 
-    with plot_style("journal_double"):
+    with plot_style("presentation", font_scale=0.65, line_scale=0.85):
         fig, axes = plt.subplots(1, 3, figsize=(10.2, 3.5), constrained_layout=True)
 
         ax = axes[0]

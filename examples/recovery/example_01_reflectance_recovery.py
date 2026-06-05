@@ -1,4 +1,4 @@
-"""Recover bounded smooth reflectance spectra from XYZ and xyY values."""
+﻿"""Recover bounded smooth reflectance spectra from XYZ and xyY values."""
 
 from __future__ import annotations
 
@@ -60,7 +60,7 @@ def main() -> None:
     print("XYZ recovery error:", np.linalg.norm(closed_XYZ - target_XYZ))
     print("xyY recovery error:", np.linalg.norm(closed_xyY_XYZ - target_XYZ))
 
-    with plot_style("journal_double"):
+    with plot_style("presentation", font_scale=0.65, line_scale=0.85):
         fig, ax = plt.subplots(figsize=(7.16, 4.2))
         plot_lines(
             [

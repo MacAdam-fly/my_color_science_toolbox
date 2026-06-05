@@ -1,4 +1,4 @@
-"""Convert image-like XYZ arrays to xyY and xy chromaticity."""
+﻿"""Convert image-like XYZ arrays to xyY and xy chromaticity."""
 
 from __future__ import annotations
 
@@ -50,7 +50,7 @@ def main() -> None:
     print("First pixel xyY:", np.round(xyY[0, 0], 6))
     print("First pixel xy:", np.round(xy[0, 0], 6))
 
-    with plot_style("journal_double"):
+    with plot_style("presentation", font_scale=0.65, line_scale=0.85):
         fig, axes = plt.subplots(1, 3, figsize=(13.5, 4.4))
 
         ax = axes[0]

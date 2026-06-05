@@ -1,4 +1,4 @@
-"""Load illuminant datasets and compare generated illuminant SPDs."""
+﻿"""Load illuminant datasets and compare generated illuminant SPDs."""
 
 from __future__ import annotations
 
@@ -47,7 +47,7 @@ def main() -> None:
             f"{daylight['wavelength'][0]:.0f}-{daylight['wavelength'][-1]:.0f} nm"
         )
 
-    with plot_style("journal_double"):
+    with plot_style("presentation", font_scale=0.65, line_scale=0.85):
         fig, axes = plt.subplots(1, 3, figsize=(16, 5))
 
         plot_lines(

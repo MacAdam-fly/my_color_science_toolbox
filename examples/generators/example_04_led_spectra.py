@@ -1,4 +1,4 @@
-"""Plot LED spectral generator examples using basic plot components."""
+﻿"""Plot LED spectral generator examples using basic plot components."""
 
 from __future__ import annotations
 
@@ -41,7 +41,7 @@ def main() -> None:
         peak_power_ratios=(0.731, 1.0, 1.66),
     )
 
-    with plot_style("journal_double"):
+    with plot_style("presentation", font_scale=0.65, line_scale=0.85):
         fig, axes = plt.subplots(2, 1, figsize=(7.16, 5.2), sharex=True)
         plot_lines(
             [

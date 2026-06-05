@@ -1,4 +1,4 @@
-"""Compute and plot correlated colour temperature relationships."""
+﻿"""Compute and plot correlated colour temperature relationships."""
 
 from __future__ import annotations
 
@@ -64,7 +64,7 @@ def _plot_loci_comparison(
         )
     )
 
-    with plot_style("journal"):
+    with plot_style("presentation", font_scale=0.75, line_scale=0.9):
         fig, ax = plt.subplots(figsize=(7.2, 5.6))
         plot_lines(
             [
@@ -124,7 +124,7 @@ def _plot_duv_offsets(output_dir: Path) -> None:
         method="ohno2013",
     )
 
-    with plot_style("journal"):
+    with plot_style("presentation", font_scale=0.75, line_scale=0.9):
         fig, ax = plt.subplots(figsize=(7.2, 5.6))
         plot_lines(
             (planckian_uv[:, 0], planckian_uv[:, 1]),
@@ -187,7 +187,7 @@ def _plot_method_comparison(
     ohno = np.array([xy_to_CCT_Duv(xy, method="ohno2013") for xy in sample_xy])
 
     x = np.arange(len(sample_names))
-    with plot_style("journal_double"):
+    with plot_style("presentation", font_scale=0.65, line_scale=0.85):
         fig, (ax0, ax1, ax2) = plt.subplots(3, 1, figsize=(8.8, 9.2), sharex=True)
         plot_lines(
             [
@@ -237,7 +237,7 @@ def _plot_mired_curve(output_dir: Path) -> None:
     named = np.array([2856.0, 5003.0, 6504.38938305, 10000.0])
     named_mired = CCT_to_mired(named)
 
-    with plot_style("journal"):
+    with plot_style("presentation", font_scale=0.75, line_scale=0.9):
         fig, ax = plt.subplots(figsize=(7.6, 4.8))
         plot_lines(
             (cct, mired),

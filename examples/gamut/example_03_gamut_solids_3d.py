@@ -1,4 +1,4 @@
-"""3D Lab colour-solid comparisons for display-primary gamuts."""
+﻿"""3D Lab colour-solid comparisons for display-primary gamuts."""
 
 from __future__ import annotations
 
@@ -48,7 +48,7 @@ def main() -> None:
         print(f"{name:8s} Lab volume: {boundary.lab_volume():10.2f}")
         print(f"{name:8s} projected a*b* area: {boundary.projected_ab_area():10.2f}")
 
-    with plot_style("journal_double"):
+    with plot_style("presentation", font_scale=0.65, line_scale=0.85):
         fig = plt.figure(figsize=(11.6, 4.4))
         for index, (name, boundary) in enumerate(boundaries.items(), start=1):
             ax = fig.add_subplot(1, 3, index, projection="3d")

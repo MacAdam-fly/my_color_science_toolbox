@@ -1,4 +1,4 @@
-"""Compare formula-generated CIE Illuminant A against the static dataset."""
+﻿"""Compare formula-generated CIE Illuminant A against the static dataset."""
 
 from __future__ import annotations
 
@@ -36,7 +36,7 @@ def main() -> None:
     print(f"Max absolute difference: {np.max(np.abs(difference)):.8g}")
     print(f"Max relative difference: {np.max(relative):.8g}")
 
-    with plot_style("journal_double"):
+    with plot_style("presentation", font_scale=0.65, line_scale=0.85):
         fig, ax = plt.subplots(figsize=(7.16, 4.0))
         plot_lines(
             [(wavelength, dataset_spd), (wavelength, generated_spd)],

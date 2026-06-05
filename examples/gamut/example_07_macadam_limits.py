@@ -1,4 +1,4 @@
-"""Cached MacAdam optimal colour stimuli limits."""
+﻿"""Cached MacAdam optimal colour stimuli limits."""
 
 from __future__ import annotations
 
@@ -32,7 +32,7 @@ from _example_helpers import COLOURS, compute_example_boundaries, save_figure
 
 
 def _plot_macadam_comparison(macadam_d65, pointer, displays) -> None:
-    with plot_style("journal_double"):
+    with plot_style("presentation", font_scale=0.65, line_scale=0.85):
         fig, axes = plt.subplots(2, 2, figsize=(8.6, 7.0), constrained_layout=True)
 
         ax = axes[0, 0]
