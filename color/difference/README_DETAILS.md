@@ -2,6 +2,9 @@
 
 `color.difference` 是色差计算层。它的职责很窄：计算两个已经位于同一颜色空间中的三维坐标差异。
 
+逐项顶层 API 的最小用法见 [`API_GUIDE.md`](API_GUIDE.md)。本文件保留模块边界、
+公式分类、输入约定和推荐工作流说明。
+
 它不负责：
 
 - RGB、XYZ、Lab、CAM、Oklab、Jzazbz 之间的转换。

@@ -10,6 +10,7 @@ The current module provides:
 - `CIECAM02`
 - `CIECAM16`
 
+For the Chinese API guide, see [API_GUIDE.md](API_GUIDE.md).
 For the full Chinese design notes and formula walkthrough, see
 [README_DETAILS.md](README_DETAILS.md).
 

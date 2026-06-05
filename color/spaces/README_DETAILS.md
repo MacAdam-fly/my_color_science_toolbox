@@ -2,6 +2,9 @@
 
 `color.spaces` 是项目中的颜色空间层，负责把已经得到的颜色数值在不同表示之间转换。
 
+逐项顶层 API 的最小用法见 [`API_GUIDE.md`](API_GUIDE.md)。本文件保留空间架构、
+XYZ 中枢、D65-referred 语义、色适应边界、注册表和路径可视化等设计说明。
+
 它和其他模块的边界是：
 
 ```text
@@ -35,6 +38,10 @@ color.spaces.appearance   基于色貌模型输出构造的均匀空间
 ```
 
 推荐使用者仍然从顶层 `color.spaces` 导入公开 API；子包主要用于保持内部实现和注册边界清楚。
+
+顶层 API 已做收口：普通用户入口保留在 `color.spaces`；CIE 1976 内部常数
+`EPSILON / KAPPA` 和 CAM-UCS 系数表留在对应子包中，例如
+`color.spaces.basic` 或 `color.spaces.appearance`。
 
 ## XYZ 标度与 D65-referred
 

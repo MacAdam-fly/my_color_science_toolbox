@@ -8,6 +8,9 @@ Recovery is not unique: many spectra can produce the same colour stimulus. The
 functions here return one feasible spectrum under explicit bounds and smoothness
 constraints.
 
+中文 API 使用指南见 [`API_GUIDE.md`](API_GUIDE.md)。中文详细说明见
+[`README_DETAILS.md`](README_DETAILS.md)。
+
 ## Quick Start
 
 ```python
@@ -38,6 +41,12 @@ closed_emission_XYZ = emission_to_XYZ(spectrum)
 - `recover_reflectance_from_xyY(...)`
 - `response_recovery_matrix(...)`
 - `reflectance_recovery_matrix(...)`
+- `second_difference_matrix(...)`
+- `solve_bounded_least_squares(...)`
+- `SPECTRUM_RECOVERY_METHODS`
+- `REFLECTANCE_RECOVERY_METHODS`
+- `resolve_spectrum_recovery_method(...)`
+- `resolve_reflectance_recovery_method(...)`
 
 `XYZ` uses the project-wide `Y=100` scale. Other colour spaces should be
 converted explicitly with `color.spaces` before recovery.

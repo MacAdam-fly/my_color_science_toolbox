@@ -7,6 +7,9 @@ target + 三通道 responses -> effective spectrum
 XYZ / xyY + illuminant + CMFs -> reflectance
 ```
 
+逐项顶层 API 的最小用法见 [`API_GUIDE.md`](API_GUIDE.md)。本文件保留反问题语义、
+通用 spectrum recovery 与 reflectance recovery 的区别、算法约束和后续方法注册设计。
+
 不做 `sRGB` 入口，不接入 `generators`。自发光 SPD 不需要单独入口，使用
 `recover_spectrum_from_XYZ(...)` 即可。
 

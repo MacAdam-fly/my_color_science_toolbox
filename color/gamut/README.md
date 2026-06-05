@@ -6,6 +6,9 @@ MacAdam optimal-colour limits, and high-level gamut summaries.
 
 All public `XYZ` values use the project convention: `Y=100`.
 
+For the Chinese API guide, see [`API_GUIDE.md`](API_GUIDE.md).
+For Chinese design notes, see [`README_DETAILS.md`](README_DETAILS.md).
+
 ## Scope
 
 This module works with linear colour stimuli and geometric gamut boundaries.

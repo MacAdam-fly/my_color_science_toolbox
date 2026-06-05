@@ -20,6 +20,9 @@ utils handles mechanics, not colour-science meaning.
 Do not put spectral, colorimetric, colour-space, appearance, whitepoint, or
 physical-parameter formulae here.
 
+Chinese API usage examples are available in [`API_GUIDE.md`](API_GUIDE.md).
+Chinese design notes are available in [`README_DETAILS.md`](README_DETAILS.md).
+
 ## Modules
 
 | Module | Responsibility |

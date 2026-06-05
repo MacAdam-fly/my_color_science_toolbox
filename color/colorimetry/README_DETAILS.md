@@ -11,6 +11,8 @@
 - 相关色温 CCT、mired、Duv、CIE D 日光轨迹和普朗克轨迹计算。
 - CIE 2006 LMS 与 XYZ 的直接矩阵转换。
 
+逐项 API 的最小用法见 [`API_GUIDE.md`](API_GUIDE.md)。本文件保留更完整的算法说明、模块边界、轨迹区别和使用注意。
+
 这个模块不直接负责静态文件读取，也不直接负责光谱对象封装：
 
 ```text
@@ -435,8 +437,8 @@ xy  ≈ (0.3127, 0.3290)
 
 | 函数 | 说明 |
 | --- | --- |
-| `xy_to_CCT_McCamy1992(xy)` | 从 xy 快速估算 CCT |
-| `xy_to_CCT(xy, method="mccamy1992")` | 上述函数的分发入口 |
+| `xy_to_CCT(xy, method="mccamy1992")` | 顶层推荐入口 |
+| `color.colorimetry.temperature.xy_to_CCT_McCamy1992(xy)` | 子包直接算法入口 |
 
 McCamy 是经验近似，只做 `xy -> CCT`，不返回 `Duv`，也不提供可靠的
 `CCT -> xy` 反向。原因是它把二维 `xy` 压缩成一个中间变量 `n`，会丢失
@@ -460,8 +462,10 @@ Robertson 和 Ohno 都是在 CIE 1960 UCS `uv` 空间中相对普朗克轨迹计
 
 | 函数 | 说明 |
 | --- | --- |
-| `uv_to_CCT_Robertson1968(uv)` | uv -> `[CCT, Duv]` |
-| `CCT_to_uv_Robertson1968([CCT, Duv])` | `[CCT, Duv]` -> uv |
+| `uv_to_CCT(uv, method="robertson1968")` | 顶层推荐入口 |
+| `CCT_to_uv([CCT, Duv], method="robertson1968")` | 顶层推荐反向入口 |
+| `color.colorimetry.temperature.uv_to_CCT_Robertson1968(uv)` | 子包直接算法入口 |
+| `color.colorimetry.temperature.CCT_to_uv_Robertson1968([CCT, Duv])` | 子包直接反向入口 |
 
 Robertson 1968 是当前默认的 CCT+Duv 快速路径：
 
@@ -498,9 +502,11 @@ iso-temperature line slope
 
 | 函数 | 说明 |
 | --- | --- |
-| `planckian_table_Ohno2013(...)` | 生成 Ohno 使用的普朗克 uv 表 |
-| `uv_to_CCT_Ohno2013(uv)` | uv -> `[CCT, Duv]` |
-| `CCT_to_uv_Ohno2013([CCT, Duv])` | `[CCT, Duv]` -> uv |
+| `uv_to_CCT(uv, method="ohno2013")` | 顶层推荐入口 |
+| `CCT_to_uv([CCT, Duv], method="ohno2013")` | 顶层推荐反向入口 |
+| `color.colorimetry.temperature.planckian_table_Ohno2013(...)` | 子包表生成入口 |
+| `color.colorimetry.temperature.uv_to_CCT_Ohno2013(uv)` | 子包直接算法入口 |
+| `color.colorimetry.temperature.CCT_to_uv_Ohno2013([CCT, Duv])` | 子包直接反向入口 |
 
 Ohno 2013 使用更密的普朗克轨迹表和更精细的几何 / 抛物线修正，通常比
 Robertson 更适合严肃色温分析。实现中不依赖 `colour-science`，而是使用
@@ -656,11 +662,10 @@ print(result.locus)
 | `CCT_to_mired` / `mired_to_CCT` | K 与 mired 转换 |
 | `TemperatureAnalysis` / `analyze_temperature` | 完整 CCT+Duv 分析结果 |
 | `CCT_to_xy_CIE_D` / `CCT_to_xy` | CIE D 系列日光轨迹 |
-| `xy_to_CCT_McCamy1992` / `xy_to_CCT` | McCamy CCT 近似 |
+| `xy_to_CCT` | McCamy CCT 近似分发入口 |
 | `xy_to_uv1960` / `XYZ_to_uv1960` / `uv1960_to_xy` | CIE 1960 UCS uv 转换 |
 | `xy_to_upvp1976` / `XYZ_to_upvp1976` / `upvp1976_to_xy` | CIE 1976 UCS u'v' 转换 |
-| `uv_to_CCT_Robertson1968` / `CCT_to_uv_Robertson1968` | Robertson CCT+Duv |
-| `uv_to_CCT_Ohno2013` / `CCT_to_uv_Ohno2013` | Ohno CCT+Duv |
+| `uv_to_CCT` / `CCT_to_uv` | Robertson / Ohno CCT+Duv 分发入口 |
 | `xy_to_CCT_Duv` / `CCT_Duv_to_xy` | CCT+Duv 便捷入口 |
 
 ### 主波长与纯度

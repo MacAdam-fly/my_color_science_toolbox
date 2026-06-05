@@ -12,6 +12,9 @@ from color.spaces import RGB_to_XYZ, XYZ_to_RGB, RGB_to_RGB
 from color.spaces import XYZ_to_Lab, Lab_to_XYZ
 ```
 
+For the Chinese API guide, see [`API_GUIDE.md`](API_GUIDE.md).
+For Chinese design notes, see [`README_DETAILS.md`](README_DETAILS.md).
+
 Internally, implementation is grouped by responsibility:
 
 ```text

@@ -6,6 +6,9 @@ CAM02, CAM16, Oklab or Jzazbz values for you.
 
 Use `color.spaces` first when your data is not already in the target space.
 
+中文 API 使用指南见 [`API_GUIDE.md`](API_GUIDE.md)。中文详细说明见
+[`README_DETAILS.md`](README_DETAILS.md)。
+
 ## Quick Start
 
 ```python

@@ -3,6 +3,9 @@
 `color.adaptation` provides explicit chromatic adaptation helpers. It is a
 standalone foundation module, not part of any single colour space.
 
+中文 API 使用指南见 [`API_GUIDE.md`](API_GUIDE.md)。中文详细说明见
+[`README_DETAILS.md`](README_DETAILS.md)。
+
 The first version implements Von Kries style adaptation using four transforms:
 
 - `Von Kries`

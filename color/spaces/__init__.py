@@ -9,7 +9,6 @@ from .appearance import (
     CAM02SCD_to_XYZ,
     CAM02UCS_to_JMh_CIECAM02,
     CAM02UCS_to_XYZ,
-    COEFFICIENTS_UCS_LUO2006,
     JMh_CIECAM02_to_CAM02LCD,
     JMh_CIECAM02_to_CAM02SCD,
     JMh_CIECAM02_to_CAM02UCS,
@@ -19,11 +18,9 @@ from .appearance import (
     CAM16SCD_to_XYZ,
     CAM16UCS_to_JMh_CIECAM16,
     CAM16UCS_to_XYZ,
-    COEFFICIENTS_UCS_LI2017,
     JMh_CIECAM16_to_CAM16LCD,
     JMh_CIECAM16_to_CAM16SCD,
     JMh_CIECAM16_to_CAM16UCS,
-    Coefficients_UCS_Luo2006,
     XYZ_to_CAM02LCD,
     XYZ_to_CAM02SCD,
     XYZ_to_CAM02UCS,
@@ -33,8 +30,6 @@ from .appearance import (
 )
 from .basic import (
     DEFAULT_WHITEPOINT_XYZ,
-    EPSILON,
-    KAPPA,
     IPT_hue_angle,
     IPT_to_XYZ,
     JzCzhz_to_Jzazbz,
@@ -116,11 +111,9 @@ __all__ = [
     "plot_conversion_graph",  # plot the registered colour-space conversion graph
 ]
 
-# Reference whitepoint and CIE 1976 constants.
+# Reference whitepoint.
 __all__ += [
     "DEFAULT_WHITEPOINT_XYZ",  # default D65 reference whitepoint for Lab and Luv
-    "EPSILON",  # CIE 1976 epsilon threshold
-    "KAPPA",  # CIE 1976 kappa slope
 ]
 
 # RGB colour spaces.
@@ -183,8 +176,6 @@ __all__ += [
 
 # CAM02 uniform colour spaces.
 __all__ += [
-    "Coefficients_UCS_Luo2006",  # Luo et al. 2006 CAM02 uniform-space coefficients
-    "COEFFICIENTS_UCS_LUO2006",  # registered CAM02-UCS / LCD / SCD coefficient presets
     "JMh_CIECAM02_to_CAM02UCS",  # convert CIECAM02 JMh correlates to CAM02-UCS
     "CAM02UCS_to_JMh_CIECAM02",  # convert CAM02-UCS coordinates to CIECAM02 JMh
     "JMh_CIECAM02_to_CAM02LCD",  # convert CIECAM02 JMh correlates to CAM02-LCD
@@ -201,7 +192,6 @@ __all__ += [
 
 # CAM16 uniform colour spaces.
 __all__ += [
-    "COEFFICIENTS_UCS_LI2017",  # registered CAM16-UCS / LCD / SCD coefficient presets
     "JMh_CIECAM16_to_CAM16UCS",  # convert CIECAM16 JMh correlates to CAM16-UCS
     "CAM16UCS_to_JMh_CIECAM16",  # convert CAM16-UCS coordinates to CIECAM16 JMh
     "JMh_CIECAM16_to_CAM16LCD",  # convert CIECAM16 JMh correlates to CAM16-LCD

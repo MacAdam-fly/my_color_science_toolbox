@@ -20,7 +20,8 @@ color.spectra      spectral object wrappers
 color.colorimetry  colorimetric computations
 ```
 
-For the Chinese detailed guide, see [`README_DETAILS.md`](README_DETAILS.md).
+For the Chinese API guide, see [`API_GUIDE.md`](API_GUIDE.md).
+For Chinese design notes, see [`README_DETAILS.md`](README_DETAILS.md).
 
 ## Recommended Spectral Workflow
 
@@ -179,8 +180,6 @@ information, region labels, and both purity values together.
 CCT_to_mired(CCT)
 mired_to_CCT(mired)
 CCT_to_xy_CIE_D(CCT)
-xy_to_CCT_McCamy1992(xy)
-
 uv_to_CCT(uv, method="robertson1968")
 CCT_to_uv([CCT, Duv], method="robertson1968")
 xy_to_CCT_Duv(xy, method="robertson1968")
@@ -191,11 +190,15 @@ analyze_temperature(xy, method="robertson1968")
 There are two distinct loci:
 
 - `CCT_to_xy_CIE_D(...)` uses the CIE D-series daylight locus.
-- `uv_to_CCT_*`, `CCT_to_uv_*`, `xy_to_CCT_Duv(...)` and
+- `uv_to_CCT(...)`, `CCT_to_uv(...)`, `xy_to_CCT_Duv(...)` and
   `CCT_Duv_to_xy(...)` work relative to the Planckian locus in CIE 1960 UCS.
 
 `Duv=0` means the point lies on the Planckian locus, not on the CIE D daylight
 locus.
+
+Direct algorithm implementations such as Robertson 1968, Ohno 2013 and
+McCamy 1992 live in `color.colorimetry.temperature`; the `color.colorimetry`
+top level exposes the named dispatchers.
 
 ### Photometry And Lightness
 

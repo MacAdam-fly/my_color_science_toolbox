@@ -1,60 +1,109 @@
-# constants
+# color.constants
 
-Purpose
+`color.constants` is the authoritative home for important standard constants
+shared across the project: whitepoint XYZ values, RGB display standard
+matrices, LMS/XYZ observer matrices, and chromatic adaptation transforms.
 
-- Authoritative home for important standard constants used by the project.
-- High-level modules such as `color.spaces`, `color.colorimetry`,
-  `color.appearance`, and `color.adaptation` should import shared standard
-  constants from here.
+Chinese API usage examples are available in [`API_GUIDE.md`](API_GUIDE.md).
+Chinese design notes are available in [`README_DETAILS.md`](README_DETAILS.md).
 
-Naming
+## Scope
 
-- Use descriptive, lowercase names (snake_case) for constants.
-- Group related constants in files like display_standards.py, standard_observer_matrices.py, illuminants_XYZ.py, adaptation_matrices.py.
+`constants` stores standard data. It does not execute conversions.
 
-Entry points
+Use upper-level modules for behavior:
 
-- `color.constants` is the main public entry point for common standard
-  constants.
-- Submodules such as `display_standards.py`, `adaptation_matrices.py`, and
-  `standard_observer_matrices.py` group related constants by subject.
+- `color.spaces` for colour-space conversion.
+- `color.adaptation` for chromatic adaptation.
+- `color.colorimetry` for spectral integration and chromaticity.
+- `color.appearance` for colour appearance models.
+- `color.gamut` for gamut computation.
 
-Semantic ownership
+## Public API
 
-- Whitepoint and reference illuminant tristimulus constants such as `A_XYZ`,
-  `C_XYZ`, and `D65_XYZ`
-  are defined in `illuminants_XYZ.py` because
-  they are shared across colorimetry, spaces, appearance, and adaptation.
-- RGB colour-space matrices and definitions are defined in
-  `display_standards.py`.
-- Standard-observer LMS/XYZ matrices are defined in
-  `standard_observer_matrices.py`.
-- Chromatic adaptation transform matrices are defined in `adaptation_matrices.py`:
-  - `CAT_VON_KRIES`
-  - `CAT_BRADFORD`
-  - `CAT_CAT02`
-  - `CAT_CAT16`
-  - `CHROMATIC_ADAPTATION_TRANSFORMS`
+Whitepoint / illuminant XYZ constants:
 
-RGB data policy
+- `A_XYZ`
+- `C_XYZ`
+- `D50_XYZ`
+- `D55_XYZ`
+- `D65_XYZ`
+- `E_XYZ`
 
-- `display_standards.py` keeps common compatibility matrix constants such as
-  `SRGB_TO_XYZ` and `XYZ_TO_SRGB`.
-- `RGB_COLOURSPACE_DEFINITIONS` is the canonical RGB standards table. Each
-  definition contains:
-  - `name`
-  - `aliases`
-  - `primaries`
-  - `white_xy`
-  - `white_name`
-  - `transfer`
-  - `matrix_RGB_to_XYZ`
-  - `matrix_XYZ_to_RGB`
-  - `reference`
-- `RGB_GAMUT_METADATA` is kept only as a backwards-compatible alias to the new
-  definition table; it no longer has the old coarse `gamma` field.
-- v1 RGB definitions cover SDR transfer identifiers such as `srgb`, `bt709`,
-  `bt2020`, `gamma_2p6`, `adobe_rgb_1998`, and `linear`.
-- PQ and HLG are intentionally not part of this v1 RGB definitions layer. They need
-  HDR luminance and system-transfer semantics, so they should be added later in
-  a dedicated HDR transfer design.
+RGB display standard matrices:
+
+- `SRGB_TO_XYZ`, `XYZ_TO_SRGB`
+- `REC709_TO_XYZ`, `XYZ_TO_REC709`
+- `REC2020_TO_XYZ`, `XYZ_TO_REC2020`
+- `ADOBE_RGB_TO_XYZ`, `XYZ_TO_ADOBE_RGB`
+- `DISPLAY_P3_TO_XYZ`, `XYZ_TO_DISPLAY_P3`
+- `DCIP3_TO_XYZ`, `XYZ_TO_DCIP3`
+- `NTSC_1953_TO_XYZ`, `XYZ_TO_NTSC_1953`
+
+RGB standard definition tables:
+
+- `RGB_COLOURSPACE_DEFINITIONS`
+- `RGB_GAMUT_METADATA`
+- `COMMON_GAMUTS`
+
+CIE 2006 LMS/XYZ observer matrices:
+
+- `LMS_2_DEGREE_TO_XYZ_2_DEGREE`
+- `XYZ_2_DEGREE_TO_LMS_2_DEGREE`
+- `LMS_10_DEGREE_TO_XYZ_10_DEGREE`
+- `XYZ_10_DEGREE_TO_LMS_10_DEGREE`
+
+Chromatic adaptation transform matrices:
+
+- `CAT_VON_KRIES`
+- `CAT_BRADFORD`
+- `CAT_CAT02`
+- `CAT_CAT16`
+- `CHROMATIC_ADAPTATION_TRANSFORMS`
+
+## Quick Start
+
+```python
+from color.constants import D50_XYZ, D65_XYZ, SRGB_TO_XYZ
+
+print(D65_XYZ)
+
+linear_rgb = [1.0, 1.0, 1.0]
+XYZ = SRGB_TO_XYZ @ linear_rgb
+```
+
+Use constants as inputs to higher-level modules:
+
+```python
+from color.adaptation import chromatic_adaptation_XYZ
+from color.constants import D50_XYZ, D65_XYZ
+
+XYZ_D65 = chromatic_adaptation_XYZ(
+    [50.0, 40.0, 30.0],
+    source_white_XYZ=D50_XYZ,
+    target_white_XYZ=D65_XYZ,
+)
+```
+
+## Scale Convention
+
+Whitepoints and RGB matrices use the project-wide `Y=100` XYZ scale.
+
+```python
+from color.constants import D65_XYZ, SRGB_TO_XYZ
+
+white = SRGB_TO_XYZ @ [1.0, 1.0, 1.0]
+# close to D65_XYZ
+```
+
+The RGB matrices are for **linear** RGB. Encoded RGB transfer functions are
+handled by `color.spaces.rgb`, not by these constants.
+
+## Files
+
+| File | Responsibility |
+| --- | --- |
+| `illuminants_XYZ.py` | whitepoint / illuminant XYZ constants |
+| `display_standards.py` | RGB display and imaging standard matrices |
+| `standard_observer_matrices.py` | CIE 2006 LMS/XYZ observer matrices |
+| `adaptation_matrices.py` | chromatic adaptation transform matrices |

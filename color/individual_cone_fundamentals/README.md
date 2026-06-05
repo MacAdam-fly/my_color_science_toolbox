@@ -3,6 +3,9 @@
 `color.individual_cone_fundamentals` generates individual LMS cone
 fundamentals from the Stockman & Rider 2023 formulae.
 
+Chinese API usage examples are available in [`API_GUIDE.md`](API_GUIDE.md).
+Chinese design notes are available in [`README_DETAILS.md`](README_DETAILS.md).
+
 The default result is a raw column dictionary:
 
 ```python
@@ -49,7 +52,8 @@ from color.generators import generate
 raw = generate("individual_cone_fundamentals", "stockman_rider_2023")
 ```
 
-For interpolation and numerical workflows, wrap it with `color.spectra`:
+For interpolation and numerical workflows, use the dedicated `color.spectra`
+wrapper:
 
 ```python
 from color.spectra import from_individual_cone_fundamentals
@@ -57,6 +61,9 @@ from color.spectra import from_individual_cone_fundamentals
 lms = from_individual_cone_fundamentals(observer_degree=2)
 l_channel = lms["l"]
 ```
+
+This wrapper calls the registered generator and preserves generator metadata
+and parameters on the returned `MultiSpectralDistribution`.
 
 ## Implementation Layout
 

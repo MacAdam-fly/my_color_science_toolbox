@@ -14,6 +14,9 @@ The important rule is simple: datasets and generators return raw column
 mappings, while `spectra` wraps those columns as objects that can be sampled,
 interpolated, reshaped, aligned, exported, and combined.
 
+- For the Chinese API guide, see [`API_GUIDE.md`](API_GUIDE.md).
+- For Chinese design notes, see [`README_DETAILS.md`](README_DETAILS.md).
+
 ## Quick Start
 
 ```python
@@ -34,6 +37,24 @@ y_bar = cmfs["Y"]
 l_bar = lms["l"]
 values_450_550 = y_bar.sample([450, 550])
 ```
+
+## Public API
+
+| API | Purpose |
+| --- | --- |
+| `SpectralShape` | Regular wavelength sampling domain |
+| `SpectralDistribution` | Single-channel spectral object |
+| `MultiSpectralDistribution` | Multi-channel spectral object |
+| `from_columns` | Wrap raw column arrays |
+| `from_dataset` | Load and wrap a registered static dataset |
+| `from_D65_illuminant` | Wrap CIE standard illuminant D65 |
+| `from_cie1931_xyz_cmfs` | Wrap CIE 1931 XYZ CMFs |
+| `from_cie1964_xyz_cmfs` | Wrap CIE 1964 XYZ CMFs |
+| `from_cie2012_xyz_2degree_cmfs` | Wrap CIE 2012 2-degree XYZ CMFs |
+| `from_cie2012_xyz_10degree_cmfs` | Wrap CIE 2012 10-degree XYZ CMFs |
+| `from_cie2006_lms_2degree_fundamentals` | Wrap CIE 2006 2-degree LMS fundamentals |
+| `from_cie2006_lms_10degree_fundamentals` | Wrap CIE 2006 10-degree LMS fundamentals |
+| `from_individual_cone_fundamentals` | Wrap Stockman/Rider individual LMS fundamentals |
 
 ## Object Creation
 

@@ -3,6 +3,8 @@
 这个模块用于根据 Stockman & Rider 2023 的连续公式生成标准或个体化
 LMS cone fundamentals。它不是静态数据读取模块，而是一个公式模型模块。
 
+逐项顶层 API 的最小使用案例见 [`API_GUIDE.md`](API_GUIDE.md)。本文档保留模型定位、计算链路、默认参数和模块边界说明。
+
 ## 核心定位
 
 模块默认返回原始列字典：
@@ -125,7 +127,7 @@ from color.generators import generate
 raw = generate("individual_cone_fundamentals", "stockman_rider_2023")
 ```
 
-如果后续要插值、对齐、采样或积分，推荐使用 spectra 包装入口：
+如果后续要插值、对齐、采样或积分，推荐使用 spectra 为这个模型专门设计的包装入口：
 
 ```python
 from color.spectra import from_individual_cone_fundamentals
@@ -133,3 +135,7 @@ from color.spectra import from_individual_cone_fundamentals
 lms = from_individual_cone_fundamentals(observer_degree=2)
 l = lms["l"]
 ```
+
+这个入口不是普通的手工 `from_columns(...)` 示例，而是一个专用 API。它内部调用
+`color.generators.generate_individual_cone_fundamentals(...)`，然后包装成
+`MultiSpectralDistribution`，并在 metadata 中保留 generator 类别、名称和生成参数。

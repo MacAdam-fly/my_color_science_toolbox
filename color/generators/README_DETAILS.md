@@ -7,6 +7,9 @@ color.datasets    读取已经存在的静态标准数据文件
 color.generators  根据公式/模型即时生成数据
 ```
 
+逐项顶层 API 的最小用法见 [`API_GUIDE.md`](API_GUIDE.md)。本文件保留模块边界、
+注册表设计、各类生成器语义、缓存规则和使用注意。
+
 两者返回的数据形式保持一致，都是原始列字典：
 
 ```python

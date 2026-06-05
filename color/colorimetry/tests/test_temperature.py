@@ -9,23 +9,25 @@ from color.colorimetry import (
     CCT_Duv_to_xy,
     CCT_to_mired,
     CCT_to_uv,
-    CCT_to_uv_Ohno2013,
-    CCT_to_uv_Robertson1968,
     CCT_to_xy,
     CCT_to_xy_CIE_D,
     TemperatureAnalysis,
     XYZ_to_uv1960,
     analyze_temperature,
     mired_to_CCT,
-    planckian_table_Ohno2013,
     uv1960_to_xy,
     uv_to_CCT,
-    uv_to_CCT_Ohno2013,
-    uv_to_CCT_Robertson1968,
     xy_to_CCT,
     xy_to_CCT_Duv,
-    xy_to_CCT_McCamy1992,
     xy_to_uv1960,
+)
+from color.colorimetry.temperature import (
+    CCT_to_uv_Ohno2013,
+    CCT_to_uv_Robertson1968,
+    planckian_table_Ohno2013,
+    uv_to_CCT_Ohno2013,
+    uv_to_CCT_Robertson1968,
+    xy_to_CCT_McCamy1992,
 )
 
 
