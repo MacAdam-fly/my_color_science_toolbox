@@ -468,6 +468,22 @@ with plot_style("journal", font_scale=1.08, line_scale=1.1):
 
 注意：推荐在脚本和 examples 中使用，不污染全局 Matplotlib 设置。旧别名如 `paper`、`journal_single`、`journal_compact`、`bw`、`slide` 不再支持。
 
+优先级规则：`plot_style(...)` 只设置默认 `rcParams`，显式绘图参数会覆盖它。
+
+```python
+with plot_style("monochrome"):
+    # 仍然会画成红色，因为显式 colors 优先于 style 默认色序。
+    fig, ax = plot_lines((x, y), colors=("tab:red",))
+```
+
+如果希望 `monochrome` 控制默认颜色，不要显式传入彩色 `colors/color/cmap`；或者显式使用：
+
+```python
+from color.plot import palette
+
+grey_colors = palette("monochrome")
+```
+
 ### `set_plot_style(...)`
 
 用途：修改全局 Matplotlib rcParams。

@@ -87,6 +87,19 @@ with plot_style("journal"):
 
 `plot_style(...)` 是上下文管理器，不会永久污染 Matplotlib 全局设置。`set_plot_style(...)` 会修改全局 `rcParams`，只建议在 notebook 或整份报告统一风格时使用。
 
+`plot_style(...)` 的优先级低于显式绘图参数。它设置的是 Matplotlib 默认
+`rcParams`，如果调用方在绘图函数中显式传入 `color`、`colors`、`cmap`、
+`fontsize`、`linewidth` 等参数，这些显式参数会覆盖 style：
+
+```python
+with plot_style("monochrome"):
+    # 仍然会画成红色，因为显式 color 优先于 monochrome 的默认色序。
+    fig, ax = plot_lines((x, y), colors=("tab:red",))
+```
+
+因此，如果希望 `monochrome` 真正控制线条颜色，不要在调用处显式传彩色
+`colors`；或者显式使用 `palette("monochrome")`。
+
 旧别名和细分预设不再保留，例如 `paper`、`journal_single`、`journal_compact`、`bw`、`slide`。细微的字号或线宽变化应通过 `font_scale`、`line_scale` 和 `rc` 表达：
 
 ```python
