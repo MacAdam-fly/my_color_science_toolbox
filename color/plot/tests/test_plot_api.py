@@ -10,14 +10,9 @@ import numpy as np
 import pytest
 
 from color.plot import (
-    as_2d_points,
-    as_rgb_rows,
     chromaticity_background_image,
     colour_cycle,
     get_figure_axes,
-    load_cie1931_locus_upvp1976,
-    load_cie1931_locus_uv1960,
-    load_cie1931_locus_xy,
     get_3d_figure_axes,
     plot_chromaticity_background,
     plot_chromaticity_points,
@@ -40,15 +35,22 @@ from color.plot import (
     plot_swatch_grid,
     plot_swatch_strip,
     plot_style,
-    plot_xy_chromaticity_background,
-    plot_xy_points,
     preview_sRGB_from_XYZ,
     set_3d_axis_limits_from_data,
     set_axis_limits_from_data,
     set_plot_style,
     style_2d_axis,
     style_3d_axis,
+    style_rcparams,
 )
+from color.plot.chromaticity import (
+    load_cie1931_locus_upvp1976,
+    load_cie1931_locus_uv1960,
+    load_cie1931_locus_xy,
+    plot_xy_chromaticity_background,
+    plot_xy_points,
+)
+from color.plot.common import as_2d_points, as_rgb_rows
 
 
 def _close(fig) -> None:
@@ -382,7 +384,18 @@ def test_plot_style_helpers() -> None:
     first_colour = next(colour_cycle("journal"))
     assert isinstance(first_colour, str)
 
+    journal_params = style_rcparams("journal")
+    assert journal_params["axes.titlesize"] == 0.0
+    assert journal_params["axes.titlepad"] == 0.0
+    assert journal_params["axes.titleweight"] == "normal"
+    assert journal_params is not style_rcparams("journal")
+
+    presentation_params = style_rcparams("presentation")
+    assert presentation_params["axes.titlesize"] > 0.0
+
     with plot_style():
+        assert plt.rcParams["axes.titlesize"] == 0.0
+        assert plt.rcParams["axes.titlepad"] == 0.0
         fig, ax = plot_lines(([0.0, 1.0], [0.0, 1.0]))
         assert fig is ax.figure
         _close(fig)

@@ -34,9 +34,15 @@ datasets / generators -> spectra / colorimetry / spaces / difference / quality -
 | `style_3d_axis` | 设置三维坐标轴标题、标签、视角和网格 |
 | `get_figure_axes` | 创建或复用 matplotlib axes |
 | `finish_figure` | 统一执行 figure 收尾布局 |
+| `palette` | 返回一组有限的预设颜色 |
 | `colour_cycle` | 返回论文图常用颜色循环 |
+| `available_styles` / `available_palettes` | 查看可用风格和调色板名称 |
 | `plot_style` | 临时应用绘图风格，不永久修改全局设置 |
 | `set_plot_style` | 显式修改全局 matplotlib 绘图风格 |
+| `style_rcparams` | 返回某个风格的 rcParams 副本 |
+| `panel_label` | 给单个 axes 添加 panel label |
+| `add_panel_labels` | 给一组 axes 批量添加 panel label |
+| `available_cjk_fonts` / `use_cjk_font` | 检查并启用 CJK 字体支持 |
 | `chromaticity_background_image` | 生成色品图背景的近似 sRGB 图像 |
 | `plot_cie1931_diagram` | 绘制 CIE 1931 xy 色品图 |
 | `plot_cie1960_ucs_diagram` | 绘制 CIE 1960 UCS uv 色度图 |
@@ -47,7 +53,8 @@ datasets / generators -> spectra / colorimetry / spaces / difference / quality -
 | `plot_swatch_strip` | 绘制一行 sRGB 预览色块 |
 | `plot_swatch_grid` | 绘制多行 sRGB 预览色块 |
 
-`plot_xy_points` 暂时保留为兼容包装，新的代码推荐使用 `plot_chromaticity_points`。
+`plot_xy_points` 暂时保留在 `color.plot.chromaticity` 子模块中作为兼容包装，新的代码推荐使用
+`plot_chromaticity_points`。
 
 ## 基础曲线与散点
 
@@ -360,9 +367,14 @@ with plot_style("journal"):
 适合 notebook 或整份报告都需要统一风格的场景。
 
 多面板论文图通常建议把子图说明放到 panel label 和 caption 里，而不是把
-`ax.set_title(...)` 当成子图标题使用。这个模块提供了 `panel_label(...)`、
-`add_panel_labels(...)` 和 `move_titles_to_panel_labels(...)`，可以直接给现有
-axes 加 `a / b / c ...` 标签，或者把旧脚本的标题式标签迁移过来。
+`ax.set_title(...)` 当成子图标题使用。这个模块提供了 `panel_label(...)` 和
+`add_panel_labels(...)`，用于显式给 axes 加 `a / b / c ...` 标签。
+
+`journal` 相关预设默认抑制 Matplotlib axes title：`axes.titlesize=0` 且
+`axes.titlepad=0`。这不是为了让用户先写标题再隐藏，而是为了避免论文图在
+不经意间被子图标题挤占空间。确实需要标题时，应显式传入
+`rc={"axes.titlesize": ..., "axes.titlepad": ...}` 覆盖该策略；更推荐的做法仍然是
+使用 panel label 与 caption。
 
 配色默认使用色盲友好的分类色序。论文图不要只依赖颜色区分数据系列；
 建议同时使用线型、marker、直接标签或图例说明。
@@ -400,6 +412,30 @@ fig, ax = plot_bars(
 )
 ```
 
+### `palette(...)` 与 `available_styles(...)`
+
+`palette(...)` 返回一组有限颜色，适合一次性传给多曲线、多柱状图或多边形：
+
+```python
+from color.plot import palette, plot_lines
+
+colors = palette("journal")
+fig, ax = plot_lines(
+    [(x, y1), (x, y2), (x, y3)],
+    labels=("A", "B", "C"),
+    colors=colors[:3],
+)
+```
+
+如果不确定当前有哪些风格或调色板，可以查询：
+
+```python
+from color.plot import available_palettes, available_styles
+
+print(available_styles())
+print(available_palettes())
+```
+
 ### `set_plot_style(...)`
 
 `set_plot_style(...)` 会修改全局 `rcParams`，适合 notebook 或整份报告统一风格：
@@ -412,6 +448,78 @@ set_plot_style("journal")
 
 库代码和可复用函数中更推荐 `plot_style(...)`，避免意外改变调用方环境。
 
+### `style_rcparams(...)`
+
+如果需要检查或复用某个风格对应的 matplotlib 参数，请使用 `style_rcparams(...)`
+取得一份独立副本，而不是直接修改 `PLOT_STYLE_PRESETS`：
+
+```python
+from color.plot import style_rcparams
+
+params = style_rcparams("journal")
+```
+
+`PLOT_STYLE_PRESETS` 保留在 `color.plot.style` 子模块中作为兼容入口，主要用于已有代码直接
+`plt.rcParams.update(PLOT_STYLE_PRESETS["journal"])` 的场景；新代码不建议原地修改它，也不从
+`color.plot` 顶层导入它。
+
+### `available_cjk_fonts(...)` 与 `use_cjk_font(...)`
+
+当图中包含中文、日文或其他 CJK 字符时，可以检查当前 Matplotlib 能看到哪些候选字体：
+
+```python
+from color.plot import available_cjk_fonts, use_cjk_font
+
+print(available_cjk_fonts())
+use_cjk_font()
+```
+
+`use_cjk_font(...)` 会修改当前 Matplotlib session 的字体栈，适合 notebook、脚本入口或
+example 中使用。库函数内部不应该隐式调用它。
+
+### `panel_label(...)` 与 `add_panel_labels(...)`
+
+这两个函数都用于论文图中的 panel label，但使用场景不同：
+
+- `panel_label(ax, "a")`：给单个 axes 添加一个标签。
+- `add_panel_labels(axes, labels=...)`：给一组 axes 批量添加标签。
+
+它们只负责 panel label，不负责标题。多面板图中的解释性文字应该放在 caption
+或图外说明中，而不是通过 `ax.set_title(...)` 写进每个子图。
+
+单个子图使用 `panel_label(...)`：
+
+```python
+import numpy as np
+from color.plot import panel_label, plot_lines, plot_style
+
+x = np.linspace(0.0, 1.0, 100)
+
+with plot_style("journal"):
+    fig, ax = plot_lines((x, x**2), xlabel="x", ylabel="response")
+    panel_label(ax, "a")
+```
+
+多个子图使用 `add_panel_labels(...)`：
+
+```python
+import matplotlib.pyplot as plt
+import numpy as np
+from color.plot import add_panel_labels, plot_lines, plot_style
+
+x = np.linspace(0.0, 1.0, 100)
+
+with plot_style("journal_double"):
+    fig, axes = plt.subplots(1, 2)
+    plot_lines((x, x), ax=axes[0], xlabel="x", ylabel="linear")
+    plot_lines((x, x**2), ax=axes[1], xlabel="x", ylabel="square")
+    add_panel_labels(axes, labels=("a", "b"), x=-0.10, y=1.03)
+```
+
+如果不传 `labels`，`add_panel_labels(...)` 会自动使用 `a, b, c, ...`。
+`x` 和 `y` 使用 axes 坐标，默认把标签放在子图左上方外侧；当布局较紧时可以微调
+`x / y`，或者在保存图像时使用 `bbox_inches="tight"`。
+
 ## 色品图组件
 
 `plot_cie1931_diagram(...)`、`plot_cie1960_ucs_diagram(...)` 和
@@ -422,6 +530,9 @@ set_plot_style("journal")
 - 可选绘制近似 sRGB 背景。
 - 可选标注 D65 白点。
 - 可选沿光谱轨迹标注波长。
+
+这三个函数默认不设置标题。需要说明子图时，请在多子图中使用
+`panel_label(...)` / 调用方自己的外置标题或 caption。底层色品图组件不应该默认挤占子图顶部空间。
 
 背景色只用于视觉辅助。很多色品坐标无法被 sRGB 真实显示，所以背景经过归一化和裁剪，不代表严格色彩管理结果。
 
@@ -493,17 +604,6 @@ from color.plot import chromaticity_background_image, plot_image
 image = chromaticity_background_image(samples=256)
 fig, ax = plot_image(image, show_ticks=False)
 ```
-
-## 为什么移除高层组合图
-
-光谱曲线、色温轨迹、RGB 色域三角形和转换图谱都不是 `color.plot` 的底层职责：
-
-- 光谱曲线本质上是曲线绘制。
-- 色温轨迹本质上是色度图、曲线和散点的组合。
-- RGB gamut 本质上是色度图、多边形和散点的组合。
-- conversion path / graph 是 `color.spaces` 注册表的特殊可视化。
-
-因此这些图不再从 `color.plot` 顶层导出。需要时应在对应 example 或领域模块中使用基础组件组合。
 
 ## 色块预览
 

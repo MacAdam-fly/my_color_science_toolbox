@@ -6,7 +6,7 @@ module family and writes generated figures to its own `output/` directory.
 Generated output images are ignored by Git; rerun the examples to regenerate
 them locally.
 
-## Database Examples (`database/`)
+## Dataset Examples (`datasets/`)
 
 Examples for `color.datasets` and runtime dataset registration.
 
@@ -16,11 +16,12 @@ Examples for `color.datasets` and runtime dataset registration.
 - `example_04_gamut_data.py` - Pointer gamut and MacAdam gamut datasets.
 - `example_05_color_systems.py` - Munsell renotation data and sRGB fields.
 - `example_06_custom_data.py` - Temporary CSV/XLSX/parser/generator registration without adding files to `color/data/`.
+- `example_07_uef_reflectance_spectra.py` - UEF reflectance spectra loading, spectral wrapping, resampling and CIE 1931 xy computation.
 
 Run one example:
 
 ```bash
-python examples/database/example_01_illuminants.py
+python examples/datasets/example_01_illuminants.py
 ```
 
 ## Generator Examples (`generators/`)

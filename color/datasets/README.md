@@ -19,12 +19,14 @@ from color.datasets import (
     get_color_system,
     get_gamut_data,
     get_illuminant,
+    get_reflectance_spectrum,
     get_standard_observer,
 )
 
 d65 = get_illuminant("D65")
 xyz = get_standard_observer("cmfs", "cie1931_xyz_1nm")
 macbeth = get_color_card("macbeth")
+uef_munsell = get_reflectance_spectrum("munsell_matt")
 pointer_50 = get_gamut_data("pointer", L=50)
 macadam_d65 = get_gamut_data("macadam_limits_D65")
 munsell = get_color_system("munsell_srgb")
@@ -40,11 +42,29 @@ read-only copies of cached data.
 | `illuminants` | `A`, `D65`, `fluorescents` |
 | `standard_observers.*` | CMFs, chromaticity coordinates, LMS fundamentals, luminous efficiency |
 | `color_cards` | `macbeth`, `pmc`, `bcra` |
+| `reflectance_spectra.uef` | `munsell_matt`, `agfa_it872`, `forest_birch` |
 | `gamut_data` | `pointer`, `pointer_raw`, `macadam_limits_A`, `macadam_limits_C`, `macadam_limits_D65` |
 | `color_systems` | `munsell_srgb` |
 
 Blackbody and daylight generators are available from `color.generators`, not
 from `color.datasets`.
+
+## Reflectance Spectra
+
+UEF spectral reflectance datasets are available through:
+
+```python
+from color.datasets import get_reflectance_spectrum, list_reflectance_spectra
+
+names = list_reflectance_spectra()
+munsell = get_reflectance_spectrum("munsell_matt")
+```
+
+Runtime data are read from `color/data/reflectance_spectra/uef_csv/`.
+Source workbooks with audit information are kept in
+`color/data/reflectance_spectra/uef_sources_data/`. Natural colors are not
+registered because the available AOTF data are not calibrated reflectance
+factors.
 
 ## Common Standard Observers
 

@@ -10,20 +10,24 @@ names alive:
     - ``set_plot_style``
 
 The visual system has been redesigned around larger, more balanced default
-fonts, CJK/Chinese font fallbacks, real monochrome styles, panel-label helpers,
-and safer export defaults.
+fonts, CJK/Chinese font fallbacks, real monochrome styles, and journal-oriented
+rcParams.
+
+Journal-oriented presets intentionally suppress axes titles.  Publication
+figures should use panel labels plus captions instead of in-axes titles; users
+can still override the title rcParams explicitly when needed.
 """
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Mapping
 from contextlib import contextmanager
 from itertools import cycle
-from pathlib import Path
-from os import PathLike
 from typing import Any, Iterator
 
 from cycler import cycler
+
+from .fonts import CJK_SANS_SERIF, SERIF_STACK
 
 
 # ---------------------------------------------------------------------------
@@ -120,55 +124,14 @@ _LINESTYLES_MONO = ("-", "--", "-.", ":")
 
 
 # ---------------------------------------------------------------------------
-# Font system
-# ---------------------------------------------------------------------------
-# Include common CJK fonts first.  Matplotlib will use the first installed font
-# that can resolve a glyph.  The JP/TC/HK variants are included because many
-# Linux environments ship one of them, and they still cover Chinese glyphs well
-# enough for figure labels.
-
-_CJK_SANS_SERIF = [
-    "Noto Sans CJK SC",
-    "Noto Sans CJK JP",
-    "Noto Sans CJK TC",
-    "Noto Sans CJK HK",
-    "Source Han Sans SC",
-    "Source Han Sans CN",
-    "Source Han Sans",
-    "Microsoft YaHei",
-    "SimHei",
-    "PingFang SC",
-    "Hiragino Sans GB",
-    "Heiti SC",
-    "WenQuanYi Micro Hei",
-    "WenQuanYi Zen Hei",
-    "Arial Unicode MS",
-    "Arial",
-    "Helvetica",
-    "DejaVu Sans",
-]
-
-_SERIF_STACK = [
-    "Times New Roman",
-    "Times",
-    "Noto Serif CJK SC",
-    "Noto Serif CJK JP",
-    "Source Han Serif SC",
-    "Songti SC",
-    "SimSun",
-    "DejaVu Serif",
-]
-
-
-# ---------------------------------------------------------------------------
 # rcParams presets
 # ---------------------------------------------------------------------------
 
 _BASE_STYLE: dict[str, Any] = {
     # Fonts and math text.
     "font.family": "sans-serif",
-    "font.sans-serif": _CJK_SANS_SERIF,
-    "font.serif": _SERIF_STACK,
+    "font.sans-serif": CJK_SANS_SERIF,
+    "font.serif": SERIF_STACK,
     "axes.unicode_minus": False,
     "mathtext.fontset": "dejavusans",
     "mathtext.default": "regular",
@@ -178,9 +141,9 @@ _BASE_STYLE: dict[str, Any] = {
     "axes.facecolor": "white",
     "savefig.facecolor": "white",
     "savefig.edgecolor": "white",
-    # Avoid implicit resizing of final journal figures.  Use save_figure(...,
-    # tight=True) or fig.savefig(..., bbox_inches='tight') when you want tight
-    # cropping for a specific file.
+    # Avoid implicit resizing of final journal figures.  Use
+    # color.io.save_figure(..., tight=True) or fig.savefig(...,
+    # bbox_inches='tight') when you want tight cropping for a specific file.
     "savefig.bbox": None,
     "savefig.pad_inches": 0.03,
     "figure.autolayout": False,
@@ -196,8 +159,8 @@ _BASE_STYLE: dict[str, Any] = {
     "axes.edgecolor": _REFERENCE_COLOURS["text"],
     "axes.labelcolor": _REFERENCE_COLOURS["text"],
     "axes.titlecolor": _REFERENCE_COLOURS["text"],
-    "axes.titleweight": "bold",
-    "axes.titlepad": 5.0,
+    "axes.titleweight": "normal",
+    "axes.titlepad": 4.0,
     "axes.labelpad": 4.0,
     # Ticks.
     "xtick.direction": "out",
@@ -223,13 +186,19 @@ _BASE_STYLE: dict[str, Any] = {
     "legend.title_fontsize": 8.0,
 }
 
+_JOURNAL_NO_TITLE = {
+    "axes.titlesize": 0.0,
+    "axes.titlepad": 0.0,
+    "axes.titleweight": "normal",
+}
+
 _JOURNAL_SINGLE_RAW = {
     **_BASE_STYLE,
+    **_JOURNAL_NO_TITLE,
     "figure.figsize": (3.54, 2.55),  # about 90 mm wide, single-column friendly.
     "figure.dpi": 130,
     "savefig.dpi": 360,
     "font.size": 8.6,
-    "axes.titlesize": 9.0,
     "axes.labelsize": 9.0,
     "xtick.labelsize": 8.0,
     "ytick.labelsize": 8.0,
@@ -252,7 +221,6 @@ _JOURNAL_COMPACT_RAW = {
     **_JOURNAL_SINGLE_RAW,
     "figure.figsize": (3.35, 2.25),
     "font.size": 8.0,
-    "axes.titlesize": 8.3,
     "axes.labelsize": 8.3,
     "xtick.labelsize": 7.4,
     "ytick.labelsize": 7.4,
@@ -266,7 +234,6 @@ _JOURNAL_DOUBLE_RAW = {
     **_JOURNAL_SINGLE_RAW,
     "figure.figsize": (7.16, 3.85),  # about 182 mm wide, double-column friendly.
     "font.size": 9.0,
-    "axes.titlesize": 9.6,
     "axes.labelsize": 9.6,
     "xtick.labelsize": 8.4,
     "ytick.labelsize": 8.4,
@@ -280,7 +247,6 @@ _JOURNAL_LARGE_RAW = {
     **_JOURNAL_SINGLE_RAW,
     "figure.figsize": (4.6, 3.25),
     "font.size": 9.6,
-    "axes.titlesize": 10.2,
     "axes.labelsize": 10.2,
     "xtick.labelsize": 8.8,
     "ytick.labelsize": 8.8,
@@ -459,23 +425,6 @@ _STYLE_ALIASES = {
     "lab": "notebook",
 }
 
-_STYLE_TO_PALETTE = {
-    "journal": "journal",
-    "journal_single": "journal",
-    "journal_compact": "journal",
-    "journal_double": "journal",
-    "journal_large": "journal",
-    "journal_grid": "journal",
-    "journal_bw": "monochrome",
-    "monochrome": "monochrome",
-    "report": "academic",
-    "thesis": "academic",
-    "notebook": "muted",
-    "presentation": "presentation",
-    "poster": "presentation",
-    "dark": "dark",
-}
-
 _FONT_SIZE_KEYS = (
     "font.size",
     "axes.titlesize",
@@ -621,6 +570,28 @@ def _style_rcparams(
     return params
 
 
+def style_rcparams(
+    style: str = "journal",
+    *,
+    font_scale: float = 1.0,
+    line_scale: float = 1.0,
+    palette_name: str | None = None,
+    rc: Mapping[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Return a copy of rcParams for a named plotting style.
+
+    This is the safe public way to inspect or reuse a style dictionary.  The
+    returned mapping is independent from ``PLOT_STYLE_PRESETS``.
+    """
+    return _style_rcparams(
+        style,
+        font_scale=font_scale,
+        line_scale=line_scale,
+        palette_name=palette_name,
+        rc=rc,
+    )
+
+
 @contextmanager
 def plot_style(
     style: str = "journal",
@@ -645,7 +616,7 @@ def plot_style(
     """
     import matplotlib.pyplot as plt
 
-    with plt.rc_context(_style_rcparams(style, font_scale=font_scale, line_scale=line_scale, palette_name=palette_name, rc=rc)):
+    with plt.rc_context(style_rcparams(style, font_scale=font_scale, line_scale=line_scale, palette_name=palette_name, rc=rc)):
         yield
 
 
@@ -660,45 +631,7 @@ def set_plot_style(
     """Apply a named plotting style to global Matplotlib rcParams."""
     import matplotlib.pyplot as plt
 
-    plt.rcParams.update(_style_rcparams(style, font_scale=font_scale, line_scale=line_scale, palette_name=palette_name, rc=rc))
-
-
-def available_cjk_fonts() -> tuple[str, ...]:
-    """Return CJK-capable font candidates currently visible to Matplotlib."""
-    from matplotlib import font_manager
-
-    installed = {font.name for font in font_manager.fontManager.ttflist}
-    return tuple(font for font in _CJK_SANS_SERIF if font in installed)
-
-
-def use_cjk_font(preferred: str | Sequence[str] | None = None) -> tuple[str, ...]:
-    """Prioritise installed CJK fonts in the active Matplotlib session.
-
-    Parameters
-    ----------
-    preferred:
-        A font name or a sequence of font names to try first.  Missing fonts are
-        harmless; Matplotlib will fall back to the rest of the stack.
-
-    Returns
-    -------
-    tuple[str, ...]
-        The font stack that was assigned to ``rcParams['font.sans-serif']``.
-    """
-    import matplotlib.pyplot as plt
-
-    if preferred is None:
-        requested: list[str] = []
-    elif isinstance(preferred, str):
-        requested = [preferred]
-    else:
-        requested = list(preferred)
-
-    stack = tuple(dict.fromkeys([*requested, *_CJK_SANS_SERIF]))
-    plt.rcParams["font.family"] = "sans-serif"
-    plt.rcParams["font.sans-serif"] = list(stack)
-    plt.rcParams["axes.unicode_minus"] = False
-    return stack
+    plt.rcParams.update(style_rcparams(style, font_scale=font_scale, line_scale=line_scale, palette_name=palette_name, rc=rc))
 
 
 def despine(ax: Any | None = None, *, top: bool = True, right: bool = True, left: bool = False, bottom: bool = False) -> Any:
@@ -714,184 +647,6 @@ def despine(ax: Any | None = None, *, top: bool = True, right: bool = True, left
     return ax
 
 
-def panel_label(
-    ax: Any,
-    label: str = "a",
-    *,
-    x: float = -0.12,
-    y: float = 1.04,
-    fontsize: float | None = None,
-    fontweight: str = "bold",
-    ha: str = "left",
-    va: str = "bottom",
-    **kwargs: Any,
-) -> Any:
-    """Add a journal-style panel label to one axes.
-
-    The label is placed in axes coordinates, so it remains stable when data
-    limits change.
-    """
-    if fontsize is None:
-        import matplotlib.pyplot as plt
-
-        size = plt.rcParams.get("axes.labelsize", plt.rcParams.get("font.size", 9.0))
-        fontsize = float(size) if isinstance(size, (int, float)) else None
-
-    text_kwargs = {
-        "transform": ax.transAxes,
-        "fontsize": fontsize,
-        "fontweight": fontweight,
-        "ha": ha,
-        "va": va,
-        "clip_on": False,
-    }
-    text_kwargs.update(kwargs)
-    text2d = getattr(ax, "text2D", None)
-    if callable(text2d):
-        return text2d(x, y, label, **text_kwargs)
-    return ax.text(x, y, label, **text_kwargs)
-
-
-def _flatten_axes(axes: Any | None) -> list[Any]:
-    """Return axes as a flat list without requiring NumPy."""
-    import matplotlib.pyplot as plt
-
-    if axes is None:
-        return list(plt.gcf().axes)
-    if hasattr(axes, "transAxes") and hasattr(axes, "text"):
-        return [axes]
-    if isinstance(axes, Mapping):
-        axes = axes.values()
-    if hasattr(axes, "flat"):
-        axes = list(axes.flat)
-    if not isinstance(axes, Iterable) or isinstance(axes, (str, bytes)):
-        return [axes]
-
-    flat: list[Any] = []
-    for item in axes:
-        if item is None:
-            continue
-        if hasattr(item, "transAxes") and hasattr(item, "text"):
-            flat.append(item)
-        elif isinstance(item, Iterable) and not isinstance(item, (str, bytes)):
-            flat.extend(_flatten_axes(item))
-        else:
-            flat.append(item)
-    return flat
-
-
-def _default_panel_labels(n: int, *, case: str = "lower") -> tuple[str, ...]:
-    """Return default panel labels for n panels."""
-    letters = "abcdefghijklmnopqrstuvwxyz"
-    labels = []
-    for i in range(n):
-        q, r = divmod(i, len(letters))
-        label = letters[r] if q == 0 else f"{letters[r]}{q + 1}"
-        labels.append(label.upper() if case == "upper" else label)
-    return tuple(labels)
-
-
-def add_panel_labels(
-    axes: Any | None = None,
-    labels: Sequence[str] | None = None,
-    *,
-    case: str = "lower",
-    x: float = -0.12,
-    y: float = 1.04,
-    **kwargs: Any,
-) -> list[Any]:
-    """Add panel labels to a sequence/grid of axes and return text artists.
-
-    Examples
-    --------
-    >>> fig, axs = plt.subplots(2, 2)
-    >>> add_panel_labels(axs)              # a, b, c, d
-    >>> add_panel_labels(axs, ["A", "B", "C", "D"], x=-0.1)
-    """
-    flat_axes = _flatten_axes(axes)
-    if labels is None:
-        labels = _default_panel_labels(len(flat_axes), case=case)
-    if len(labels) < len(flat_axes):
-        raise ValueError("not enough labels for the number of axes")
-    return [panel_label(ax, label, x=x, y=y, **kwargs) for ax, label in zip(flat_axes, labels)]
-
-
-def move_titles_to_panel_labels(
-    axes: Any | None = None,
-    labels: Sequence[str] | None = None,
-    *,
-    clear_titles: bool = True,
-    **kwargs: Any,
-) -> list[Any]:
-    """Convert existing axes titles or supplied labels into panel labels.
-
-    This is useful when an old script used ``ax.set_title('a')`` or
-    ``ax.set_title('A')`` for subplot tags.  By default the original titles are
-    cleared after the panel labels are added.
-    """
-    flat_axes = _flatten_axes(axes)
-    if labels is None:
-        labels = [ax.get_title() or label for ax, label in zip(flat_axes, _default_panel_labels(len(flat_axes)))]
-    artists = add_panel_labels(flat_axes, labels, **kwargs)
-    if clear_titles:
-        for ax in flat_axes:
-            ax.set_title("")
-    return artists
-
-
-# Short aliases for panel-label helpers.
-label_panel = panel_label
-label_subplots = add_panel_labels
-set_panel_labels = add_panel_labels
-
-
-def save_figure(
-    path: str | Path | Any,
-    fig: Any | None = None,
-    *,
-    tight: bool = True,
-    dpi: int | float | None = None,
-    transparent: bool = False,
-    close: bool = False,
-    **kwargs: Any,
-) -> Path | Any:
-    """Save a figure with sensible scientific-figure defaults.
-
-    Unlike the style presets, this helper opts into tight cropping explicitly.
-    This avoids the hidden global-size change caused by setting
-    ``savefig.bbox='tight'`` in rcParams.
-    """
-    import matplotlib.pyplot as plt
-
-    if fig is None:
-        fig = plt.gcf()
-
-    if isinstance(path, (str, PathLike)):
-        output: Path | Any = Path(path)
-        output.parent.mkdir(parents=True, exist_ok=True)
-        save_target: Any = output
-    else:
-        # File-like objects such as io.BytesIO are supported because
-        # matplotlib.figure.Figure.savefig supports them.
-        output = path
-        save_target = path
-
-    save_kwargs: dict[str, Any] = {
-        "transparent": transparent,
-    }
-    if dpi is not None:
-        save_kwargs["dpi"] = dpi
-    if tight:
-        save_kwargs.setdefault("bbox_inches", "tight")
-        save_kwargs.setdefault("pad_inches", 0.04)
-    save_kwargs.update(kwargs)
-
-    fig.savefig(save_target, **save_kwargs)
-    if close:
-        plt.close(fig)
-    return output
-
-
 def mm_to_inches(mm: float) -> float:
     """Convert millimetres to inches for figure sizing."""
     return mm / 25.4
@@ -904,24 +659,16 @@ def cm_to_inches(cm: float) -> float:
 
 __all__ = [
     "PLOT_STYLE_PRESETS",
-    "add_panel_labels",
-    "available_cjk_fonts",
     "available_palettes",
     "available_styles",
     "cm_to_inches",
     "color_cycle",
     "colour_cycle",
     "despine",
-    "label_panel",
-    "label_subplots",
     "mm_to_inches",
-    "move_titles_to_panel_labels",
     "palette",
-    "panel_label",
     "plot_style",
     "reference_colours",
-    "save_figure",
-    "set_panel_labels",
     "set_plot_style",
-    "use_cjk_font",
+    "style_rcparams",
 ]

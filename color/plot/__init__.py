@@ -3,23 +3,20 @@
 from __future__ import annotations
 
 from .chromaticity import (
-    D65_UPVP1976,
-    D65_UV1960,
-    D65_XY,
     chromaticity_background_image,
-    load_cie1931_locus_upvp1976,
-    load_cie1931_locus_uv1960,
-    load_cie1931_locus_xy,
     plot_cie1931_diagram,
     plot_cie1960_ucs_diagram,
     plot_cie1976_ucs_diagram,
     plot_chromaticity_points,
     plot_chromaticity_background,
     plot_locus_wavelength_labels,
-    plot_xy_chromaticity_background,
-    plot_xy_points,
 )
-from .common import as_2d_points, as_rgb_rows, finish_figure, get_figure_axes
+from .annotations import (
+    add_panel_labels,
+    panel_label,
+)
+from .common import finish_figure, get_figure_axes
+from .fonts import available_cjk_fonts, use_cjk_font
 from .primitives import (
     plot_arrows,
     plot_bars,
@@ -42,58 +39,56 @@ from .primitives3d import (
     style_3d_axis,
 )
 from .style import (
-    PLOT_STYLE_PRESETS,
-    add_panel_labels,
+    available_palettes,
+    available_styles,
     colour_cycle,
-    label_panel,
-    label_subplots,
-    move_titles_to_panel_labels,
-    panel_label,
+    cm_to_inches,
+    despine,
+    mm_to_inches,
+    palette,
     plot_style,
-    set_panel_labels,
     set_plot_style,
+    style_rcparams,
 )
 from .swatches import preview_sRGB_from_XYZ, plot_swatch_grid, plot_swatch_strip
 
-__all__ = [
-    "D65_UPVP1976",  # rounded D65 u'v'1976 whitepoint used for plotting
-    "D65_UV1960",  # rounded D65 uv1960 whitepoint used for plotting
-    "D65_XY",  # rounded D65 xy whitepoint used for plotting
-]
+__all__: list[str] = []
 
 __all__ += [
-    "as_2d_points",  # validate row-wise plotting points
-    "as_rgb_rows",  # validate RGB rows for plotting
     "finish_figure",  # apply final figure layout
     "get_figure_axes",  # create or reuse matplotlib axes
 ]
 
 __all__ += [
     "chromaticity_background_image",  # compute chromaticity background RGB image
-    "load_cie1931_locus_upvp1976",  # load CIE 1931 spectral locus u'v' coordinates
-    "load_cie1931_locus_uv1960",  # load CIE 1931 spectral locus uv coordinates
-    "load_cie1931_locus_xy",  # load CIE 1931 spectral locus xy coordinates
     "plot_chromaticity_background",  # plot a chromaticity background image
     "plot_cie1931_diagram",  # plot CIE 1931 xy chromaticity diagram
     "plot_cie1960_ucs_diagram",  # plot CIE 1960 uv chromaticity diagram
     "plot_cie1976_ucs_diagram",  # plot CIE 1976 u'v' chromaticity diagram
     "plot_chromaticity_points",  # plot labelled chromaticity points
     "plot_locus_wavelength_labels",  # label wavelengths along a spectral locus
-    "plot_xy_chromaticity_background",  # plot the CIE 1931 xy background
-    "plot_xy_points",  # compatibility wrapper for xy chromaticity points
 ]
 
 __all__ += [
-    "PLOT_STYLE_PRESETS",  # named matplotlib style presets for plotting
     "add_panel_labels",  # add journal-style panel labels to axes
-    "colour_cycle",  # return an infinite cycle of plotting colours
-    "label_panel",  # compatibility alias for panel_label
-    "label_subplots",  # compatibility alias for add_panel_labels
-    "move_titles_to_panel_labels",  # convert titles into panel labels
     "panel_label",  # add a journal-style panel label to one axes
+
+    "available_cjk_fonts",  # list installed CJK-capable plotting font candidates
+    "use_cjk_font",  # prioritise CJK fonts in the active matplotlib session
+
+    "available_palettes",  # list supported plotting palettes
+    "available_styles",  # list supported plotting styles
+
+    "cm_to_inches",  # convert centimetres to inches
+    "mm_to_inches",  # convert millimetres to inches
+
+    "colour_cycle",  # return an infinite cycle of plotting colours
+    "despine",  # hide selected axes spines
+    "palette",  # return a finite plotting colour palette
+
     "plot_style",  # temporarily apply a plotting style
-    "set_panel_labels",  # compatibility alias for add_panel_labels
     "set_plot_style",  # apply a plotting style to global matplotlib rcParams
+    "style_rcparams",  # return a copy of rcParams for a plotting style
 ]
 
 __all__ += [

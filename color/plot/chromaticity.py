@@ -395,7 +395,7 @@ def plot_xy_chromaticity_background(
 def plot_cie1931_diagram(
     *,
     ax=None,
-    title: str = "CIE 1931 xy",
+    title: str | None = None,
     whitepoint_xy: Sequence[float] | None = D65_XY,
     show_sample_points: bool = True,
     close_locus: bool = True,
@@ -410,6 +410,7 @@ def plot_cie1931_diagram(
     wavelength_label_fontsize: float = 7.0,
 ):
     """Plot the CIE 1931 xy chromaticity diagram."""
+    using_existing_axes = ax is not None
     if show_background:
         fig, ax = plot_xy_chromaticity_background(
             ax=ax,
@@ -448,14 +449,15 @@ def plot_cie1931_diagram(
             whitepoint=whitepoint_xy if whitepoint_xy is not None else D65_XY,
             fontsize=wavelength_label_fontsize,
         )
-    ax.set_title(title)
+    if title:
+        ax.set_title(title)
     ax.set_xlabel("x")
     ax.set_ylabel("y")
     ax.set_xlim(0.0, 0.8)
     ax.set_ylim(0.0, 0.9)
     ax.set_aspect("equal", adjustable="box")
     ax.grid(True, alpha=0.25)
-    finish_figure(fig)
+    finish_figure(fig, tight_layout=not using_existing_axes)
     return fig, ax
 
 
@@ -463,7 +465,7 @@ def _plot_chromaticity_locus(
     *,
     method: str,
     ax=None,
-    title: str,
+    title: str | None,
     whitepoint: Sequence[float] | None,
     whitepoint_name: str,
     show_sample_points: bool,
@@ -479,6 +481,7 @@ def _plot_chromaticity_locus(
     wavelength_label_fontsize: float,
 ):
     """Plot a spectral locus in a configured chromaticity diagram."""
+    using_existing_axes = ax is not None
     definition = _resolve_chromaticity_method(method)
     if show_background:
         fig, ax = plot_chromaticity_background(
@@ -525,21 +528,22 @@ def _plot_chromaticity_locus(
             whitepoint=label_whitepoint,
             fontsize=wavelength_label_fontsize,
         )
-    ax.set_title(title)
+    if title:
+        ax.set_title(title)
     ax.set_xlabel(definition["xlabel"])
     ax.set_ylabel(definition["ylabel"])
     ax.set_xlim(*definition["default_xlim"])
     ax.set_ylim(*definition["default_ylim"])
     ax.set_aspect("equal", adjustable="box")
     ax.grid(True, alpha=0.25)
-    finish_figure(fig)
+    finish_figure(fig, tight_layout=not using_existing_axes)
     return fig, ax
 
 
 def plot_cie1960_ucs_diagram(
     *,
     ax=None,
-    title: str = "CIE 1960 UCS uv",
+    title: str | None = None,
     whitepoint_uv: Sequence[float] | None = D65_UV1960,
     show_sample_points: bool = True,
     close_locus: bool = True,
@@ -577,7 +581,7 @@ def plot_cie1960_ucs_diagram(
 def plot_cie1976_ucs_diagram(
     *,
     ax=None,
-    title: str = "CIE 1976 UCS u'v'",
+    title: str | None = None,
     whitepoint_upvp: Sequence[float] | None = D65_UPVP1976,
     show_sample_points: bool = True,
     close_locus: bool = True,

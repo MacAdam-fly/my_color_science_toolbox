@@ -31,6 +31,7 @@ from . import color_cards  # noqa: F401
 from . import color_systems  # noqa: F401
 from . import gamut_data  # noqa: F401
 from . import illuminants  # noqa: F401
+from . import reflectance_spectra  # noqa: F401
 from . import standard_observers  # noqa: F401
 
 # Re-export the core registry API
@@ -51,6 +52,7 @@ from .color_cards import get_color_card, list_color_cards
 from .color_systems import get_color_system, list_color_systems
 from .gamut_data import get_gamut_data, list_gamut_data
 from .illuminants import get_illuminant, list_illuminants
+from .reflectance_spectra import get_reflectance_spectrum, list_reflectance_spectra
 from .standard_observers import (
     describe_standard_observer,
     get_standard_observer,
@@ -95,4 +97,9 @@ __all__ += [
 __all__ += [
     "get_color_system",  # load a color-system dataset
     "list_color_systems",  # list color-system datasets
+]
+
+__all__ += [
+    "get_reflectance_spectrum",  # load a UEF spectral reflectance dataset
+    "list_reflectance_spectra",  # list UEF spectral reflectance datasets
 ]

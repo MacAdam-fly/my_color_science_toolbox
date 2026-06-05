@@ -8,40 +8,43 @@ raw data lives here, while public loading APIs live in `color/datasets/`.
 
 ```text
 color/data/
-├── standard_observer_data/
-│   ├── cmfs/
-│   ├── cone_fundamentals/
-│   ├── luminous_efficiency/
-│   ├── prereceptoral_filters/
-│   ├── chromaticity_coordinates/
-│   ├── photopigments/
-│   └── README.md
-├── illuminants/
-│   ├── illuminant_A.csv
-│   ├── illuminant_D65.csv
-│   ├── Fluorescents.xls
-│   ├── reference/
-│   │   ├── blackbody.xlsx
-│   │   └── DaylightSeries.xlsx
-│   └── readme.md
-├── color_cards/
-│   ├── MacbethColorChecker(Sheet1).csv
-│   ├── PMC.xlsx
-│   ├── RepresentativeBCRA.xls
-│   └── readme.md
-├── gamut_data/
-│   ├── PointerData.xls
-│   ├── MacAdamLimits_A.csv
-│   ├── MacAdamLimits_C.csv
-│   ├── MacAdamLimits_D65.csv
-│   └── readme.md
-├── color_systems/
-│   ├── real_sRGB.xls
-│   └── readme.md
-├── color_difference/
-│   ├── CIEDE2000.xls
-│   └── readme.md
-└── __init__.py
+|-- standard_observer_data/
+|   |-- cmfs/
+|   |-- cone_fundamentals/
+|   |-- luminous_efficiency/
+|   |-- prereceptoral_filters/
+|   |-- chromaticity_coordinates/
+|   |-- photopigments/
+|   `-- README.md
+|-- illuminants/
+|   |-- illuminant_A.csv
+|   |-- illuminant_D65.csv
+|   |-- Fluorescents.xls
+|   |-- reference/
+|   |   |-- blackbody.xlsx
+|   |   `-- DaylightSeries.xlsx
+|   `-- readme.md
+|-- color_cards/
+|   |-- MacbethColorChecker(Sheet1).csv
+|   |-- PMC.xlsx
+|   |-- RepresentativeBCRA.xls
+|   `-- readme.md
+|-- reflectance_spectra/
+|   |-- uef_csv/
+|   `-- uef_sources_data/
+|-- gamut_data/
+|   |-- PointerData.xls
+|   |-- MacAdamLimits_A.csv
+|   |-- MacAdamLimits_C.csv
+|   |-- MacAdamLimits_D65.csv
+|   `-- readme.md
+|-- color_systems/
+|   |-- real_sRGB.xls
+|   `-- readme.md
+|-- color_difference/
+|   |-- CIEDE2000.xls
+|   `-- readme.md
+`-- __init__.py
 ```
 
 ## Dataset Summary
@@ -84,6 +87,28 @@ Formula-generated blackbody and daylight data are provided by
 | `PMC.xlsx` | `pmc` | 31 | 400-700 nm, 10 nm |
 | `RepresentativeBCRA.xls` | `bcra` | 12 | 380-730 nm, 10 nm |
 
+### Reflectance Spectra
+
+UEF spectral reflectance datasets are split into two folders:
+
+| Folder | Purpose |
+| --- | --- |
+| `reflectance_spectra/uef_csv/` | Runtime CSV files registered by `color.datasets.reflectance_spectra` |
+| `reflectance_spectra/uef_sources_data/` | Source workbooks with `metadata`, `audit`, `samples`, raw sheets, and reviewed sheets |
+
+Registered runtime datasets:
+
+| Dataset name | Samples | Wavelength range | Notes |
+| --- | ---: | --- | --- |
+| `munsell_matt` | 1269 | 380-800 nm, 1 nm | UEF Munsell matt reflectance |
+| `munsell_glossy_all` | 1600 | 380-780 nm, 1 nm | Specular excluded |
+| `agfa_it872` | 288 | 400-700 nm, 10 nm | Minolta white calibration sample excluded |
+| `paper_*` | 36-216 | 400-700 nm, 10 nm | Percent reflectance divided by 100 |
+| `forest_*` | 337-370 | 390-850 nm, 5 nm | Uses reviewed `corrected_reflectance_0_1` sheets |
+
+Natural colors are not registered as reflectance spectra because the available
+AOTF data are raw/normalized digital counts without dark/white reference data.
+
 ### Gamut Data
 
 | File | Dataset name | Description |
@@ -115,12 +140,14 @@ from color.datasets import (
     get_color_system,
     get_gamut_data,
     get_illuminant,
+    get_reflectance_spectrum,
     get_standard_observer,
 )
 
 d65 = get_illuminant("D65")
 xyz = get_standard_observer("cmfs", "cie1931_xyz_1nm")
 macbeth = get_color_card("macbeth")
+uef_munsell = get_reflectance_spectrum("munsell_matt")
 pointer = get_gamut_data("pointer", L=50)
 munsell = get_color_system("munsell_srgb")
 ```
@@ -142,6 +169,6 @@ validation, but application code should normally go through `color.datasets`.
 
 | Source | URL |
 | --- | --- |
-| CVRL, UCL | http://www.cvrl.org/ |
-| RIT Munsell Color Science Lab | https://www.rit.edu/science/munsell-color-science-lab-educational-resources |
-| RIT Munsell Renotation | http://www.rit-mcsl.org/MunsellRenotation/ |
+| CVRL, UCL | <http://www.cvrl.org/> |
+| RIT Munsell Color Science Lab | <https://www.rit.edu/science/munsell-color-science-lab-educational-resources> |
+| RIT Munsell Renotation | <http://www.rit-mcsl.org/MunsellRenotation/> |

@@ -30,13 +30,19 @@ from color.plot import (
     set_3d_axis_limits_from_data,
     style_3d_axis,
     colour_cycle,
-    PLOT_STYLE_PRESETS,
+    palette,
+    available_styles,
+    available_palettes,
+    style_rcparams,
     plot_style,
     set_plot_style,
+    panel_label,
+    add_panel_labels,
+    available_cjk_fonts,
+    use_cjk_font,
     chromaticity_background_image,
     plot_chromaticity_background,
     plot_locus_wavelength_labels,
-    plot_xy_chromaticity_background,
     plot_cie1931_diagram,
     plot_cie1960_ucs_diagram,
     plot_cie1976_ucs_diagram,
@@ -60,6 +66,7 @@ fig, ax = plot_points([[0.2, 0.3], [0.4, 0.5]], labels=["A", "B"], annotate=True
 
 fig, ax = plot_cie1931_diagram(show_background=True)
 fig, ax = plot_cie1931_diagram(show_wavelength_labels=True)
+fig, ax = plot_cie1931_diagram()
 
 L = np.linspace(0, 100, 32)
 h = np.linspace(0, 2 * np.pi, 64)
@@ -94,6 +101,10 @@ Domain-specific figures should be composed from these primitives:
 
 The chromaticity background is a visual aid. RGB values are normalised and
 clipped for display, so the background is not a strict colour-management result.
+Chromaticity diagrams do not set a title by default. For journal figures, use
+panel labels and captions instead of axes titles. The `journal` presets suppress
+Matplotlib axes titles by default, so `ax.set_title(...)` will not visibly affect
+the final figure unless you explicitly override the title rcParams.
 
 Use `plot_style("journal")` as a context manager when you want a compact
 journal-friendly figure without permanently changing matplotlib settings.
@@ -101,6 +112,11 @@ journal-friendly figure without permanently changing matplotlib settings.
 `plot_style("journal_double")` for wide or multi-panel figures, and use
 `set_plot_style("journal")` only when you intentionally want to update global
 `rcParams`.
+
+Use `style_rcparams("journal")` when you need a copy of the style dictionary for
+inspection or integration with external plotting code. The raw
+`PLOT_STYLE_PRESETS` mapping remains available from `color.plot.style` for
+compatibility, but it is not part of the top-level `color.plot` API.
 
 The journal presets are not official journal templates. They follow common
 publisher guidance such as Nature's single/double-column figure sizing and final
