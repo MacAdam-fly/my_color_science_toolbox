@@ -6,10 +6,13 @@ import runpy
 import sys
 from pathlib import Path
 
+import pytest
+
 _ROOT = Path(__file__).resolve().parents[3]
 _EXAMPLES = _ROOT / "examples" / "generators"
 
 
+@pytest.mark.examples
 def test_generator_examples_run() -> None:
     """Generator examples should run without interactive windows."""
     if str(_EXAMPLES) not in sys.path:

@@ -6,11 +6,14 @@ import runpy
 import sys
 from pathlib import Path
 
+import pytest
+
 
 _ROOT = Path(__file__).resolve().parents[3]
 _EXAMPLES = _ROOT / "examples" / "spectra"
 
 
+@pytest.mark.examples
 def test_spectra_examples_run():
     if str(_EXAMPLES) not in sys.path:
         sys.path.insert(0, str(_EXAMPLES))

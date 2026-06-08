@@ -6,11 +6,14 @@ import runpy
 import sys
 from pathlib import Path
 
+import pytest
+
 
 _ROOT = Path(__file__).resolve().parents[3]
 _EXAMPLES = _ROOT / "examples" / "datasets"
 
 
+@pytest.mark.examples
 def test_dataset_examples_run() -> None:
     """Run all dataset examples without interactive plotting."""
     if str(_EXAMPLES) not in sys.path:

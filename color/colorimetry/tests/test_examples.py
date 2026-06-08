@@ -6,6 +6,8 @@ import runpy
 import sys
 from pathlib import Path
 
+import pytest
+
 
 _ROOT = Path(__file__).resolve().parents[3]
 _COLORIMETRY_EXAMPLES = _ROOT / "examples" / "colorimetry"
@@ -14,6 +16,7 @@ _DIFFERENCE_EXAMPLES = _ROOT / "examples" / "difference"
 _INTEGRATION_EXAMPLES = _ROOT / "examples" / "integration"
 
 
+@pytest.mark.examples
 def test_colorimetry_examples_run():
     for directory in (
         _COLORIMETRY_EXAMPLES,

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from .matrix import reflectance_recovery_matrix, response_recovery_matrix
+from .library import ReflectanceLibrary, load_reflectance_library
 from .methods import (
     REFLECTANCE_RECOVERY_METHODS,
     SPECTRUM_RECOVERY_METHODS,
@@ -26,6 +27,11 @@ __all__ = [
 __all__ += [
     "recover_reflectance_from_XYZ",  # recover bounded smooth reflectance from XYZ
     "recover_reflectance_from_xyY",  # recover bounded smooth reflectance from xyY
+]
+
+__all__ += [
+    "ReflectanceLibrary",  # aligned reflectance sample matrix for recovery methods
+    "load_reflectance_library",  # load UEF reflectance datasets as one library
 ]
 
 __all__ += [
