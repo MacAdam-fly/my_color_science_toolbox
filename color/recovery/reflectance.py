@@ -14,18 +14,127 @@ from color.spectra import (
 )
 
 from .matrix import IlluminantSource, ResponseSource, reflectance_recovery_matrix
-from .library import (
-    DEFAULT_REFLECTANCE_LIBRARY_DATASETS,
-    DEFAULT_REFLECTANCE_LIBRARY_SHAPE,
-    ReflectanceLibrary,
-    load_reflectance_library,
-)
+from .library import ReflectanceLibrary
 from .methods import resolve_reflectance_recovery_method
+from .options import (
+    BoundedLeastSquaresOptions,
+    Burns2019RecoveryOptions,
+    DictionaryReflectanceOptions,
+    Meng2015RecoveryOptions,
+    PCAReflectanceOptions,
+    ReflectanceRecoveryOption,
+    SpectrumRecoveryOption,
+    option_values,
+)
 from .spectrum import (
     as_recovery_targets,
     build_recovered_spectral_object,
     spectral_recovery_metadata,
 )
+
+
+_REFLECTANCE_METHOD_OPTIONS = {
+    "bounded_least_squares": {"bounds", "smoothness"},
+    "burns2019": {"bounds", "max_iterations", "tolerance"},
+    "meng2015": {"bounds"},
+    "pca": {"library", "bounds", "n_components", "coefficient_regularization"},
+    "dictionary": {"library", "dictionary_regularization", "dictionary_top_k"},
+}
+
+
+def _reject_unknown_options(
+    *,
+    method_name: str,
+    options: dict,
+    allowed: set[str],
+) -> None:
+    if "library_datasets" in options:
+        raise ValueError(
+            "library_datasets is no longer accepted by reflectance recovery; "
+            "call load_reflectance_library(...) first and pass library=..."
+        )
+    unknown = set(options) - allowed
+    if unknown:
+        names = ", ".join(sorted(unknown))
+        allowed_names = ", ".join(sorted(allowed))
+        raise ValueError(
+            f"Unsupported option(s) for reflectance recovery method "
+            f"{method_name!r}: {names}. Allowed options: {allowed_names}"
+        )
+
+
+def _validate_library(value: object) -> ReflectanceLibrary:
+    if not isinstance(value, ReflectanceLibrary):
+        raise ValueError(
+            "PCA and dictionary reflectance recovery require a "
+            "ReflectanceLibrary; call load_reflectance_library(...) first and "
+            "pass library=..."
+        )
+    return value
+
+
+def _normalise_reflectance_method(
+    method: str | ReflectanceRecoveryOption,
+    method_options: dict,
+) -> tuple[str, dict]:
+    if isinstance(method, SpectrumRecoveryOption) and not isinstance(
+        method,
+        BoundedLeastSquaresOptions,
+    ):
+        raise ValueError("spectrum recovery options cannot be used for reflectance recovery")
+
+    if isinstance(method, ReflectanceRecoveryOption):
+        if method_options:
+            raise ValueError(
+                "Do not pass method-specific keyword options together with a "
+                "recovery options object"
+            )
+        method_name = method.method_name
+        config = option_values(method)
+        if isinstance(method, BoundedLeastSquaresOptions):
+            config["bounds"] = (
+                (0.0, 1.0) if config["bounds"] is None else config["bounds"]
+            )
+        elif isinstance(method, PCAReflectanceOptions):
+            config["library"] = _validate_library(config["library"])
+        elif isinstance(method, DictionaryReflectanceOptions):
+            config["library"] = _validate_library(config["library"])
+            config["dictionary_regularization"] = config.pop("regularization")
+            config["dictionary_top_k"] = config.pop("top_k")
+        elif isinstance(method, (Burns2019RecoveryOptions, Meng2015RecoveryOptions)):
+            pass
+        return method_name, config
+
+    method_name, _solver = resolve_reflectance_recovery_method(method)
+    if method_name == "bounded_least_squares":
+        defaults = {"bounds": (0.0, 1.0), "smoothness": 1e-3}
+    elif method_name == "burns2019":
+        defaults = {"bounds": (0.0, 1.0), "max_iterations": 50, "tolerance": 1e-8}
+    elif method_name == "meng2015":
+        defaults = {"bounds": (0.0, 1.0)}
+    elif method_name == "pca":
+        defaults = {
+            "library": None,
+            "bounds": (0.0, 1.0),
+            "n_components": 8,
+            "coefficient_regularization": 1e-3,
+        }
+    else:
+        defaults = {
+            "library": None,
+            "dictionary_regularization": 1e-6,
+            "dictionary_top_k": 120,
+        }
+    allowed = _REFLECTANCE_METHOD_OPTIONS[method_name]
+    _reject_unknown_options(
+        method_name=method_name,
+        options=method_options,
+        allowed=allowed,
+    )
+    config = {**defaults, **method_options}
+    if method_name in {"pca", "dictionary"}:
+        config["library"] = _validate_library(config["library"])
+    return method_name, config
 
 
 def recover_reflectance_from_XYZ(
@@ -34,25 +143,18 @@ def recover_reflectance_from_XYZ(
     cmfs: ResponseSource = "cie1931_xyz_1nm",
     illuminant: IlluminantSource = "D65",
     shape: SpectralShape | None = None,
-    method: str = "bounded_least_squares",
-    bounds: tuple[float, float] = (0.0, 1.0),
-    smoothness: float = 1e-3,
+    method: str | ReflectanceRecoveryOption = "bounded_least_squares",
     labels: Sequence[str] | None = None,
-    library: ReflectanceLibrary | None = None,
-    library_datasets: str | Sequence[str] = DEFAULT_REFLECTANCE_LIBRARY_DATASETS,
-    n_components: int = 8,
-    coefficient_regularization: float = 1e-3,
-    dictionary_regularization: float = 1e-6,
+    **method_options,
 ) -> Union[SpectralDistribution, MultiSpectralDistribution]:
     """Recover bounded smooth reflectance spectra from XYZ values."""
     targets, is_single = as_recovery_targets(XYZ, name="XYZ")
-    method_name, solver = resolve_reflectance_recovery_method(method)
+    method_name, config = _normalise_reflectance_method(method, method_options)
+    _resolved, solver = resolve_reflectance_recovery_method(method_name)
     uses_library = method_name in {"dictionary", "pca"}
-    if uses_library and library is not None and not isinstance(library, ReflectanceLibrary):
-        raise ValueError("library must be a ReflectanceLibrary instance")
     matrix_shape = shape
     if uses_library and matrix_shape is None:
-        matrix_shape = library.shape if library is not None else DEFAULT_REFLECTANCE_LIBRARY_SHAPE
+        matrix_shape = config["library"].shape
 
     matrix, wavelengths, common_shape = reflectance_recovery_matrix(
         cmfs=cmfs,
@@ -60,11 +162,7 @@ def recover_reflectance_from_XYZ(
         shape=matrix_shape,
     )
     if uses_library:
-        if library is None:
-            library = load_reflectance_library(
-                library_datasets,
-                shape=common_shape,
-            )
+        library = config["library"]
         if not np.array_equal(library.wavelengths, wavelengths):
             raise ValueError(
                 "library wavelengths must match the recovery matrix wavelengths"
@@ -74,28 +172,37 @@ def recover_reflectance_from_XYZ(
                 targets,
                 matrix,
                 library=library,
-                bounds=bounds,
-                n_components=n_components,
-                coefficient_regularization=coefficient_regularization,
+                bounds=config["bounds"],
+                n_components=config["n_components"],
+                coefficient_regularization=config["coefficient_regularization"],
             )
         else:
             values = solver(
                 targets,
                 matrix,
                 library=library,
-                dictionary_regularization=dictionary_regularization,
+                dictionary_regularization=config["dictionary_regularization"],
+                dictionary_top_k=config["dictionary_top_k"],
             )
+    elif method_name == "burns2019":
+        values = solver(
+            targets,
+            matrix,
+            bounds=config["bounds"],
+            max_iterations=config["max_iterations"],
+            tolerance=config["tolerance"],
+        )
     else:
         values = solver(
             targets,
             matrix,
-            bounds=bounds,
-            smoothness=smoothness,
+            bounds=config["bounds"],
+            smoothness=config.get("smoothness"),
         )
     metadata = spectral_recovery_metadata(
         method=method_name,
-        bounds=bounds,
-        smoothness=smoothness,
+        bounds=config.get("bounds", (0.0, 1.0)),
+        smoothness=config.get("smoothness", 1e-3),
         shape=common_shape,
         recovery_kind="reflectance",
     )
@@ -110,12 +217,32 @@ def recover_reflectance_from_XYZ(
     if method_name == "pca":
         metadata.update(
             {
-                "n_components": int(n_components),
-                "coefficient_regularization": float(coefficient_regularization),
+                "n_components": int(config["n_components"]),
+                "coefficient_regularization": float(
+                    config["coefficient_regularization"]
+                ),
             }
         )
     elif method_name == "dictionary":
-        metadata["dictionary_regularization"] = float(dictionary_regularization)
+        metadata.update(
+            {
+                "dictionary_regularization": float(config["dictionary_regularization"]),
+                "dictionary_top_k": (
+                    None
+                    if config["dictionary_top_k"] is None
+                    else int(config["dictionary_top_k"])
+                ),
+            }
+        )
+    elif method_name == "burns2019":
+        metadata.update(
+            {
+                "reference": "Burns 2019 Method 3",
+                "objective": "minimise_slope_energy_in_atanh_reflectance_space",
+                "reflectance_transform": "rho=(tanh(z)+1)/2",
+                "boundary_special_cases": "black_and_white",
+            }
+        )
     elif method_name == "meng2015":
         metadata.update(
             {

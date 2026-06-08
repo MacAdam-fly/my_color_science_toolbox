@@ -3,12 +3,15 @@
 from __future__ import annotations
 
 import numpy as np
-from scipy.optimize import lsq_linear
+from scipy.optimize import Bounds, LinearConstraint, minimize
 
 from .library import ReflectanceLibrary
 
 
-_SUM_CONSTRAINT_WEIGHT = 1e6
+_DEFAULT_SOLVER_OPTIONS = {
+    "ftol": 1e-10,
+    "maxiter": 1000,
+}
 
 
 def _validate_regularization(value: float) -> float:
@@ -19,12 +22,79 @@ def _validate_regularization(value: float) -> float:
     return regularization
 
 
+def _validate_top_k(value: int | None, sample_count: int) -> int:
+    """Return the number of dictionary atoms to use for optimisation."""
+    if value is None:
+        return sample_count
+    top_k = int(value)
+    if top_k <= 0:
+        raise ValueError("dictionary_top_k must be positive or None")
+    return min(top_k, sample_count)
+
+
+def _candidate_indices(
+    response_matrix: np.ndarray,
+    target: np.ndarray,
+    top_k: int,
+) -> np.ndarray:
+    """Return nearest dictionary atoms in response space."""
+    sample_count = response_matrix.shape[1]
+    if top_k >= sample_count:
+        return np.arange(sample_count)
+    distances = np.linalg.norm(response_matrix.T - target, axis=1)
+    indices = np.argpartition(distances, top_k - 1)[:top_k]
+    return indices[np.argsort(distances[indices])]
+
+
+def _solve_convex_weights(
+    target: np.ndarray,
+    responses: np.ndarray,
+    regularization: float,
+) -> np.ndarray:
+    """Solve exact non-negative convex weights for candidate responses."""
+    sample_count = responses.shape[1]
+    initial = np.full(sample_count, 1.0 / sample_count, dtype=np.float64)
+    bounds = Bounds(np.zeros(sample_count), np.ones(sample_count))
+    constraint = LinearConstraint(
+        np.ones((1, sample_count), dtype=np.float64),
+        lb=np.array([1.0]),
+        ub=np.array([1.0]),
+    )
+
+    def objective(weights: np.ndarray) -> float:
+        residual = responses @ weights - target
+        return float(residual @ residual + regularization * (weights @ weights))
+
+    def jacobian(weights: np.ndarray) -> np.ndarray:
+        residual = responses @ weights - target
+        return 2.0 * (responses.T @ residual + regularization * weights)
+
+    result = minimize(
+        objective,
+        initial,
+        method="SLSQP",
+        jac=jacobian,
+        bounds=bounds,
+        constraints=(constraint,),
+        options=_DEFAULT_SOLVER_OPTIONS,
+    )
+    if not result.success:
+        raise ValueError(f"dictionary reflectance recovery failed: {result.message}")
+
+    weights = np.clip(np.asarray(result.x, dtype=np.float64), 0.0, 1.0)
+    weight_sum = np.sum(weights)
+    if weight_sum <= 0:
+        raise ValueError("dictionary reflectance recovery produced zero weights")
+    return weights / weight_sum
+
+
 def solve_dictionary_reflectance(
     targets: np.ndarray,
     matrix: np.ndarray,
     *,
     library: ReflectanceLibrary,
     dictionary_regularization: float,
+    dictionary_top_k: int | None,
 ) -> np.ndarray:
     """Recover reflectances as convex combinations of library samples."""
     regularization = _validate_regularization(dictionary_regularization)
@@ -40,43 +110,19 @@ def solve_dictionary_reflectance(
     if sample_count == 0:
         raise ValueError("library must contain at least one reflectance sample")
 
+    top_k = _validate_top_k(dictionary_top_k, sample_count)
     response_matrix = matrix @ reflectances.T
-    sqrt_sum_weight = np.sqrt(_SUM_CONSTRAINT_WEIGHT)
-    sqrt_regularization = np.sqrt(regularization)
-    lhs_blocks = [
-        response_matrix,
-        sqrt_sum_weight * np.ones((1, sample_count), dtype=np.float64),
-    ]
-    if regularization > 0:
-        lhs_blocks.append(sqrt_regularization * np.eye(sample_count, dtype=np.float64))
-    lhs = np.vstack(lhs_blocks)
-    zero_tail = (
-        np.zeros(sample_count, dtype=np.float64)
-        if regularization > 0
-        else np.empty(0, dtype=np.float64)
-    )
 
     recovered = []
     for target in targets:
         target = np.asarray(target, dtype=np.float64)
-        rhs = np.concatenate(
-            (
-                target,
-                np.array([sqrt_sum_weight], dtype=np.float64),
-                zero_tail,
-            )
+        indices = _candidate_indices(response_matrix, target, top_k)
+        weights = _solve_convex_weights(
+            target,
+            response_matrix[:, indices],
+            regularization,
         )
-        result = lsq_linear(lhs, rhs, bounds=(0.0, 1.0))
-        if not result.success:
-            raise ValueError(
-                f"dictionary reflectance recovery failed: {result.message}"
-            )
-        weights = np.asarray(result.x, dtype=np.float64)
-        weight_sum = np.sum(weights)
-        if weight_sum <= 0:
-            raise ValueError("dictionary reflectance recovery produced zero weights")
-        weights = weights / weight_sum
-        recovered.append(weights @ reflectances)
+        recovered.append(weights @ reflectances[indices])
 
     return np.asarray(recovered, dtype=np.float64)
 

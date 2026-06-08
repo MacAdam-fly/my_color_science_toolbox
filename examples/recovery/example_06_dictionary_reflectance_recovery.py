@@ -15,7 +15,13 @@ import numpy as np
 from color.colorimetry import reflectance_to_XYZ
 from color.datasets.color_cards import get_color_card
 from color.plot import plot_lines, plot_style
-from color.recovery import load_reflectance_library, recover_reflectance_from_XYZ
+from color.recovery import (
+    BoundedLeastSquaresOptions,
+    DictionaryReflectanceOptions,
+    PCAReflectanceOptions,
+    load_reflectance_library,
+    recover_reflectance_from_XYZ,
+)
 from color.spectra import SpectralShape, from_columns
 
 
@@ -48,25 +54,27 @@ def main() -> None:
 
     bounded = recover_reflectance_from_XYZ(
         target_XYZ,
-        method="bounded_least_squares",
+        method=BoundedLeastSquaresOptions(smoothness=1e-3),
         illuminant="D65",
         shape=shape,
-        smoothness=1e-3,
     )
     pca = recover_reflectance_from_XYZ(
         target_XYZ,
-        method="pca",
-        library=library,
+        method=PCAReflectanceOptions(
+            library=library,
+            n_components=12,
+            coefficient_regularization=1e-3,
+        ),
         illuminant="D65",
-        n_components=12,
-        coefficient_regularization=1e-3,
     )
     dictionary = recover_reflectance_from_XYZ(
         target_XYZ,
-        method="dictionary",
-        library=library,
+        method=DictionaryReflectanceOptions(
+            library=library,
+            regularization=1e-6,
+            top_k=120,
+        ),
         illuminant="D65",
-        dictionary_regularization=1e-6,
     )
 
     print("Target XYZ:", np.round(target_XYZ, 6))
@@ -76,6 +84,7 @@ def main() -> None:
     print("Dictionary library datasets:", dictionary.metadata["library_datasets"])
     print("Dictionary library sample count:", dictionary.metadata["library_sample_count"])
     print("Dictionary regularization:", dictionary.metadata["dictionary_regularization"])
+    print("Dictionary top-k candidates:", dictionary.metadata["dictionary_top_k"])
 
     with plot_style("presentation", font_scale=0.65, line_scale=0.85):
         fig, ax = plt.subplots(figsize=(7.16, 4.2))

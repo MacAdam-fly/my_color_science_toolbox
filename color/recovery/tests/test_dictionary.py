@@ -65,6 +65,7 @@ def test_recover_reflectance_dictionary_round_trips_mean_reflectance() -> None:
     assert np.max(recovered.values) <= np.max(library.reflectances) + 1e-10
     assert recovered.metadata["recovery_method"] == "dictionary"
     assert recovered.metadata["dictionary_regularization"] == pytest.approx(1e-6)
+    assert recovered.metadata["dictionary_top_k"] == 120
 
 
 def test_recover_reflectance_from_xyY_dictionary_uses_XYZ_path() -> None:
@@ -102,23 +103,53 @@ def test_recover_reflectance_dictionary_batch_returns_multi_spectral_distributio
     assert recovered.values.shape == (library.wavelengths.size, 2)
 
 
-def test_recover_reflectance_dictionary_loads_default_library() -> None:
-    """Dictionary recovery should load the default Munsell matt library when omitted."""
-    from color.recovery import load_reflectance_library
+def test_recover_reflectance_dictionary_requires_explicit_library() -> None:
+    """Dictionary recovery requires an explicit ReflectanceLibrary."""
+    library = _small_dictionary_library()
+    _, target = _mean_target(library)
 
-    library = load_reflectance_library("munsell_matt", shape=SpectralShape(400.0, 700.0, 100.0))
+    with pytest.raises(ValueError, match="load_reflectance_library"):
+        recover_reflectance_from_XYZ(
+            target,
+            method="dictionary",
+            illuminant="D65",
+            shape=library.shape,
+        )
+
+
+def test_recover_reflectance_dictionary_accepts_full_library_top_k() -> None:
+    """dictionary_top_k=None should use every library atom."""
+    library = _small_dictionary_library()
     _, target = _mean_target(library)
 
     recovered = recover_reflectance_from_XYZ(
         target,
         method="dictionary",
+        library=library,
         illuminant="D65",
-        shape=library.shape,
+        dictionary_top_k=None,
     )
 
     assert isinstance(recovered, SpectralDistribution)
-    assert recovered.metadata["library_datasets"] == ("munsell_matt",)
-    assert recovered.wavelengths.shape == library.wavelengths.shape
+    assert recovered.metadata["dictionary_top_k"] is None
+
+
+def test_recover_reflectance_dictionary_accepts_candidate_top_k() -> None:
+    """dictionary_top_k should limit candidate atoms without trimming the library."""
+    library = _small_dictionary_library()
+    _, target = _mean_target(library)
+
+    recovered = recover_reflectance_from_XYZ(
+        target,
+        method="dictionary",
+        library=library,
+        illuminant="D65",
+        dictionary_top_k=2,
+    )
+
+    assert isinstance(recovered, SpectralDistribution)
+    assert recovered.metadata["library_sample_count"] == 4
+    assert recovered.metadata["dictionary_top_k"] == 2
 
 
 def test_recover_reflectance_dictionary_rejects_negative_regularization() -> None:
@@ -133,6 +164,21 @@ def test_recover_reflectance_dictionary_rejects_negative_regularization() -> Non
             library=library,
             illuminant="D65",
             dictionary_regularization=-1.0,
+        )
+
+
+def test_recover_reflectance_dictionary_rejects_invalid_top_k() -> None:
+    """dictionary_top_k must be positive or None."""
+    library = _small_dictionary_library()
+    _, target = _mean_target(library)
+
+    with pytest.raises(ValueError, match="dictionary_top_k"):
+        recover_reflectance_from_XYZ(
+            target,
+            method="dictionary",
+            library=library,
+            illuminant="D65",
+            dictionary_top_k=0,
         )
 
 

@@ -79,15 +79,12 @@ def test_recover_reflectance_pca_batch_returns_multi_spectral_distribution() -> 
     assert np.all(recovered.values <= 1.0 + 1e-10)
 
 
-def test_recover_reflectance_pca_loads_default_library() -> None:
-    """PCA recovery should load the default Munsell matt library when omitted."""
-    library, _, target = _library_mean_reflectance()
+def test_recover_reflectance_pca_requires_explicit_library() -> None:
+    """PCA recovery requires an explicit ReflectanceLibrary."""
+    _library, _, target = _library_mean_reflectance()
 
-    recovered = recover_reflectance_from_XYZ(target, method="pca")
-
-    assert isinstance(recovered, SpectralDistribution)
-    assert recovered.wavelengths.shape == library.wavelengths.shape
-    assert recovered.metadata["library_datasets"] == ("munsell_matt",)
+    with pytest.raises(ValueError, match="load_reflectance_library"):
+        recover_reflectance_from_XYZ(target, method="pca")
 
 
 @pytest.mark.parametrize(

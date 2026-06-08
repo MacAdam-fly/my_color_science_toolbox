@@ -28,5 +28,6 @@ def test_recovery_examples_run() -> None:
         "example_07_gaussian_spectrum_recovery.py",
         "example_08_multi_gaussian_spectrum_recovery.py",
         "example_09_auto_gaussian_spectrum_recovery.py",
+        "example_10_reflectance_method_comparison.py",
     ):
         runpy.run_path(str(_EXAMPLES / filename), run_name="__main__")

@@ -14,7 +14,7 @@ import numpy as np
 
 from color.colorimetry import emission_to_XYZ
 from color.plot import plot_lines, plot_style
-from color.recovery import recover_spectrum_from_XYZ
+from color.recovery import AutoGaussianRecoveryOptions, recover_spectrum_from_XYZ
 from color.recovery.parametric import gaussian_spectrum, multi_gaussian_spectrum
 from color.spectra import SpectralDistribution, SpectralShape
 
@@ -61,9 +61,8 @@ def main() -> None:
         target_XYZ = emission_to_XYZ(original, shape=shape)
         spectrum = recover_spectrum_from_XYZ(
             target_XYZ,
-            method="auto_gaussian",
+            method=AutoGaussianRecoveryOptions(n_components=3),
             shape=shape,
-            n_components=3,
         )
         recovered.append(spectrum)
         print(original.name)

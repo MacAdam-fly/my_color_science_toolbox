@@ -15,7 +15,11 @@ import numpy as np
 from color.colorimetry import emission_to_LMS, emission_to_XYZ
 from color.generators.ideal import gaussian_spd
 from color.plot import plot_lines, plot_style
-from color.recovery import recover_spectrum_from_LMS, recover_spectrum_from_XYZ
+from color.recovery import (
+    BoundedLeastSquaresOptions,
+    recover_spectrum_from_LMS,
+    recover_spectrum_from_XYZ,
+)
 from color.spectra import SpectralShape, from_columns
 
 
@@ -49,12 +53,12 @@ def main() -> None:
     recovered_XYZ = recover_spectrum_from_XYZ(
         target_XYZ,
         shape=shape,
-        smoothness=1e-3,
+        method=BoundedLeastSquaresOptions(smoothness=1e-3),
     )
     recovered_LMS = recover_spectrum_from_LMS(
         target_LMS,
         shape=shape,
-        smoothness=1e-3,
+        method=BoundedLeastSquaresOptions(smoothness=1e-3),
     )
 
     closed_XYZ = emission_to_XYZ(recovered_XYZ, shape=shape)

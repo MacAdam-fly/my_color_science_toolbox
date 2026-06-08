@@ -14,7 +14,7 @@ import numpy as np
 
 from color.colorimetry import emission_to_XYZ
 from color.plot import plot_lines, plot_style
-from color.recovery import recover_spectrum_from_XYZ
+from color.recovery import GaussianRecoveryOptions, recover_spectrum_from_XYZ
 from color.recovery.parametric import gaussian_spectrum
 from color.spectra import SpectralDistribution, SpectralShape
 
@@ -43,7 +43,7 @@ def main() -> None:
     target_XYZ = emission_to_XYZ(original, shape=shape)
     recovered = recover_spectrum_from_XYZ(
         target_XYZ,
-        method="gaussian",
+        method=GaussianRecoveryOptions(),
         shape=shape,
     )
     closed_XYZ = emission_to_XYZ(recovered, shape=shape)

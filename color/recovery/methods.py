@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from color.utils.methods import build_method_index, resolve_method
 
+from .burns2019 import solve_burns2019_reflectance
 from .dictionary import solve_dictionary_reflectance
 from .meng2015 import solve_meng2015_reflectance
 from .parametric import solve_gaussian_spectrum, solve_multi_gaussian_spectrum
@@ -20,6 +21,7 @@ SPECTRUM_RECOVERY_METHODS = {
 
 REFLECTANCE_RECOVERY_METHODS = {
     "bounded_least_squares": solve_bounded_least_squares,
+    "burns2019": solve_burns2019_reflectance,
     "dictionary": solve_dictionary_reflectance,
     "meng2015": solve_meng2015_reflectance,
     "pca": solve_pca_reflectance,
@@ -54,6 +56,12 @@ _SPECTRUM_METHOD_ALIASES = {
 
 _REFLECTANCE_METHOD_ALIASES = {
     **_BOUNDED_LEAST_SQUARES_ALIASES,
+    "burns2019": (
+        "Burns 2019",
+        "Burns",
+        "smoothest_bounded",
+        "smoothest bounded",
+    ),
     "dictionary": (
         "dict",
         "convex_dictionary",

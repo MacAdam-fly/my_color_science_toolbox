@@ -78,6 +78,55 @@ def test_recover_reflectance_bounds_are_respected() -> None:
     assert np.max(recovered.values) <= 0.5 + 1e-12
 
 
+def test_recover_reflectance_burns2019_round_trips_constant_reflectance() -> None:
+    original = _constant_reflectance(0.42)
+    target = reflectance_to_XYZ(original, illuminant="D65")
+
+    recovered = recover_reflectance_from_XYZ(target, method="burns2019")
+    closed = reflectance_to_XYZ(recovered, illuminant="D65")
+
+    assert isinstance(recovered, SpectralDistribution)
+    np.testing.assert_allclose(closed, target, atol=2e-5)
+    assert np.min(recovered.values) >= 0.0
+    assert np.max(recovered.values) <= 1.0
+    assert recovered.metadata["recovery_method"] == "burns2019"
+    assert recovered.metadata["reference"] == "Burns 2019 Method 3"
+
+
+def test_recover_reflectance_burns2019_handles_black_and_white_boundaries() -> None:
+    _, wavelengths, _ = reflectance_recovery_matrix()
+    white = reflectance_to_XYZ(
+        SpectralDistribution(
+            wavelengths,
+            np.ones_like(wavelengths),
+            name="white reflectance",
+        ),
+        illuminant="D65",
+    )
+    targets = np.vstack([np.zeros(3, dtype=np.float64), white])
+
+    recovered = recover_reflectance_from_XYZ(
+        targets,
+        method="Burns 2019",
+        labels=("black", "white"),
+    )
+
+    assert isinstance(recovered, MultiSpectralDistribution)
+    np.testing.assert_allclose(recovered.channel("black").values, 0.0)
+    np.testing.assert_allclose(recovered.channel("white").values, 1.0)
+
+
+def test_recover_reflectance_burns2019_rejects_non_unit_bounds() -> None:
+    target = reflectance_to_XYZ(_constant_reflectance(0.42), illuminant="D65")
+
+    with pytest.raises(ValueError, match="bounds"):
+        recover_reflectance_from_XYZ(
+            target,
+            method="burns2019",
+            bounds=(0.0, 0.8),
+        )
+
+
 def test_recover_reflectance_smoothness_reduces_second_difference() -> None:
     target = np.array([35.0, 22.0, 14.0])
 

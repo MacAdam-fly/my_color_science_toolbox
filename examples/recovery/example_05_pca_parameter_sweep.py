@@ -15,7 +15,11 @@ import numpy as np
 from color.colorimetry import reflectance_to_XYZ
 from color.datasets.color_cards import get_color_card
 from color.plot import plot_bars, plot_lines, plot_style
-from color.recovery import load_reflectance_library, recover_reflectance_from_XYZ
+from color.recovery import (
+    PCAReflectanceOptions,
+    load_reflectance_library,
+    recover_reflectance_from_XYZ,
+)
 from color.spectra import from_columns
 
 
@@ -37,11 +41,12 @@ def _save_figure(fig, filename: str) -> Path:
 def _recover_pca(target_XYZ, library, *, n_components: int, regularization: float):
     return recover_reflectance_from_XYZ(
         target_XYZ,
-        method="pca",
-        library=library,
+        method=PCAReflectanceOptions(
+            library=library,
+            n_components=n_components,
+            coefficient_regularization=regularization,
+        ),
         illuminant="D65",
-        n_components=n_components,
-        coefficient_regularization=regularization,
     )
 
 

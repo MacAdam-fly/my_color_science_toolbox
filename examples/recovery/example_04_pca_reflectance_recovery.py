@@ -15,7 +15,12 @@ import numpy as np
 from color.colorimetry import reflectance_to_XYZ
 from color.datasets.color_cards import get_color_card
 from color.plot import plot_lines, plot_style
-from color.recovery import load_reflectance_library, recover_reflectance_from_XYZ
+from color.recovery import (
+    BoundedLeastSquaresOptions,
+    PCAReflectanceOptions,
+    load_reflectance_library,
+    recover_reflectance_from_XYZ,
+)
 from color.spectra import from_columns, SpectralShape
 
 
@@ -43,18 +48,18 @@ def main() -> None:
 
     bounded = recover_reflectance_from_XYZ(
         target_XYZ,
-        method="bounded_least_squares",
+        method=BoundedLeastSquaresOptions(smoothness=1e-3),
         illuminant="D65",
         shape=library.shape,
-        smoothness=1e-3,
     )
     pca = recover_reflectance_from_XYZ(
         target_XYZ,
-        method="pca",
-        library=library,
+        method=PCAReflectanceOptions(
+            library=library,
+            n_components=30,
+            coefficient_regularization=1e-3,
+        ),
         illuminant="D65",
-        n_components=30,
-        coefficient_regularization=1e-3,
     )
 
     bounded_closed = reflectance_to_XYZ(bounded, illuminant="D65", shape=library.shape)

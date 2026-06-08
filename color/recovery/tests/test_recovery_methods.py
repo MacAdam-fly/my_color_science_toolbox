@@ -11,6 +11,7 @@ from color.recovery import (
     resolve_spectrum_recovery_method,
     solve_bounded_least_squares,
 )
+from color.recovery.burns2019 import solve_burns2019_reflectance
 from color.recovery.dictionary import solve_dictionary_reflectance
 from color.recovery.meng2015 import solve_meng2015_reflectance
 from color.recovery.pca import solve_pca_reflectance
@@ -50,6 +51,8 @@ def test_recovery_method_registries_are_separate() -> None:
     assert "bounded_least_squares" in REFLECTANCE_RECOVERY_METHODS
     assert "auto_gaussian" in SPECTRUM_RECOVERY_METHODS
     assert "auto_gaussian" not in REFLECTANCE_RECOVERY_METHODS
+    assert "burns2019" not in SPECTRUM_RECOVERY_METHODS
+    assert "burns2019" in REFLECTANCE_RECOVERY_METHODS
     assert "dictionary" not in SPECTRUM_RECOVERY_METHODS
     assert "dictionary" in REFLECTANCE_RECOVERY_METHODS
     assert "gaussian" in SPECTRUM_RECOVERY_METHODS
@@ -75,6 +78,22 @@ def test_reflectance_dictionary_method_aliases(method: str) -> None:
     name, solver = resolve_reflectance_recovery_method(method)
     assert name == "dictionary"
     assert solver is solve_dictionary_reflectance
+
+
+@pytest.mark.parametrize(
+    "method",
+    [
+        "burns2019",
+        "Burns 2019",
+        "Burns",
+        "smoothest_bounded",
+        "smoothest bounded",
+    ],
+)
+def test_reflectance_burns2019_method_aliases(method: str) -> None:
+    name, solver = resolve_reflectance_recovery_method(method)
+    assert name == "burns2019"
+    assert solver is solve_burns2019_reflectance
 
 
 @pytest.mark.parametrize(
@@ -108,6 +127,8 @@ def test_reflectance_meng2015_method_aliases(method: str) -> None:
 
 
 def test_unknown_recovery_method_raises() -> None:
+    with pytest.raises(ValueError):
+        resolve_spectrum_recovery_method("burns2019")
     with pytest.raises(ValueError):
         resolve_spectrum_recovery_method("pca")
     with pytest.raises(ValueError):

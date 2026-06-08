@@ -4,12 +4,13 @@ from __future__ import annotations
 
 import numpy as np
 
-from color.colorimetry import emission_to_LMS, emission_to_XYZ
+from color.colorimetry import XYZ_to_xyY, emission_to_LMS, emission_to_XYZ
 from color.generators.ideal import gaussian_spd
 from color.recovery import (
     recover_spectrum_from_LMS,
     recover_spectrum_from_responses,
     recover_spectrum_from_XYZ,
+    recover_spectrum_from_xyY,
     response_recovery_matrix,
 )
 from color.spectra import (
@@ -46,6 +47,23 @@ def test_recover_spectrum_from_XYZ_round_trips_emission_XYZ() -> None:
     assert isinstance(recovered, SpectralDistribution)
     assert np.allclose(closed, target, atol=2e-4)
     assert np.all(recovered.values >= 0.0)
+
+
+def test_recover_spectrum_from_xyY_round_trips_emission_XYZ() -> None:
+    original = _gaussian_spectrum()
+    shape = SpectralShape(400, 700, 1)
+    target = emission_to_XYZ(original, shape=shape)
+    target_xyY = XYZ_to_xyY(target)
+
+    recovered = recover_spectrum_from_xyY(
+        target_xyY,
+        shape=shape,
+        smoothness=1e-3,
+    )
+    closed = emission_to_XYZ(recovered, shape=shape)
+
+    assert isinstance(recovered, SpectralDistribution)
+    assert np.allclose(closed, target, atol=2e-4)
 
 
 def test_recover_spectrum_from_LMS_round_trips_emission_LMS() -> None:
