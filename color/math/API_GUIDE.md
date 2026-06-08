@@ -14,6 +14,9 @@
 | `resolve_interpolator` | 根据 `method="auto"` 和采样结构选择实际插值器 |
 | `Extrapolator` | 外推方法类型标注 |
 | `extrapolate_1d` | 对一维采样信号插值并外推 |
+| `gaussian_values` | 计算一条高斯曲线的数值 |
+| `gaussian_values_from_fwhm` | 使用 FWHM 宽度计算高斯曲线 |
+| `sigma_from_fwhm` | 将 FWHM 转成高斯标准差 `sigma` |
 
 ## 基本约定
 
@@ -239,6 +242,90 @@ values = extrapolate_1d(
 ```
 
 `left` 和 `right` 优先级高于 `method` 的默认外推结果。
+
+## `gaussian_values(x, *, amplitude=1.0, center=0.0, sigma=1.0)`
+
+计算一条高斯曲线：
+
+```text
+y = amplitude * exp(-0.5 * ((x - center) / sigma)^2)
+```
+
+```python
+import numpy as np
+from color.math import gaussian_values
+
+x = np.linspace(400.0, 700.0, 301)
+y = gaussian_values(x, amplitude=1.0, center=555.0, sigma=25.0)
+```
+
+注意：这里的 `x` 只是数值坐标。它可以是波长，也可以是其他一维坐标；`color.math` 不保存单位和 metadata。
+
+## `sigma_from_fwhm(fwhm)`
+
+把高斯曲线的 full width at half maximum 转换成标准差：
+
+```python
+from color.math import sigma_from_fwhm
+
+sigma = sigma_from_fwhm(50.0)
+```
+
+公式为：
+
+```text
+sigma = fwhm / (2 * sqrt(2 * ln(2)))
+```
+
+`fwhm` 必须是有限正数。
+
+## `gaussian_values_from_fwhm(x, *, amplitude=1.0, center=0.0, fwhm=1.0)`
+
+使用 FWHM 宽度直接计算高斯曲线。
+
+```python
+import numpy as np
+from color.math import gaussian_values_from_fwhm
+
+wavelengths = np.array([530.0, 555.0, 580.0])
+values = gaussian_values_from_fwhm(
+    wavelengths,
+    amplitude=1.0,
+    center=555.0,
+    fwhm=50.0,
+)
+```
+
+这个函数等价于：
+
+```python
+from color.math import gaussian_values, sigma_from_fwhm
+
+values = gaussian_values(
+    wavelengths,
+    amplitude=1.0,
+    center=555.0,
+    sigma=sigma_from_fwhm(50.0),
+)
+```
+
+## 与 generators / recovery 的关系
+
+`color.math` 只提供高斯公式本身。若你需要生成一个带 `wavelength` / `spd` 列的字典，应使用：
+
+```python
+from color.generators import gaussian_spd
+
+data = gaussian_spd(peak_wavelength=555.0, width=25.0)
+```
+
+若你需要从 `XYZ` 优化恢复一条参数化高斯 effective spectrum，应使用：
+
+```python
+from color.recovery import recover_spectrum_from_XYZ
+
+sd = recover_spectrum_from_XYZ(XYZ, method="gaussian")
+```
 
 ## 与 `color.spectra` 的关系
 

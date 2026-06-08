@@ -27,6 +27,7 @@ from .ideal import (
     gaussian_spd,
     generate_ideal,
     list_ideal_generators,
+    multi_gaussian_spd,
     zero_spd,
 )
 from .illuminants import (
@@ -84,6 +85,7 @@ __all__ += [
     "zero_spd",  # generate a zero-valued ideal spectrum
     "equal_energy_spd",  # generate an equal-energy ideal spectrum
     "gaussian_spd",  # generate a Gaussian ideal spectrum
+    "multi_gaussian_spd",  # generate a multi-Gaussian ideal spectrum
 
     "generate_ideal",  # generate a registered ideal spectrum
     "list_ideal_generators",  # list ideal generator names

@@ -32,7 +32,7 @@ dict[str, numpy.ndarray]
 | --- | --- |
 | `blackbody_spd`, `generate_blackbody`, `list_blackbody_generators` | 黑体光谱 |
 | `illuminant_a_spd`, `daylight_spd`, `generate_illuminant`, `list_illuminant_generators` | CIE A / D 系列照明体 |
-| `constant_spd`, `zero_spd`, `equal_energy_spd`, `gaussian_spd`, `generate_ideal`, `list_ideal_generators` | 理想光谱 |
+| `constant_spd`, `zero_spd`, `equal_energy_spd`, `gaussian_spd`, `multi_gaussian_spd`, `generate_ideal`, `list_ideal_generators` | 理想光谱 |
 | `single_led_spd`, `multi_led_spd`, `generate_led`, `list_led_generators` | LED 光谱 |
 | `macular_density_spectrum`, `lens_density_spectrum`, `cone_absorbance_spectra`, `generate_individual_cone_fundamentals`, `generate_individual_cone_fundamental`, `list_individual_cone_fundamental_generators` | Stockman/Rider 个体锥体模型 |
 
@@ -270,6 +270,41 @@ FWHM 宽度：
 raw = gaussian_spd(peak_wavelength=555, width=50, method="fwhm")
 ```
 
+### `multi_gaussian_spd(wavelength_nm=None, peak_wavelengths=..., widths=..., amplitudes=None, method="normal", column="spd")`
+
+用途：生成多个理想高斯分量叠加得到的多峰光谱。
+
+```python
+from color.generators import multi_gaussian_spd
+
+raw = multi_gaussian_spd(
+    peak_wavelengths=(450, 540, 630),
+    widths=(18, 35, 24),
+    amplitudes=(0.8, 0.55, 1.0),
+)
+```
+
+所有分量使用同一个宽度：
+
+```python
+raw = multi_gaussian_spd(
+    peak_wavelengths=(450, 540, 630),
+    widths=25,
+)
+```
+
+使用 FWHM 宽度：
+
+```python
+raw = multi_gaussian_spd(
+    peak_wavelengths=(450, 630),
+    widths=(40, 55),
+    method="fwhm",
+)
+```
+
+注意：`multi_gaussian_spd(...)` 是数学理想多高斯谱；`multi_led_spd(...)` 使用 Ohno 2005 LED 模型，两者曲线形状和语义不同。
+
 ### `generate_ideal(name, **kwargs)` / `list_ideal_generators()`
 
 ```python
@@ -277,6 +312,7 @@ from color.generators import generate_ideal, list_ideal_generators
 
 print(list_ideal_generators())
 raw = generate_ideal("gaussian", peak_wavelength=555, width=25)
+multi = generate_ideal("multi_gaussian", peak_wavelengths=(450, 630))
 ```
 
 ## LED

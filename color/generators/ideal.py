@@ -6,6 +6,8 @@ from typing import List
 
 import numpy as np
 
+from color.math import gaussian_values, gaussian_values_from_fwhm
+
 from ._registry import GeneratedDict, GeneratorEntry, generate, list_generators, register
 
 
@@ -75,13 +77,92 @@ def gaussian_spd(
     wavelengths = _as_wavelengths(wavelength_nm)
     method_key = method.strip().lower().replace("-", "").replace("_", "")
     if method_key == "normal":
-        sigma = width
+        values = gaussian_values(
+            wavelengths,
+            amplitude=amplitude,
+            center=peak_wavelength,
+            sigma=width,
+        )
     elif method_key == "fwhm":
-        sigma = width / (2.0 * np.sqrt(2.0 * np.log(2.0)))
+        values = gaussian_values_from_fwhm(
+            wavelengths,
+            amplitude=amplitude,
+            center=peak_wavelength,
+            fwhm=width,
+        )
     else:
         raise ValueError("method must be 'normal' or 'fwhm'")
 
-    values = amplitude * np.exp(-((wavelengths - peak_wavelength) ** 2) / (2.0 * sigma**2))
+    return {"wavelength": wavelengths, column: values}
+
+
+def _as_component_values(
+    value: np.ndarray | List[float] | tuple[float, ...] | float,
+    *,
+    size: int,
+    name: str,
+) -> np.ndarray:
+    """Return component values, allowing scalar broadcast or exact length."""
+    values = np.asarray(value, dtype=np.float64)
+    if values.ndim == 0:
+        return np.full(size, float(values), dtype=np.float64)
+    if values.ndim != 1 or values.size != size:
+        raise ValueError(f"{name} must be a scalar or a one-dimensional array of length {size}")
+    return values
+
+
+def multi_gaussian_spd(
+    wavelength_nm: np.ndarray | None = None,
+    peak_wavelengths: np.ndarray | List[float] | tuple[float, ...] = (450.0, 550.0, 650.0),
+    widths: np.ndarray | List[float] | tuple[float, ...] | float = 25.0,
+    amplitudes: np.ndarray | List[float] | tuple[float, ...] | float | None = None,
+    method: str = "normal",
+    column: str = "spd",
+) -> GeneratedDict:
+    """Generate an idealised multi-Gaussian spectral distribution.
+
+    ``method="normal"`` interprets ``widths`` as standard deviations.
+    ``method="fwhm"`` interprets ``widths`` as full widths at half maximum.
+    """
+    wavelengths = _as_wavelengths(wavelength_nm)
+    peaks = np.asarray(peak_wavelengths, dtype=np.float64)
+    if peaks.ndim != 1 or peaks.size == 0:
+        raise ValueError("peak_wavelengths must be a non-empty one-dimensional array")
+    if not np.all(np.isfinite(peaks)):
+        raise ValueError("peak_wavelengths must contain finite values")
+
+    widths_arr = _as_component_values(widths, size=peaks.size, name="widths")
+    if np.any(widths_arr <= 0) or not np.all(np.isfinite(widths_arr)):
+        raise ValueError("widths must contain finite positive values")
+
+    if amplitudes is None:
+        amplitudes_arr = np.ones(peaks.shape, dtype=np.float64)
+    else:
+        amplitudes_arr = _as_component_values(amplitudes, size=peaks.size, name="amplitudes")
+    if not np.all(np.isfinite(amplitudes_arr)):
+        raise ValueError("amplitudes must contain finite values")
+
+    method_key = method.strip().lower().replace("-", "").replace("_", "")
+    values = np.zeros(wavelengths.shape, dtype=np.float64)
+    for peak, width, amplitude in zip(peaks, widths_arr, amplitudes_arr):
+        if method_key == "normal":
+            component = gaussian_values(
+                wavelengths,
+                amplitude=float(amplitude),
+                center=float(peak),
+                sigma=float(width),
+            )
+        elif method_key == "fwhm":
+            component = gaussian_values_from_fwhm(
+                wavelengths,
+                amplitude=float(amplitude),
+                center=float(peak),
+                fwhm=float(width),
+            )
+        else:
+            raise ValueError("method must be 'normal' or 'fwhm'")
+        values = values + component
+
     return {"wavelength": wavelengths, column: values}
 
 
@@ -118,6 +199,15 @@ register(GeneratorEntry(
     description="Idealised Gaussian spectral distribution using normal or FWHM width",
     generate_fn=gaussian_spd,
     parameters=("peak_wavelength", "width", "method", "amplitude", "wavelength_nm", "column"),
+    metadata={"quantity": "relative_spd", "wavelength_unit": "nm"},
+))
+
+register(GeneratorEntry(
+    category="ideal",
+    name="multi_gaussian",
+    description="Idealised multi-Gaussian spectral distribution",
+    generate_fn=multi_gaussian_spd,
+    parameters=("peak_wavelengths", "widths", "amplitudes", "method", "wavelength_nm", "column"),
     metadata={"quantity": "relative_spd", "wavelength_unit": "nm"},
 ))
 

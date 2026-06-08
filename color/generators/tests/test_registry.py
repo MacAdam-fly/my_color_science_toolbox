@@ -152,6 +152,7 @@ def test_registry_contains_expected_builtin():
     assert ("blackbody", "blackbody_spd") in _REGISTRY
     assert ("illuminants", "A") in _REGISTRY
     assert ("ideal", "gaussian") in _REGISTRY
+    assert ("ideal", "multi_gaussian") in _REGISTRY
     assert ("leds", "single") in _REGISTRY
     assert (
         "individual_cone_fundamentals",

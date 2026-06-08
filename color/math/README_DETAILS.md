@@ -1,6 +1,6 @@
 # color.math 详细说明
 
-`color.math` 是项目里的底层数值方法层，目前主要服务于光谱插值和外推。它只处理一维数组上的数值运算，不表达颜色科学对象本身。
+`color.math` 是项目里的底层数值方法层，目前主要服务于光谱插值、外推和少量可被多个模块复用的纯数值曲线。它只处理数组上的数值运算，不表达颜色科学对象本身。
 
 逐项顶层 API 的最小使用案例见 [`API_GUIDE.md`](API_GUIDE.md)。本文档保留模块边界、插值/外推策略和与上层模块的关系说明。
 
@@ -25,6 +25,7 @@ color.spectra
 | --- | --- |
 | `interpolation.py` | 一维采样数据插值 |
 | `extrapolation.py` | 一维采样数据外推 |
+| `gaussian.py` | 高斯曲线底层数值公式 |
 
 ## 输入约定
 
@@ -109,6 +110,32 @@ from color.math import interpolate_1d
 
 values = interpolate_1d(x, y, target, method="linear")
 ```
+
+## 高斯曲线工具的边界
+
+`gaussian_values(...)`、`gaussian_values_from_fwhm(...)` 和
+`sigma_from_fwhm(...)` 放在 `color.math`，原因是高斯公式同时被多个上层模块复用：
+
+- `color.generators.ideal.gaussian_spd(...)` 需要用高斯公式生成理想 SPD 字典。
+- `color.recovery.parametric` 需要在优化循环中反复计算单高斯和多高斯模型。
+
+两者共享的只有数学公式，不共享对象语义。因此底层只保留：
+
+```text
+x + amplitude + center + sigma/fwhm -> np.ndarray
+```
+
+它不负责：
+
+- 判断 `x` 是否是 wavelength。
+- 创建 `{"wavelength": ..., "spd": ...}` 字典。
+- 创建 `SpectralDistribution`。
+- 记录 recovery 参数或优化误差。
+
+对应地：
+
+- 需要生成公式光谱数据时，用 `color.generators.gaussian_spd(...)`。
+- 需要从 `XYZ/LMS` 恢复参数化光谱时，用 `color.recovery.recover_spectrum_from_XYZ(..., method="gaussian")` 或 `method="multi_gaussian"`。
 
 ## 不负责的内容
 

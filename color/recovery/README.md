@@ -5,8 +5,8 @@ spectrum from arbitrary three-channel responses, or recover a reflectance
 spectrum from `XYZ` / `xyY` under a specified illuminant.
 
 Recovery is not unique: many spectra can produce the same colour stimulus. The
-functions here return one feasible spectrum under explicit bounds and smoothness
-constraints.
+functions here return one feasible spectrum under explicit bounds, smoothness,
+database, or parametric constraints.
 
 中文 API 使用指南见 [`API_GUIDE.md`](API_GUIDE.md)。中文详细说明见
 [`README_DETAILS.md`](README_DETAILS.md)。
@@ -51,6 +51,16 @@ reflectance_meng = recover_reflectance_from_XYZ(
 spectrum = recover_spectrum_from_XYZ(target_XYZ, bounds=(0.0, float("inf")))
 closed_emission_XYZ = emission_to_XYZ(spectrum)
 
+gaussian_spectrum = recover_spectrum_from_XYZ(
+    target_XYZ,
+    method="gaussian",
+)
+
+auto_parametric_spectrum = recover_spectrum_from_XYZ(
+    target_XYZ,
+    method="auto_gaussian",
+)
+
 library = load_reflectance_library()  # default: UEF Munsell matt, 400-700 nm / 5 nm
 print(library.reflectances.shape)     # (samples, wavelengths)
 ```
@@ -81,3 +91,7 @@ convex dictionary recovery. PCA and dictionary methods use a reflectance library
 prior and are not registered for generic spectrum recovery. Meng 2015 is an
 optimisation method with exact XYZ equality constraints and does not use a
 reflectance library.
+
+Spectrum recovery supports bounded smooth least-squares and parametric Gaussian
+methods: `gaussian`, `multi_gaussian`, and `auto_gaussian`. These methods recover
+effective spectra / emission-like SPDs and are not reflectance recovery methods.

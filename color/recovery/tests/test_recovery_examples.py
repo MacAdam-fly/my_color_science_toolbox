@@ -25,5 +25,8 @@ def test_recovery_examples_run() -> None:
         "example_04_pca_reflectance_recovery.py",
         "example_05_pca_parameter_sweep.py",
         "example_06_dictionary_reflectance_recovery.py",
+        "example_07_gaussian_spectrum_recovery.py",
+        "example_08_multi_gaussian_spectrum_recovery.py",
+        "example_09_auto_gaussian_spectrum_recovery.py",
     ):
         runpy.run_path(str(_EXAMPLES / filename), run_name="__main__")

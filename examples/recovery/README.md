@@ -15,5 +15,11 @@ Examples for `color.recovery`.
   shape.
 - `example_06_dictionary_reflectance_recovery.py` - Compare bounded
   least-squares, PCA, and convex dictionary recovery.
+- `example_07_gaussian_spectrum_recovery.py` - Recover a single-peak effective
+  spectrum with `method="gaussian"` and inspect dominant-wavelength metadata.
+- `example_08_multi_gaussian_spectrum_recovery.py` - Compare single and
+  multi-Gaussian recovery for a two-peak effective spectrum.
+- `example_09_auto_gaussian_spectrum_recovery.py` - Show `auto_gaussian`
+  selecting single or multi-Gaussian models from chromaticity analysis.
 
 Generated figures are written to `examples/recovery/output/` and ignored by Git.

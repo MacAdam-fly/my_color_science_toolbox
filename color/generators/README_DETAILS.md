@@ -301,6 +301,42 @@ raw = gaussian_spd(
 raw = generate("ideal", "gaussian", peak_wavelength=555, width=25)
 ```
 
+### multi_gaussian
+
+```python
+from color.generators.ideal import multi_gaussian_spd
+
+raw = multi_gaussian_spd(
+    peak_wavelengths=(450, 540, 630),
+    widths=(18, 35, 24),
+    amplitudes=(0.8, 0.55, 1.0),
+)
+```
+
+`multi_gaussian_spd(...)` 会把多个标准高斯分量相加。它和 `multi_led_spd(...)`
+不是同一个模型：
+
+- `multi_gaussian_spd(...)` 使用标准高斯公式，属于理想数学曲线。
+- `multi_led_spd(...)` 使用 Ohno 2005 LED 模型，属于 LED 经验谱形。
+
+参数规则也更严格：
+
+- `widths` 和 `amplitudes` 可以是标量，表示所有分量共用同一个值。
+- 如果传入数组，长度必须和 `peak_wavelengths` 一致。
+- 不会像 `np.resize` 那样循环填充短数组，避免隐藏输入错误。
+
+注册表入口：
+
+```python
+raw = generate(
+    "ideal",
+    "multi_gaussian",
+    peak_wavelengths=(450, 540, 630),
+    widths=(18, 35, 24),
+    amplitudes=(0.8, 0.55, 1.0),
+)
+```
+
 ## LED
 
 LED 模块使用 Ohno 2005 LED 模型。
@@ -506,6 +542,7 @@ constant_spd
 zero_spd
 equal_energy_spd
 gaussian_spd
+multi_gaussian_spd
 generate_ideal
 list_ideal_generators
 ```

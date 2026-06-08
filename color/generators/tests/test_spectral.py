@@ -12,6 +12,7 @@ from color.generators.ideal import (
     gaussian_spd,
     generate_ideal,
     list_ideal_generators,
+    multi_gaussian_spd,
     zero_spd,
 )
 from color.generators.leds import (
@@ -29,6 +30,7 @@ class TestListIdealGenerators:
         assert "constant" in result
         assert "equal_energy" in result
         assert "gaussian" in result
+        assert "multi_gaussian" in result
 
 
 class TestListLedGenerators:
@@ -107,6 +109,75 @@ class TestGaussian:
     def test_invalid_method_raises(self):
         with pytest.raises(ValueError, match="method must be"):
             gaussian_spd(method="unknown")
+
+
+class TestMultiGaussian:
+    """Tests for multi-Gaussian spectral generator."""
+
+    def test_sums_gaussian_components(self):
+        wavelengths = np.array([450.0, 550.0, 650.0])
+        data = multi_gaussian_spd(
+            wavelength_nm=wavelengths,
+            peak_wavelengths=(450.0, 650.0),
+            widths=10.0,
+            amplitudes=(1.0, 2.0),
+        )
+        expected = (
+            gaussian_spd(
+                wavelength_nm=wavelengths,
+                peak_wavelength=450.0,
+                width=10.0,
+                amplitude=1.0,
+            )["spd"]
+            + gaussian_spd(
+                wavelength_nm=wavelengths,
+                peak_wavelength=650.0,
+                width=10.0,
+                amplitude=2.0,
+            )["spd"]
+        )
+        np.testing.assert_allclose(data["spd"], expected)
+
+    def test_fwhm_method(self):
+        wavelengths = np.array([530.0, 555.0, 580.0])
+        data = multi_gaussian_spd(
+            wavelength_nm=wavelengths,
+            peak_wavelengths=(555.0,),
+            widths=(50.0,),
+            method="fwhm",
+        )
+        np.testing.assert_allclose(
+            data["spd"],
+            gaussian_spd(
+                wavelength_nm=wavelengths,
+                peak_wavelength=555.0,
+                width=50.0,
+                method="fwhm",
+            )["spd"],
+        )
+
+    def test_registry_generate(self):
+        data = generate("ideal", "multi_gaussian", peak_wavelengths=(450.0, 650.0))
+        assert data["wavelength"][0] == 360
+        assert "spd" in data
+
+    def test_invalid_component_lengths_raise(self):
+        with pytest.raises(ValueError, match="widths"):
+            multi_gaussian_spd(
+                peak_wavelengths=(450.0, 650.0),
+                widths=(10.0, 20.0, 30.0),
+            )
+        with pytest.raises(ValueError, match="amplitudes"):
+            multi_gaussian_spd(
+                peak_wavelengths=(450.0, 650.0),
+                amplitudes=(1.0, 2.0, 3.0),
+            )
+
+    def test_invalid_width_and_method_raise(self):
+        with pytest.raises(ValueError, match="widths"):
+            multi_gaussian_spd(widths=0.0)
+        with pytest.raises(ValueError, match="method must be"):
+            multi_gaussian_spd(method="unknown")
 
 
 class TestLed:

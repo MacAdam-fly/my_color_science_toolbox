@@ -48,10 +48,16 @@ def test_recovery_method_registries_are_separate() -> None:
     assert SPECTRUM_RECOVERY_METHODS is not REFLECTANCE_RECOVERY_METHODS
     assert "bounded_least_squares" in SPECTRUM_RECOVERY_METHODS
     assert "bounded_least_squares" in REFLECTANCE_RECOVERY_METHODS
+    assert "auto_gaussian" in SPECTRUM_RECOVERY_METHODS
+    assert "auto_gaussian" not in REFLECTANCE_RECOVERY_METHODS
     assert "dictionary" not in SPECTRUM_RECOVERY_METHODS
     assert "dictionary" in REFLECTANCE_RECOVERY_METHODS
+    assert "gaussian" in SPECTRUM_RECOVERY_METHODS
+    assert "gaussian" not in REFLECTANCE_RECOVERY_METHODS
     assert "meng2015" not in SPECTRUM_RECOVERY_METHODS
     assert "meng2015" in REFLECTANCE_RECOVERY_METHODS
+    assert "multi_gaussian" in SPECTRUM_RECOVERY_METHODS
+    assert "multi_gaussian" not in REFLECTANCE_RECOVERY_METHODS
     assert "pca" not in SPECTRUM_RECOVERY_METHODS
     assert "pca" in REFLECTANCE_RECOVERY_METHODS
 

@@ -17,6 +17,7 @@ from color.generators.ideal import (
     constant_spd,
     equal_energy_spd,
     gaussian_spd,
+    multi_gaussian_spd,
     zero_spd,
 )
 from color.plot import plot_lines, plot_style
@@ -39,6 +40,12 @@ def main() -> None:
             peak_wavelength=555,
             width=50,
             method="fwhm",
+        ),
+        "multi gaussian": multi_gaussian_spd(
+            wavelength_nm=wavelength,
+            peak_wavelengths=(450, 540, 630),
+            widths=(18, 35, 24),
+            amplitudes=(0.8, 0.55, 1.0),
         ),
     }
 

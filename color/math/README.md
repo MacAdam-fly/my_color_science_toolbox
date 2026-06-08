@@ -1,8 +1,9 @@
 # color.math
 
 `color.math` provides low-level numerical helpers used by the package. The
-current scope is one-dimensional interpolation and extrapolation for sampled
-signals, especially spectral data.
+current scope is one-dimensional interpolation/extrapolation for sampled
+signals and small pure numerical curve helpers shared by generators and
+recovery algorithms.
 
 Chinese API usage examples are available in [`API_GUIDE.md`](API_GUIDE.md).
 Chinese design notes are available in [`README_DETAILS.md`](README_DETAILS.md).
@@ -13,6 +14,7 @@ Chinese design notes are available in [`README_DETAILS.md`](README_DETAILS.md).
 
 ```text
 x, y, target arrays -> interpolated or extrapolated values
+x samples + Gaussian parameters -> curve values
 ```
 
 It does not manage spectral objects, channel labels, metadata, units,
@@ -34,6 +36,12 @@ Extrapolation:
 - `Extrapolator`
 - `extrapolate_1d(...)`
 
+Gaussian curves:
+
+- `gaussian_values(...)`
+- `gaussian_values_from_fwhm(...)`
+- `sigma_from_fwhm(...)`
+
 ## Quick Start
 
 ```python
@@ -54,6 +62,16 @@ wide_values = extrapolate_1d(
     interpolator="linear",
     method="constant",
 )
+```
+
+Gaussian curve values:
+
+```python
+import numpy as np
+from color.math import gaussian_values
+
+x = np.linspace(400.0, 700.0, 301)
+values = gaussian_values(x, amplitude=1.0, center=555.0, sigma=25.0)
 ```
 
 ## Interpolation
@@ -89,6 +107,14 @@ then handles out-of-domain samples with:
 - `fill`
 
 `left` and `right` can explicitly override the two extrapolated sides.
+
+## Gaussian Helpers
+
+The Gaussian helpers are pure numerical functions. They do not know whether
+`x` is wavelength, time, position, or another axis. For spectral generator
+dictionaries, use `color.generators.gaussian_spd(...)`. For parameterised
+recovery, use `color.recovery` methods such as
+`recover_spectrum_from_XYZ(..., method="gaussian")`.
 
 ## Input Rules
 

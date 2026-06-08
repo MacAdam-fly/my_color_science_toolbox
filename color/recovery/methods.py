@@ -6,12 +6,16 @@ from color.utils.methods import build_method_index, resolve_method
 
 from .dictionary import solve_dictionary_reflectance
 from .meng2015 import solve_meng2015_reflectance
+from .parametric import solve_gaussian_spectrum, solve_multi_gaussian_spectrum
 from .pca import solve_pca_reflectance
 from .solvers import solve_bounded_least_squares
 
 
 SPECTRUM_RECOVERY_METHODS = {
     "bounded_least_squares": solve_bounded_least_squares,
+    "auto_gaussian": solve_multi_gaussian_spectrum,
+    "gaussian": solve_gaussian_spectrum,
+    "multi_gaussian": solve_multi_gaussian_spectrum,
 }
 
 REFLECTANCE_RECOVERY_METHODS = {
@@ -21,7 +25,7 @@ REFLECTANCE_RECOVERY_METHODS = {
     "pca": solve_pca_reflectance,
 }
 
-_SPECTRUM_METHOD_ALIASES = {
+_BOUNDED_LEAST_SQUARES_ALIASES = {
     "bounded_least_squares": (
         "bounded least squares",
         "BoundedLeastSquares",
@@ -29,8 +33,27 @@ _SPECTRUM_METHOD_ALIASES = {
     ),
 }
 
+_SPECTRUM_METHOD_ALIASES = {
+    **_BOUNDED_LEAST_SQUARES_ALIASES,
+    "auto_gaussian": (
+        "auto gaussian",
+        "AutoGaussian",
+    ),
+    "gaussian": (
+        "single_gaussian",
+        "single gaussian",
+        "Gaussian",
+    ),
+    "multi_gaussian": (
+        "multi gaussian",
+        "multigaussian",
+        "multiple_gaussian",
+        "multiple gaussian",
+    ),
+}
+
 _REFLECTANCE_METHOD_ALIASES = {
-    **_SPECTRUM_METHOD_ALIASES,
+    **_BOUNDED_LEAST_SQUARES_ALIASES,
     "dictionary": (
         "dict",
         "convex_dictionary",

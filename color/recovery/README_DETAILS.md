@@ -63,14 +63,23 @@ subject to lower <= r <= upper
 
 ```text
 bounded_least_squares
+gaussian  # spectrum recovery only
+multi_gaussian  # spectrum recovery only
+auto_gaussian  # spectrum recovery only
 meng2015  # reflectance recovery only
 pca  # reflectance recovery only
 dictionary  # reflectance recovery only
 ```
 
+`gaussian`、`multi_gaussian` 和 `auto_gaussian` 只注册在 spectrum recovery 中。
+它们恢复的是 effective spectrum / emission-like SPD，不是反射率。单高斯模型适合
+单峰 LED 或窄带光源；多高斯模型适合双峰/多峰 LED，尤其是 purple/complementary
+方向这类单峰光谱难以表达的色品。`auto_gaussian` 是策略分发：XYZ 入口下根据主波长
+分析选择 single 或 multi Gaussian，不是新的数学模型。
+
 `meng2015`、`pca` 和 `dictionary` 只注册在 reflectance recovery 中。`meng2015`
 依赖反射率边界和照明体语义；`pca` / `dictionary` 依赖反射谱数据库。通用 spectrum
-recovery 没有反射率先验，因此不提供这些 method。
+recovery 没有反射率先验，因此不提供这些 reflectance-only method。
 
 Meng 2015 recovery 不使用数据库。它求解：
 
