@@ -1,13 +1,49 @@
-# io
+# color.io
 
-Purpose
-- File readers and writers for spectra, figures, CMF, and ICC artifacts.
+`color.io` contains lightweight file readers and writers for objects already
+used by the toolbox. It does not register datasets, perform colour management,
+or change scientific computation semantics.
 
-Naming
-- Use `reader_*` / `writer_*` or `load_*` / `save_*` patterns.
-- Figure export lives here, not in `color.plot`, because saving files is an IO
-  operation rather than a plotting primitive.
+## Public API
 
-Entry points
-- Prefer `color.io.<module>` for IO utilities.
-- `save_figure(...)` is exported from `color.io` for Matplotlib figure export.
+Figure export:
+
+- `save_figure`
+
+Spectral object IO:
+
+- `spectral_to_dataframe`
+- `spectral_from_dataframe`
+- `read_spectral_csv`
+- `write_spectral_csv`
+- `read_spectral_excel`
+- `write_spectral_excel`
+- `read_spectral_json`
+- `write_spectral_json`
+
+Image IO:
+
+- `read_sRGB_image`
+- `write_sRGB_image`
+
+## Quick Start
+
+```python
+from color.io import read_spectral_json, write_spectral_json
+from color.spectra import SpectralDistribution
+
+sd = SpectralDistribution([400, 500, 600], [0.1, 0.8, 0.2], name="sample")
+
+write_spectral_json("sample.json", sd)
+sd2 = read_spectral_json("sample.json")
+```
+
+```python
+from color.io import read_sRGB_image, write_sRGB_image
+
+image = read_sRGB_image("input.jpg")
+write_sRGB_image("preview.png", image)
+```
+
+For detailed design notes, see `README_DETAILS.md`. For per-API examples, see
+`API_GUIDE.md`.
