@@ -5,7 +5,44 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from color.io import read_sRGB_image, write_sRGB_image
+from color.io import read_image, read_sRGB_image, write_image, write_sRGB_image
+
+
+def test_read_image_can_keep_integer_codes(tmp_path) -> None:
+    image = np.array(
+        [
+            [[0, 64, 128], [192, 255, 25]],
+            [[51, 102, 153], [204, 76, 0]],
+        ],
+        dtype=np.uint8,
+    )
+
+    path = write_image(tmp_path / "codes.png", image)
+    result = read_image(path, as_float=False)
+
+    assert path.exists()
+    assert result.dtype == np.uint8
+    assert np.array_equal(result, image)
+
+
+def test_read_image_normalises_integer_codes(tmp_path) -> None:
+    image = np.array([[[0, 128, 255]]], dtype=np.uint8)
+
+    path = write_image(tmp_path / "normalised.png", image)
+    result = read_image(path)
+
+    assert result.dtype == np.float64
+    assert np.allclose(result[0, 0], [0.0, 128.0 / 255.0, 1.0])
+
+
+def test_write_image_can_quantise_float_to_16_bit_grayscale(tmp_path) -> None:
+    image = np.array([[0.0, 0.5, 1.0]], dtype=np.float64)
+
+    path = write_image(tmp_path / "gray16.tiff", image, bit_depth=16)
+    result = read_image(path, as_float=False)
+
+    assert result.dtype == np.uint16
+    assert np.array_equal(result, np.array([[0, 32768, 65535]], dtype=np.uint16))
 
 
 def test_srgb_image_roundtrip_png(tmp_path) -> None:

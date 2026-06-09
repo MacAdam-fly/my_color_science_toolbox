@@ -23,6 +23,8 @@ Spectral object IO:
 
 Image IO:
 
+- `read_image`
+- `write_image`
 - `read_sRGB_image`
 - `write_sRGB_image`
 
@@ -39,8 +41,9 @@ sd2 = read_spectral_json("sample.json")
 ```
 
 ```python
-from color.io import read_sRGB_image, write_sRGB_image
+from color.io import read_image, read_sRGB_image, write_sRGB_image
 
+raw_codes = read_image("input.png", as_float=False)
 image = read_sRGB_image("input.jpg")
 write_sRGB_image("preview.png", image)
 ```

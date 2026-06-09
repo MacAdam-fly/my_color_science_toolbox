@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from .figure import save_figure
-from .image import read_sRGB_image, write_sRGB_image
+from .image import read_image, read_sRGB_image, write_image, write_sRGB_image
 from .spectral import (
     read_spectral_csv,
     read_spectral_excel,
@@ -31,6 +31,8 @@ __all__ += [
 ]
 
 __all__ += [
+    "read_image",  # read an image as a NumPy array
+    "write_image",  # write a NumPy image array to disk
     "read_sRGB_image",  # read encoded sRGB image as float array in [0, 1]
     "write_sRGB_image",  # write encoded sRGB float array as 8-bit image
 ]

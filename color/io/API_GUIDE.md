@@ -2,6 +2,24 @@
 
 本文档覆盖 `color.io` 顶层导出的 API。设计说明见 `README_DETAILS.md`。
 
+## API 汇总
+
+| 功能组 | API | 核心用途 |
+| --- | --- | --- |
+| Figure 输出 | `save_figure` | 保存 Matplotlib figure，文件保存职责归属 `color.io`。 |
+| Spectral / DataFrame | `spectral_to_dataframe` | 将 `SpectralDistribution` 或 `MultiSpectralDistribution` 转为 pandas DataFrame。 |
+| Spectral / DataFrame | `spectral_from_dataframe` | 从列式 DataFrame 创建单通道或多通道 spectral 对象。 |
+| Spectral CSV | `read_spectral_csv` | 从列式 CSV 读取 spectral 对象。 |
+| Spectral CSV | `write_spectral_csv` | 将 spectral 对象写出为列式 CSV。 |
+| Spectral Excel | `read_spectral_excel` | 从 Excel 的一个 sheet 读取 spectral 对象。 |
+| Spectral Excel | `write_spectral_excel` | 将 spectral 对象写出到 Excel workbook。 |
+| Spectral JSON | `read_spectral_json` | 从对象级 JSON 读取 spectral 对象，并恢复 `name`、`metadata`、labels。 |
+| Spectral JSON | `write_spectral_json` | 将 spectral 对象写出为对象级 JSON。 |
+| 通用图像 IO | `read_image` | 读取图像为 NumPy 数组，可保留编码值或归一化到 `[0, 1]`。 |
+| 通用图像 IO | `write_image` | 将 NumPy 图像数组写入文件，支持 8-bit / 16-bit 量化。 |
+| sRGB 图像便利入口 | `read_sRGB_image` | 读取 encoded sRGB RGB 图像为 `[0, 1]` 浮点数组。 |
+| sRGB 图像便利入口 | `write_sRGB_image` | 将 encoded sRGB RGB 浮点数组写出为 8-bit 图像。 |
+
 ## save_figure
 
 用途：保存 Matplotlib figure。
@@ -161,6 +179,66 @@ msd2 = read_spectral_json("multi.json")
 sd = read_spectral_json("sample.json", name="renamed sample")
 ```
 
+## read_image
+
+用途：读取图像为 NumPy 数组。
+
+默认返回浮点数组，整数编码值会归一化到 `[0, 1]`。
+
+```python
+from color.io import read_image
+
+image = read_image("input.png")
+```
+
+保留原始编码值：
+
+```python
+image_u8 = read_image("input.png", as_float=False)
+```
+
+读取并转换通道模式：
+
+```python
+rgb = read_image("input.jpg", mode="RGB")
+rgba = read_image("input.png", mode="RGBA")
+gray = read_image("input.png", mode="L")
+```
+
+注意：`mode` 是 Pillow 的基础图像模式转换，不是 ICC/profile 色彩管理。
+
+## write_image
+
+用途：把 NumPy 图像数组写入文件。
+
+浮点 `[0, 1]` 图像默认写为 8-bit：
+
+```python
+from color.io import write_image
+
+write_image("preview.png", image)
+```
+
+写出 16-bit 浮点灰度图：
+
+```python
+write_image("gray16.tiff", gray_image, bit_depth=16)
+```
+
+保留整数图像 dtype：
+
+```python
+write_image("codes.png", image_u8, bit_depth=None)
+```
+
+严格检查浮点越界：
+
+```python
+write_image("preview.png", image, clip=False)
+```
+
+注意：浮点输入代表归一化图像值；整数输入代表实际编码码值。
+
 ## read_sRGB_image
 
 用途：把图像读取为 encoded sRGB 浮点数组。
@@ -177,7 +255,7 @@ from color.io import read_sRGB_image
 image = read_sRGB_image("input.jpg")
 ```
 
-注意：函数会应用 EXIF orientation，并转换为 RGB；不执行 ICC profile 色彩管理。
+注意：这是 `read_image(..., mode="RGB", as_float=True)` 的语义包装。函数会应用 EXIF orientation，并转换为 RGB；不执行 ICC profile 色彩管理。
 
 ## write_sRGB_image
 

@@ -40,7 +40,23 @@ JSON 是对象级导出格式，会保留：
 
 ## 图像 IO 约定
 
-`read_sRGB_image(...)` 读取图像后返回 encoded sRGB 浮点数组，shape 为：
+`read_image(...)` 是通用图像入口。默认 `as_float=True`，会把整数图像编码值归一化到 `[0, 1]`；如果需要保留原始 `uint8 / uint16` 编码值，使用：
+
+```python
+image_codes = read_image("input.png", as_float=False)
+```
+
+读取时可以用 `mode="RGB"`、`mode="RGBA"` 或 `mode="L"` 让 Pillow 先做基础通道转换。这里的 mode 转换只是图像格式层面的通道转换，不是 ICC/profile 色彩管理。
+
+`write_image(...)` 是通用写入入口。浮点数组被解释为 `[0, 1]` 归一化图像，默认写成 8-bit；如果要从浮点写成 16-bit，可以显式传入：
+
+```python
+write_image("gray16.tiff", image, bit_depth=16)
+```
+
+整数数组在 `bit_depth=None` 时保留原始 dtype；如果显式传入 `bit_depth=8/16`，则按对应码值范围裁剪或检查。
+
+`read_sRGB_image(...)` / `write_sRGB_image(...)` 是语义更窄的便利入口，固定用于 encoded sRGB RGB 图像。`read_sRGB_image(...)` 读取图像后返回浮点数组，shape 为：
 
 ```text
 (height, width, 3)
@@ -50,7 +66,7 @@ JSON 是对象级导出格式，会保留：
 
 `write_sRGB_image(...)` 接受同样的 `[0, 1]` encoded sRGB 数组，并写出为 8-bit 图像。默认 `clip=True`，越界值会裁剪到 `[0, 1]`；如果需要严格检查越界，使用 `clip=False`。
 
-这两个函数只做常规 sRGB 图像读写，不解析 ICC profile，也不执行显示 profile 之间的色彩管理。
+这些图像函数只做常规数组读写，不解析 ICC profile，也不执行显示 profile 之间的色彩管理。
 
 ## Figure 保存
 

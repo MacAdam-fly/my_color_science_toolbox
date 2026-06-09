@@ -45,6 +45,12 @@ python examples/generators/example_02_ideal_spectra.py
   through XYZ/LMS, Luv, CAM02-UCS with D50 viewing white, explicit chromatic
   adaptation for Oklab, final Lab, CIEDE2000, CCT and dominant-wavelength analysis.
 
+## IO Examples (`io/`)
+
+- `example_01_figure_export.py` - Save a simple scientific figure with `color.io.save_figure(...)`.
+- `example_02_spectral_data_io.py` - Read real spectral CSV variants, plot spectra and CIE 1931 xy, then write/read CSV, Excel and JSON spectral objects.
+- `example_03_image_io.py` - Read an sRGB image, boost Lab(D65) lightness and save edited image outputs.
+
 ## Recovery Examples (`recovery/`)
 
 - `example_01_reflectance_recovery.py` - Recover bounded smooth reflectance
