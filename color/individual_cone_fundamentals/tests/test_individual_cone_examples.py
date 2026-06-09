@@ -11,17 +11,15 @@ import pytest
 
 _ROOT = Path(__file__).resolve().parents[3]
 _EXAMPLES = _ROOT / "examples" / "individual_cone_fundamentals"
+_EXAMPLE_FILENAMES = (
+    "example_01_stockman_rider_2023.py",
+    "example_02_asano2016.py",
+)
 
 
 @pytest.mark.examples
-def test_individual_cone_fundamental_examples_run():
+@pytest.mark.parametrize("filename", _EXAMPLE_FILENAMES)
+def test_individual_cone_fundamental_examples_run(filename: str):
     if str(_EXAMPLES) not in sys.path:
         sys.path.insert(0, str(_EXAMPLES))
-    runpy.run_path(
-        str(_EXAMPLES / "example_01_stockman_rider_2023.py"),
-        run_name="__main__",
-    )
-    runpy.run_path(
-        str(_EXAMPLES / "example_02_asano2016.py"),
-        run_name="__main__",
-    )
+    runpy.run_path(str(_EXAMPLES / filename), run_name="__main__")

@@ -9,10 +9,14 @@ import pytest
 
 
 _EXAMPLES = Path(__file__).resolve().parents[3] / "examples" / "io"
+_EXAMPLE_FILENAMES = (
+    "example_01_figure_export.py",
+    "example_02_spectral_data_io.py",
+    "example_03_image_io.py",
+)
 
 
 @pytest.mark.examples
-def test_io_examples_run() -> None:
-    runpy.run_path(str(_EXAMPLES / "example_01_figure_export.py"), run_name="__main__")
-    runpy.run_path(str(_EXAMPLES / "example_02_spectral_data_io.py"), run_name="__main__")
-    runpy.run_path(str(_EXAMPLES / "example_03_image_io.py"), run_name="__main__")
+@pytest.mark.parametrize("filename", _EXAMPLE_FILENAMES)
+def test_io_examples_run(filename: str) -> None:
+    runpy.run_path(str(_EXAMPLES / filename), run_name="__main__")
