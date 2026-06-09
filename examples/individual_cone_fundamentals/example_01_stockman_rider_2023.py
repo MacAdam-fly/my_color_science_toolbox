@@ -15,7 +15,9 @@ from color.datasets.standard_observers import (
     get_cie2006_lms_2degree_fundamentals,
     get_cie2006_lms_10degree_fundamentals,
 )
-from color.individual_cone_fundamentals import generate_individual_cone_fundamentals
+from color.individual_cone_fundamentals import (
+    generate_stockman_rider_2023_individual_cone_fundamentals,
+)
 from color.plot import add_panel_labels, finish_figure, plot_lines, plot_style
 
 
@@ -124,14 +126,18 @@ def _plot_individual_parameter_sets(parameter_sets):
 
 
 def main() -> None:
-    standard_2 = generate_individual_cone_fundamentals(observer_degree=2)
-    standard_10 = generate_individual_cone_fundamentals(observer_degree=10)
-    dense_prereceptoral = generate_individual_cone_fundamentals(
+    standard_2 = generate_stockman_rider_2023_individual_cone_fundamentals(
+        observer_degree=2
+    )
+    standard_10 = generate_stockman_rider_2023_individual_cone_fundamentals(
+        observer_degree=10
+    )
+    dense_prereceptoral = generate_stockman_rider_2023_individual_cone_fundamentals(
         observer_degree=2,
         macular_density_460=0.65,
         lens_density_400=2.1,
     )
-    shifted_lm = generate_individual_cone_fundamentals(
+    shifted_lm = generate_stockman_rider_2023_individual_cone_fundamentals(
         observer_degree=2,
         l_shift_nm=2.0,
         m_shift_nm=-2.0,

@@ -34,7 +34,7 @@ dict[str, numpy.ndarray]
 | `illuminant_a_spd`, `daylight_spd`, `generate_illuminant`, `list_illuminant_generators` | CIE A / D 系列照明体 |
 | `constant_spd`, `zero_spd`, `equal_energy_spd`, `gaussian_spd`, `multi_gaussian_spd`, `generate_ideal`, `list_ideal_generators` | 理想光谱 |
 | `single_led_spd`, `multi_led_spd`, `generate_led`, `list_led_generators` | LED 光谱 |
-| `macular_density_spectrum`, `lens_density_spectrum`, `cone_absorbance_spectra`, `generate_individual_cone_fundamentals`, `generate_individual_cone_fundamental`, `list_individual_cone_fundamental_generators` | Stockman/Rider 个体锥体模型 |
+| `generate_stockman_rider_2023_individual_cone_fundamentals`, `generate_asano2016_individual_cone_fundamentals`, `generate_individual_cone_fundamental`, `list_individual_cone_fundamental_generators` | 个体锥体模型 |
 
 ## 注册表 API
 
@@ -363,74 +363,75 @@ multi = generate_led("multi", peak_wavelengths=(460, 530, 620))
 
 ## Individual Cone Fundamentals
 
-### `macular_density_spectrum(...)`
-
-用途：生成 Stockman/Rider macular density 光谱。
-
-```python
-from color.generators import macular_density_spectrum
-
-raw = macular_density_spectrum()
-```
-
-### `lens_density_spectrum(...)`
-
-用途：生成 lens density 光谱。
-
-```python
-from color.generators import lens_density_spectrum
-
-raw = lens_density_spectrum()
-```
-
-### `cone_absorbance_spectra(...)`
-
-用途：生成 L/M/S photopigment absorbance 模板。
-
-```python
-from color.generators import cone_absorbance_spectra
-
-raw = cone_absorbance_spectra(
-    l_shift_nm=1.0,
-    m_shift_nm=-1.0,
-    s_shift_nm=0.0,
-    l_template="mean",
-)
-```
-
-注意：这些 density / absorbance 函数服务于个体锥体模型分析；一般积分工作流更常用
-`generate_individual_cone_fundamentals(...)`。模板函数不接收个体 density 缩放；
-`macular_density_460`、`lens_density_400` 和 `photopigment_od` 属于最终 LMS fundamentals
-生成函数的参数。
-
-### `generate_individual_cone_fundamentals(**kwargs)`
+### `generate_stockman_rider_2023_individual_cone_fundamentals(**kwargs)`
 
 用途：生成 Stockman/Rider 2023 个体化 corneal energy LMS fundamentals。
 
 默认 2 度观察者：
 
 ```python
-from color.generators import generate_individual_cone_fundamentals
+from color.generators import generate_stockman_rider_2023_individual_cone_fundamentals
 
-lms2 = generate_individual_cone_fundamentals(observer_degree=2)
+lms2 = generate_stockman_rider_2023_individual_cone_fundamentals(observer_degree=2)
 ```
 
 10 度观察者：
 
 ```python
-lms10 = generate_individual_cone_fundamentals(observer_degree=10)
+lms10 = generate_stockman_rider_2023_individual_cone_fundamentals(
+    observer_degree=10
+)
 ```
 
 改变个体参数：
 
 ```python
-custom = generate_individual_cone_fundamentals(
+custom = generate_stockman_rider_2023_individual_cone_fundamentals(
     observer_degree=2,
     l_shift_nm=2.0,
     m_shift_nm=-1.0,
     macular_density_460=0.28,
 )
 ```
+
+### `generate_asano2016_individual_cone_fundamentals(**kwargs)`
+
+用途：生成 Asano et al. 2016 个体化 corneal energy LMS fundamentals。
+
+平均 2 度语义：
+
+```python
+from color.generators import generate_asano2016_individual_cone_fundamentals
+
+lms2 = generate_asano2016_individual_cone_fundamentals(
+    age=32,
+    field_size_degree=2,
+)
+```
+
+改变年龄和视场：
+
+```python
+lms = generate_asano2016_individual_cone_fundamentals(
+    age=60,
+    field_size_degree=10,
+)
+```
+
+改变个体 deviation 和峰值偏移：
+
+```python
+custom = generate_asano2016_individual_cone_fundamentals(
+    age=40,
+    field_size_degree=4,
+    lens_density_deviation=10.0,
+    macular_density_deviation=-5.0,
+    photopigment_shift_nm=(2.0, -1.0, 0.0),
+)
+```
+
+注意：deviation 参数按百分比解释。`photopigment_shift_nm` 是 L/M/S 三通道
+lambda-max shift。
 
 ### `generate_individual_cone_fundamental(name="stockman_rider_2023", **kwargs)` / `list_individual_cone_fundamental_generators()`
 
@@ -441,7 +442,15 @@ from color.generators import (
 )
 
 print(list_individual_cone_fundamental_generators())
-lms = generate_individual_cone_fundamental(observer_degree=2)
+stockman = generate_individual_cone_fundamental(
+    "stockman_rider_2023",
+    observer_degree=2,
+)
+asano = generate_individual_cone_fundamental(
+    "asano2016",
+    age=32,
+    field_size_degree=2,
+)
 ```
 
 ## 从 generators 到 spectra / colorimetry

@@ -37,12 +37,10 @@ from .illuminants import (
     list_illuminant_generators,
 )
 from .individual_cone_fundamentals import (
-    cone_absorbance_spectra,
+    generate_asano2016_individual_cone_fundamentals,
     generate_individual_cone_fundamental,
-    generate_individual_cone_fundamentals,
-    lens_density_spectrum,
+    generate_stockman_rider_2023_individual_cone_fundamentals,
     list_individual_cone_fundamental_generators,
-    macular_density_spectrum,
 )
 from .leds import (
     generate_led,
@@ -102,11 +100,8 @@ __all__ += [
 
 # Individual cone fundamental generators.
 __all__ += [
-    "macular_density_spectrum",  # generate Stockman/Rider macular density
-    "lens_density_spectrum",  # generate Stockman/Rider lens density
-    "cone_absorbance_spectra",  # generate L/M/S photopigment absorbances
-
-    "generate_individual_cone_fundamentals",  # generate Stockman/Rider LMS fundamentals
+    "generate_stockman_rider_2023_individual_cone_fundamentals",  # Stockman/Rider LMS fundamentals
+    "generate_asano2016_individual_cone_fundamentals",  # Asano 2016 LMS fundamentals
     "generate_individual_cone_fundamental",  # generate a registered individual LMS model
     "list_individual_cone_fundamental_generators",  # list individual LMS generator names
 ]

@@ -10,6 +10,7 @@ from color.spectra import (
     SpectralDistribution,
     SpectralShape,
     from_D65_illuminant,
+    from_asano2016_individual_cone_fundamentals,
     from_cie1931_xyz_cmfs,
     from_cie1964_xyz_cmfs,
     from_cie2006_lms_2degree_fundamentals,
@@ -18,7 +19,7 @@ from color.spectra import (
     from_cie2012_xyz_10degree_cmfs,
     from_columns,
     from_dataset,
-    from_individual_cone_fundamentals,
+    from_stockman_rider_2023_individual_cone_fundamentals,
 )
 
 
@@ -561,11 +562,21 @@ class TestCommonStandardObserverEntrypoints:
         assert result_10.metadata["dataset_name"] == "cie2006_lms10_logE_5nm"
         assert result_10.metadata["observer_degree"] == 10
 
-    def test_individual_cone_fundamentals_wrapper(self):
-        result = from_individual_cone_fundamentals(observer_degree=2)
-        assert isinstance(result, MultiSpectralDistribution)
-        assert result.labels == ("l", "m", "s")
-        assert result.metadata["generator_category"] == "individual_cone_fundamentals"
-        assert result.metadata["generator_name"] == "stockman_rider_2023"
-        assert result.metadata["parameters"]["observer_degree"] == 2
-        np.testing.assert_allclose(result.values.max(axis=0), [1.0, 1.0, 1.0])
+    def test_individual_cone_fundamentals_wrappers(self):
+        stockman = from_stockman_rider_2023_individual_cone_fundamentals(
+            observer_degree=2
+        )
+        asano = from_asano2016_individual_cone_fundamentals(field_size_degree=2)
+
+        for result in (stockman, asano):
+            assert isinstance(result, MultiSpectralDistribution)
+            assert result.labels == ("l", "m", "s")
+            assert result.metadata["generator_category"] == (
+                "individual_cone_fundamentals"
+            )
+            np.testing.assert_allclose(result.values.max(axis=0), [1.0, 1.0, 1.0])
+
+        assert stockman.metadata["generator_name"] == "stockman_rider_2023"
+        assert stockman.metadata["parameters"]["observer_degree"] == 2
+        assert asano.metadata["generator_name"] == "asano2016"
+        assert asano.metadata["parameters"]["field_size_degree"] == 2

@@ -1,4 +1,4 @@
-"""Optical transforms for Stockman/Rider cone fundamentals."""
+"""Shared optical transforms for cone fundamental models."""
 
 from __future__ import annotations
 

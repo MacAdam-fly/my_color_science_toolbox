@@ -5,11 +5,10 @@ from __future__ import annotations
 from typing import List
 
 from color.individual_cone_fundamentals import (
+    ASANO2016_REFERENCE,
     STOCKMAN_RIDER_REFERENCE,
-    cone_absorbance_spectra,
-    generate_individual_cone_fundamentals as _generate_stockman_rider_2023,
-    lens_density_spectrum,
-    macular_density_spectrum,
+    generate_asano2016_individual_cone_fundamentals as _generate_asano2016,
+    generate_stockman_rider_2023_individual_cone_fundamentals as _generate_stockman_rider_2023,
 )
 
 from ._registry import GeneratedDict, GeneratorEntry, generate, list_generators, register
@@ -43,11 +42,46 @@ register(GeneratorEntry(
 ))
 
 
-def generate_individual_cone_fundamentals(**kwargs) -> GeneratedDict:
+register(GeneratorEntry(
+    category="individual_cone_fundamentals",
+    name="asano2016",
+    description="Asano et al. 2016 individual colorimetric observer LMS fundamentals",
+    generate_fn=_generate_asano2016,
+    parameters=(
+        "wavelength_nm",
+        "age",
+        "field_size_degree",
+        "lens_density_deviation",
+        "macular_density_deviation",
+        "photopigment_od_deviation",
+        "photopigment_shift_nm",
+    ),
+    metadata={
+        "quantity": "cone_fundamental",
+        "value_unit": "relative",
+        "wavelength_unit": "nm",
+        "energy_basis": "energy",
+        "scale": "linear",
+        "model": "Asano et al. 2016",
+        "reference": ASANO2016_REFERENCE,
+    },
+))
+
+
+def generate_stockman_rider_2023_individual_cone_fundamentals(**kwargs) -> GeneratedDict:
     """Generate Stockman/Rider individual LMS cone fundamentals."""
     return generate(
         "individual_cone_fundamentals",
         "stockman_rider_2023",
+        **kwargs,
+    )
+
+
+def generate_asano2016_individual_cone_fundamentals(**kwargs) -> GeneratedDict:
+    """Generate Asano et al. 2016 individual LMS cone fundamentals."""
+    return generate(
+        "individual_cone_fundamentals",
+        "asano2016",
         **kwargs,
     )
 
@@ -66,10 +100,8 @@ def list_individual_cone_fundamental_generators() -> List[str]:
 
 
 __all__ = [
-    "macular_density_spectrum",
-    "lens_density_spectrum",
-    "cone_absorbance_spectra",
-    "generate_individual_cone_fundamentals",
+    "generate_stockman_rider_2023_individual_cone_fundamentals",
+    "generate_asano2016_individual_cone_fundamentals",
     "generate_individual_cone_fundamental",
     "list_individual_cone_fundamental_generators",
 ]

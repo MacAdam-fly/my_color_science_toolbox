@@ -2,24 +2,24 @@
 
 from __future__ import annotations
 
-from .constants import STOCKMAN_RIDER_REFERENCE
-from .generation import generate_individual_cone_fundamentals
-from .templates import (
-    cone_absorbance_spectra,
-    lens_density_spectrum,
-    macular_density_spectrum,
+from .asano2016 import (
+    asano2016_model_components,
+    generate_asano2016_individual_cone_fundamentals,
+)
+from ._constants import ASANO2016_REFERENCE, STOCKMAN_RIDER_REFERENCE
+from .stockman_rider_2023 import (
+    generate_stockman_rider_2023_individual_cone_fundamentals,
+    stockman_rider_2023_model_components,
 )
 
 __all__ = [
     "STOCKMAN_RIDER_REFERENCE",  # Stockman/Rider 2023 model reference text
+    "ASANO2016_REFERENCE",  # Asano et al. 2016 model reference text
 ]
 
 __all__ += [
-    "macular_density_spectrum",  # generate macular pigment density spectrum
-    "lens_density_spectrum",  # generate lens density spectrum
-    "cone_absorbance_spectra",  # generate L/M/S photopigment absorbance spectra
-]
-
-__all__ += [
-    "generate_individual_cone_fundamentals",  # generate individualised LMS cone fundamentals
+    "generate_stockman_rider_2023_individual_cone_fundamentals",  # Stockman/Rider LMS fundamentals
+    "stockman_rider_2023_model_components",  # Stockman/Rider model components
+    "generate_asano2016_individual_cone_fundamentals",  # Asano 2016 LMS fundamentals
+    "asano2016_model_components",  # Asano 2016 model components
 ]

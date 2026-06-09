@@ -225,6 +225,9 @@ _DESCRIPTION_OVERRIDES: dict[str, str] = {
     "lens_ss_5nm": "Lens density spectrum, Stockman & Sharpe (5 nm)",
     "lens_ss_1nm": "Lens density spectrum, Stockman & Sharpe (1 nm)",
     "lens_ss_0p1nm": "Lens density spectrum, Stockman & Sharpe (0.1 nm)",
+    "lens_ciepo06_components_5nm": (
+        "CIEPO06 ocular media lens density components D_ocul,1 and D_ocul,2 (5 nm)"
+    ),
     "lens_smj": "Lens density, Stockman, MacLeod & Johnson (1993)",
     "lens_vnv": "Lens density, van Norren & Vos (1974)",
     "lens_ws": "Lens density, Wyszecki & Stiles (1967)",
@@ -488,6 +491,10 @@ def _metadata_for_standard_observer(category: str, stem: str) -> dict[str, Any]:
     elif category == "prereceptoral_filters":
         meta["quantity"] = "optical_density"
         meta["value_unit"] = "density"
+        if "lens_ciepo06_components" in stem.lower():
+            meta["quantity"] = "ocular_media_lens_density_components"
+            meta["standard"] = "CIEPO06"
+            meta["component_columns"] = ("d_ocul1", "d_ocul2", "d_ocul_32")
     elif category == "chromaticity_coordinates":
         meta["quantity"] = "chromaticity_coordinate"
         meta["value_unit"] = "dimensionless"

@@ -137,6 +137,21 @@ class TestPrereceptoralFilters:
         data = get_standard_observer("prereceptoral_filters", "lens_ss_5nm")
         assert "optical_density" in data
 
+    def test_ciepo06_lens_components(self):
+        data = get_standard_observer(
+            "prereceptoral_filters",
+            "lens_ciepo06_components_5nm",
+        )
+        assert tuple(data) == ("wavelength", "d_ocul1", "d_ocul2", "d_ocul_32")
+        np.testing.assert_allclose(
+            data["d_ocul1"] + data["d_ocul2"],
+            data["d_ocul_32"],
+            atol=1e-12,
+        )
+
+        idx_400 = int(np.where(data["wavelength"] == 400)[0][0])
+        assert data["d_ocul_32"][idx_400] == pytest.approx(1.7649, abs=1e-4)
+
 
 class TestChromaticityCoordinates:
     """Tests for chromaticity coordinate data."""
@@ -208,6 +223,19 @@ class TestObserverMetadata:
         assert entry.metadata["quantity"] == "luminous_efficiency"
         assert entry.metadata["vision_regime"] == "scotopic"
         assert entry.metadata["sampling_interval_nm"] == 1.0
+
+    def test_ciepo06_lens_component_metadata(self):
+        entry = describe(
+            "standard_observers.prereceptoral_filters",
+            "lens_ciepo06_components_5nm",
+        )
+        assert entry.metadata["quantity"] == "ocular_media_lens_density_components"
+        assert entry.metadata["standard"] == "CIEPO06"
+        assert entry.metadata["component_columns"] == (
+            "d_ocul1",
+            "d_ocul2",
+            "d_ocul_32",
+        )
 
 
 class TestCategoryAliases:

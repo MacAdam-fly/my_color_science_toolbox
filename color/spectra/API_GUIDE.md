@@ -19,7 +19,8 @@
 | `from_cie2012_xyz_10degree_cmfs` | CIE 2012 10 度 XYZ CMFs | CIE 2012 10 度响应 |
 | `from_cie2006_lms_2degree_fundamentals` | CIE 2006 2 度 LMS fundamentals | LMS 积分响应 |
 | `from_cie2006_lms_10degree_fundamentals` | CIE 2006 10 度 LMS fundamentals | 10 度 LMS 积分响应 |
-| `from_individual_cone_fundamentals` | Stockman/Rider 个体化 LMS | 个体参数化 cone fundamentals |
+| `from_stockman_rider_2023_individual_cone_fundamentals` | Stockman/Rider 个体化 LMS | 个体参数化 cone fundamentals |
+| `from_asano2016_individual_cone_fundamentals` | Asano 2016 个体化 LMS | Asano individual colorimetric observer |
 
 ## 核心对象
 
@@ -320,7 +321,7 @@ lms = from_cie2006_lms_2degree_fundamentals(fill_nan=None)
 
 注意：这些 LMS 入口默认 `fill_nan=0.0`，适合积分中的零响应语义。
 
-### `from_individual_cone_fundamentals(**kwargs)`
+### `from_stockman_rider_2023_individual_cone_fundamentals(**kwargs)`
 
 用途：生成并包装 Stockman/Rider 2023 个体化 LMS fundamentals。
 
@@ -330,17 +331,17 @@ lms = from_cie2006_lms_2degree_fundamentals(fill_nan=None)
 标准 2 度：
 
 ```python
-from color.spectra import from_individual_cone_fundamentals
+from color.spectra import from_stockman_rider_2023_individual_cone_fundamentals
 
-lms = from_individual_cone_fundamentals(observer_degree=2)
+lms = from_stockman_rider_2023_individual_cone_fundamentals(observer_degree=2)
 ```
 
 带个体参数：
 
 ```python
-from color.spectra import from_individual_cone_fundamentals
+from color.spectra import from_stockman_rider_2023_individual_cone_fundamentals
 
-individual = from_individual_cone_fundamentals(
+individual = from_stockman_rider_2023_individual_cone_fundamentals(
     observer_degree=2,
     l_shift_nm=2.0,
     m_shift_nm=-1.0,
@@ -349,6 +350,40 @@ individual = from_individual_cone_fundamentals(
 ```
 
 注意：该入口包装的是生成数据，不是静态 dataset 文件。
+
+### `from_asano2016_individual_cone_fundamentals(**kwargs)`
+
+用途：生成并包装 Asano et al. 2016 个体化 LMS fundamentals。
+
+输入：`age`、`field_size_degree`、density deviation、OD deviation、L/M/S shift。  
+返回：`MultiSpectralDistribution`，labels 为 `("l", "m", "s")`。
+
+平均 2 度语义：
+
+```python
+from color.spectra import from_asano2016_individual_cone_fundamentals
+
+lms = from_asano2016_individual_cone_fundamentals(
+    age=32,
+    field_size_degree=2,
+)
+```
+
+带个体参数：
+
+```python
+individual = from_asano2016_individual_cone_fundamentals(
+    age=45,
+    field_size_degree=4,
+    lens_density_deviation=10.0,
+    macular_density_deviation=-5.0,
+    photopigment_shift_nm=(2.0, -1.0, 0.0),
+)
+```
+
+注意：该入口适合需要 Asano 年龄/视场/个体 deviation 模型的场景；只需要
+CIE 2006 平均观察者时，优先使用 `from_cie2006_lms_2degree_fundamentals(...)`
+或 `from_cie2006_lms_10degree_fundamentals(...)`。
 
 ## 常见操作组合
 

@@ -330,12 +330,16 @@ def from_cie2006_lms_10degree_fundamentals(
     )
 
 
-def from_individual_cone_fundamentals(**kwargs: Any) -> MultiSpectralDistribution:
-    """Return Stockman/Rider individual LMS cone fundamentals as a spectral object."""
-    from color.generators import describe, generate_individual_cone_fundamentals
+def _from_individual_cone_generator(
+    generator_name: str,
+    display_name: str,
+    kwargs: dict[str, Any],
+) -> MultiSpectralDistribution:
+    """Wrap a registered individual LMS generator as a multispectral object."""
+    from color.generators import describe, generate_individual_cone_fundamental
 
-    raw = generate_individual_cone_fundamentals(**kwargs)
-    entry = describe("individual_cone_fundamentals", "stockman_rider_2023")
+    raw = generate_individual_cone_fundamental(generator_name, **kwargs)
+    entry = describe("individual_cone_fundamentals", generator_name)
     metadata = dict(entry.metadata)
     metadata.setdefault("generator_category", entry.category)
     metadata.setdefault("generator_name", entry.name)
@@ -344,6 +348,28 @@ def from_individual_cone_fundamentals(**kwargs: Any) -> MultiSpectralDistributio
         raw,
         x="wavelength",
         ys=("l", "m", "s"),
-        name="Stockman/Rider 2023 individual LMS fundamentals",
+        name=display_name,
         metadata=metadata,
+    )
+
+
+def from_stockman_rider_2023_individual_cone_fundamentals(
+    **kwargs: Any,
+) -> MultiSpectralDistribution:
+    """Return Stockman/Rider 2023 individual LMS fundamentals."""
+    return _from_individual_cone_generator(
+        "stockman_rider_2023",
+        "Stockman/Rider 2023 individual LMS fundamentals",
+        dict(kwargs),
+    )
+
+
+def from_asano2016_individual_cone_fundamentals(
+    **kwargs: Any,
+) -> MultiSpectralDistribution:
+    """Return Asano et al. 2016 individual LMS fundamentals."""
+    return _from_individual_cone_generator(
+        "asano2016",
+        "Asano et al. 2016 individual LMS fundamentals",
+        dict(kwargs),
     )

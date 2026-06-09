@@ -1,275 +1,227 @@
 # color.individual_cone_fundamentals API 使用指南
 
-本文档对应 `color.individual_cone_fundamentals` 顶层公开 API。该模块基于 Stockman & Rider 2023 公式生成标准或个体化 LMS cone fundamentals。
+本文档对应 `color.individual_cone_fundamentals` 顶层公开 API。模块设计和
+两种模型的计算语义见 [`README_DETAILS.md`](README_DETAILS.md)。
 
-英文快速入口见 [`README.md`](README.md)，中文设计说明见 [`README_DETAILS.md`](README_DETAILS.md)。
-
-## API 总览
+## 顶层 API 总览
 
 | API | 用途 |
 | --- | --- |
-| `STOCKMAN_RIDER_REFERENCE` | Stockman/Rider 2023 模型参考文献说明字符串 |
-| `macular_density_spectrum` | 生成 macular pigment density 谱模板 |
-| `lens_density_spectrum` | 生成 lens density 谱模板 |
-| `cone_absorbance_spectra` | 生成 L/M/S photopigment absorbance 谱模板 |
-| `generate_individual_cone_fundamentals` | 生成最终 corneal energy LMS cone fundamentals |
+| `STOCKMAN_RIDER_REFERENCE` | Stockman/Rider 2023 参考文献字符串 |
+| `ASANO2016_REFERENCE` | Asano et al. 2016 参考文献字符串 |
+| `generate_stockman_rider_2023_individual_cone_fundamentals` | 生成 Stockman/Rider 2023 LMS fundamentals |
+| `stockman_rider_2023_model_components` | 返回 Stockman/Rider 当前参数下的中间产物 |
+| `generate_asano2016_individual_cone_fundamentals` | 生成 Asano 2016 LMS fundamentals |
+| `asano2016_model_components` | 返回 Asano 当前参数下的中间产物 |
 
-## 基本约定
-
-- 默认波长为 `360-850 nm / 1 nm`。
-- 所有函数返回原始列字典，至少包含 `wavelength`。
-- `generate_individual_cone_fundamentals(...)` 的输出包含 `wavelength, l, m, s`。
-- 最终 `l/m/s` 是 corneal energy LMS fundamentals，并且每个通道独立峰值归一化到 1。
-- 该模块只负责公式生成；插值、重采样和通道访问建议交给 `color.spectra` 包装层。
-
-## `STOCKMAN_RIDER_REFERENCE`
-
-模型参考文献说明。
+## 参考文献字符串
 
 ```python
-from color.individual_cone_fundamentals import STOCKMAN_RIDER_REFERENCE
+from color.individual_cone_fundamentals import (
+    ASANO2016_REFERENCE,
+    STOCKMAN_RIDER_REFERENCE,
+)
 
 print(STOCKMAN_RIDER_REFERENCE)
+print(ASANO2016_REFERENCE)
 ```
 
-适合写入 metadata 或生成报告时标注模型来源。
+这些字符串适合写入 metadata、图注或报告。
 
-## `macular_density_spectrum(wavelength_nm=None)`
+## `generate_stockman_rider_2023_individual_cone_fundamentals(...)`
 
-生成 macular pigment density 谱模板。
+用途：生成 Stockman/Rider 2023 corneal energy LMS fundamentals。
 
-### 默认波长
-
-```python
-from color.individual_cone_fundamentals import macular_density_spectrum
-
-raw = macular_density_spectrum()
-print(raw.keys())          # wavelength, macular_density
-print(raw["wavelength"])   # 默认 360-850 nm
-```
-
-### 自定义波长
+标准 2 度观察者：
 
 ```python
-import numpy as np
-from color.individual_cone_fundamentals import macular_density_spectrum
+from color.individual_cone_fundamentals import (
+    generate_stockman_rider_2023_individual_cone_fundamentals,
+)
 
-wavelengths = np.arange(400.0, 701.0, 5.0)
-raw = macular_density_spectrum(wavelengths)
-```
-
-注意：这个函数只生成密度模板，不乘以个体化的 `macular_density_460`。完整 cone fundamentals 生成时才使用该密度参数。
-
-## `lens_density_spectrum(wavelength_nm=None)`
-
-生成 lens density 谱模板。
-
-### 默认波长
-
-```python
-from color.individual_cone_fundamentals import lens_density_spectrum
-
-raw = lens_density_spectrum()
-print(raw.keys())  # wavelength, lens_density
-```
-
-### 自定义波长
-
-```python
-import numpy as np
-from color.individual_cone_fundamentals import lens_density_spectrum
-
-raw = lens_density_spectrum(np.arange(380.0, 781.0, 2.0))
-```
-
-注意：这个函数只生成 lens density 模板，不等同于最终 LMS fundamentals。
-
-## `cone_absorbance_spectra(wavelength_nm=None, *, l_shift_nm=0.0, m_shift_nm=0.0, s_shift_nm=0.0, l_template="mean")`
-
-生成 L/M/S photopigment absorbance 谱。
-
-### 默认平均模板
-
-```python
-from color.individual_cone_fundamentals import cone_absorbance_spectra
-
-raw = cone_absorbance_spectra()
-print(raw.keys())  # wavelength, l, m, s
-```
-
-### 模拟 cone 峰值偏移
-
-```python
-from color.individual_cone_fundamentals import cone_absorbance_spectra
-
-raw = cone_absorbance_spectra(
-    l_shift_nm=2.0,
-    m_shift_nm=-1.0,
-    s_shift_nm=0.0,
+lms_2 = generate_stockman_rider_2023_individual_cone_fundamentals(
+    observer_degree=2
 )
 ```
 
-### 指定 L cone 多态模板
+标准 10 度观察者：
 
 ```python
-from color.individual_cone_fundamentals import cone_absorbance_spectra
-
-ser = cone_absorbance_spectra(l_template="ser180")
-ala = cone_absorbance_spectra(l_template="ala180")
-mean = cone_absorbance_spectra(l_template="mean")
-```
-
-`l_template="mean"` 使用项目实现的群体平均 L 模板。`ser180` 和 `ala180` 用于显式比较 L cone polymorphism。
-
-## `generate_individual_cone_fundamentals(...)`
-
-生成最终 corneal energy LMS cone fundamentals，是该模块最主要的入口。
-
-签名核心参数：
-
-```python
-generate_individual_cone_fundamentals(
-    wavelength_nm=None,
-    *,
-    observer_degree=2,
-    photopigment_od=None,
-    macular_density_460=None,
-    lens_density_400=1.7649,
-    l_shift_nm=0.0,
-    m_shift_nm=0.0,
-    s_shift_nm=0.0,
-    l_template="mean",
+lms_10 = generate_stockman_rider_2023_individual_cone_fundamentals(
+    observer_degree=10
 )
 ```
 
-### 标准 2° 模型
+改变个体参数：
 
 ```python
-from color.individual_cone_fundamentals import generate_individual_cone_fundamentals
-
-lms_2 = generate_individual_cone_fundamentals(observer_degree=2)
-print(lms_2.keys())  # wavelength, l, m, s
-```
-
-默认参数：
-
-```text
-photopigment_od=(0.50, 0.50, 0.40)
-macular_density_460=0.350
-lens_density_400=1.7649
-```
-
-### 标准 10° 模型
-
-```python
-from color.individual_cone_fundamentals import generate_individual_cone_fundamentals
-
-lms_10 = generate_individual_cone_fundamentals(observer_degree=10)
-```
-
-默认参数：
-
-```text
-photopigment_od=(0.38, 0.38, 0.30)
-macular_density_460=0.095
-lens_density_400=1.7649
-```
-
-### 自定义个体参数
-
-```python
-from color.individual_cone_fundamentals import generate_individual_cone_fundamentals
-
-individual = generate_individual_cone_fundamentals(
+individual = generate_stockman_rider_2023_individual_cone_fundamentals(
     observer_degree=2,
     photopigment_od=(0.45, 0.52, 0.38),
     macular_density_460=0.50,
-    lens_density_400=1.60,
+    lens_density_400=1.50,
     l_shift_nm=2.0,
     m_shift_nm=-1.0,
-    s_shift_nm=0.0,
 )
 ```
 
-这些参数用于直接建模个体差异。当前版本不从 codon 或 genotype 自动推导这些偏移。
-
-### 自定义波长采样
+返回值是原始列字典：
 
 ```python
-import numpy as np
-from color.individual_cone_fundamentals import generate_individual_cone_fundamentals
-
-wavelengths = np.arange(400.0, 831.0, 1.0)
-lms = generate_individual_cone_fundamentals(wavelengths, observer_degree=2)
+{
+    "wavelength": ...,
+    "l": ...,
+    "m": ...,
+    "s": ...,
+}
 ```
 
-如果后续要和其他光谱数据积分，通常建议先包装为 `MultiSpectralDistribution`，再用 spectra 的 `align(...)` 或 `reshape(...)` 对齐采样。
+## `stockman_rider_2023_model_components(...)`
 
-## 与 `color.generators` 的关系
-
-该模型也注册在 `color.generators` 中。需要统一生成器入口时可以这样用：
+用途：返回 Stockman/Rider 当前观察者参数下的完整中间产物。
 
 ```python
-from color.generators import generate
+from color.individual_cone_fundamentals import (
+    stockman_rider_2023_model_components,
+)
 
-raw = generate(
-    "individual_cone_fundamentals",
-    "stockman_rider_2023",
+components = stockman_rider_2023_model_components(
     observer_degree=2,
+    l_shift_nm=2.0,
+    macular_density_460=0.50,
+    lens_density_400=1.50,
+)
+
+lens = components["lens_density"]
+macular = components["macular_density"]
+absorbance = components["photopigment_absorbance"]
+final_lms = components["corneal_energy"]
+```
+
+返回字段统一为：
+
+```python
+{
+    "wavelength": ...,
+    "photopigment_absorbance": ...,
+    "photopigment_od": ...,
+    "retinal_absorptance": ...,
+    "macular_density": ...,
+    "lens_density": ...,
+    "prereceptoral_density": ...,
+    "corneal_quantal": ...,
+    "corneal_energy": ...,
+}
+```
+
+注意：这里的 `macular_density` 和 `lens_density` 已经应用当前个体参数，不是未缩放标准模板。
+
+## `generate_asano2016_individual_cone_fundamentals(...)`
+
+用途：生成 Asano et al. 2016 individual colorimetric observer LMS fundamentals。
+
+默认观察者：
+
+```python
+from color.individual_cone_fundamentals import (
+    generate_asano2016_individual_cone_fundamentals,
+)
+
+default = generate_asano2016_individual_cone_fundamentals()
+```
+
+改变 age 和 field size：
+
+```python
+older = generate_asano2016_individual_cone_fundamentals(
+    age=70,
+    field_size_degree=2,
+)
+
+wide_field = generate_asano2016_individual_cone_fundamentals(
+    age=32,
+    field_size_degree=10,
 )
 ```
 
-这和直接调用核心函数的结果语义一致，仍然返回原始列字典。
-
-## 与 `color.spectra` 的关系
-
-需要插值、重采样、通道访问或后续光谱积分时，优先使用 `spectra` 为该模型专门设计的包装入口，而不是手工调用 `from_columns(...)`。
+改变个体化参数：
 
 ```python
-from color.spectra import from_individual_cone_fundamentals
+individual = generate_asano2016_individual_cone_fundamentals(
+    lens_density_deviation=20.0,
+    macular_density_deviation=30.0,
+    photopigment_od_deviation=(5.0, -3.0, 0.0),
+    photopigment_shift_nm=(4.0, -2.0, 0.0),
+)
+```
 
-lms = from_individual_cone_fundamentals(observer_degree=2)
+注意：Asano 的 deviation 参数是相对平均值的百分比偏差；shift 参数单位是 nm。
+
+## `asano2016_model_components(...)`
+
+用途：返回 Asano 当前观察者参数下的完整中间产物。
+
+```python
+from color.individual_cone_fundamentals import asano2016_model_components
+
+components = asano2016_model_components(
+    age=60,
+    field_size_degree=4,
+    lens_density_deviation=10.0,
+    macular_density_deviation=-5.0,
+    photopigment_shift_nm=(2.0, -1.0, 0.0),
+)
+
+lens = components["lens_density"]
+macular = components["macular_density"]
+absorbance = components["photopigment_absorbance"]
+final_lms = components["corneal_energy"]
+```
+
+Asano 的 `lens_density` 已经应用 age 和 lens deviation；`macular_density` 已经应用
+field size 和 macular deviation；`photopigment_absorbance` 已经应用 L/M/S shift。
+
+## 与 generators / spectra 配合
+
+通过 generators 注册表：
+
+```python
+from color.generators import generate_individual_cone_fundamental
+
+stockman = generate_individual_cone_fundamental("stockman_rider_2023")
+asano = generate_individual_cone_fundamental("asano2016", age=45)
+```
+
+包装成 `MultiSpectralDistribution`：
+
+```python
+from color.spectra import from_asano2016_individual_cone_fundamentals
+
+lms = from_asano2016_individual_cone_fundamentals(age=45)
 print(lms.keys())       # wavelength, l, m, s
-print(lms["l"].values)  # L channel as SpectralDistribution values
+print(lms["l"].values)  # L channel values
 ```
 
-这个专用入口内部会调用 `color.generators.generate_individual_cone_fundamentals(...)`，
-再包装成 `MultiSpectralDistribution`，并在 metadata 中保留 generator 类别、名称和传入参数。`individual_cone_fundamentals` 本身只负责公式生成和返回原始列字典。
-
-## 常见工作流
-
-### 比较标准 2° 与个体化模型
+Stockman/Rider 的 spectra 包装入口为：
 
 ```python
-from color.individual_cone_fundamentals import generate_individual_cone_fundamentals
+from color.spectra import from_stockman_rider_2023_individual_cone_fundamentals
 
-standard = generate_individual_cone_fundamentals(observer_degree=2)
-shifted = generate_individual_cone_fundamentals(
-    observer_degree=2,
-    l_shift_nm=2.0,
-    m_shift_nm=-1.0,
-)
-
-delta_l = shifted["l"] - standard["l"]
+lms = from_stockman_rider_2023_individual_cone_fundamentals(observer_degree=2)
 ```
 
-### 生成 LMS fundamentals 后用于 LMS 响应计算
+## 用于光谱积分
 
 ```python
 from color.colorimetry import emission_to_LMS
-from color.generators import generate_ideal_spectrum
-from color.spectra import from_columns, from_individual_cone_fundamentals
+from color.generators import gaussian_spd
+from color.spectra import (
+    from_asano2016_individual_cone_fundamentals,
+    from_columns,
+)
 
-led_raw = generate_ideal_spectrum(kind="gaussian", peak_wavelength=530, fwhm=20)
-led = from_columns(led_raw, y="spd")
-
-lms_fundamentals = from_individual_cone_fundamentals(observer_degree=2)
+led_raw = gaussian_spd(peak_wavelength=530, width=18)
+led = from_columns(led_raw, x="wavelength", y="spd")
+lms_fundamentals = from_asano2016_individual_cone_fundamentals(age=45)
 LMS = emission_to_LMS(led, fundamentals=lms_fundamentals)
 ```
-
-## 使用边界
-
-- 当前版本不做 codon/hybrid genotype 推断。
-- 当前版本不输出中间层级的完整对象；模板函数可用于检查中间谱。
-- 默认输出是 energy-based corneal LMS fundamentals。
-- 若需要复现 CIE 2006 标准观察者，严格比较应主要关注 `400-830 nm` 区间。

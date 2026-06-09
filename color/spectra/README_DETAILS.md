@@ -152,7 +152,8 @@ from color.spectra import (
 | `from_cie2012_xyz_10degree_cmfs(interval_nm=1)` | CIE 2012 10 度 XYZ CMFs |
 | `from_cie2006_lms_2degree_fundamentals(interval_nm=1, energy="linE")` | CIE 2006 2 度 LMS fundamentals |
 | `from_cie2006_lms_10degree_fundamentals(interval_nm=1, energy="linE")` | CIE 2006 10 度 LMS fundamentals |
-| `from_individual_cone_fundamentals(...)` | Stockman/Rider 2023 个体化 LMS fundamentals |
+| `from_stockman_rider_2023_individual_cone_fundamentals(...)` | Stockman/Rider 2023 个体化 LMS fundamentals |
+| `from_asano2016_individual_cone_fundamentals(...)` | Asano 2016 个体化 LMS fundamentals |
 
 `interval_nm` 的含义是“选择已有原始数据文件的采样间隔”，不是插值间隔。例如：
 
@@ -236,33 +237,43 @@ lms = from_cie2006_lms_2degree_fundamentals()
 lms = from_cie2006_lms_2degree_fundamentals(fill_nan=None)
 ```
 
-## Stockman/Rider 个体化 LMS 入口
+## 个体化 LMS 入口
 
 `color.spectra` 现在也提供公式生成数据的包装入口：
 
 ```python
-from color.spectra import from_individual_cone_fundamentals
+from color.spectra import (
+    from_asano2016_individual_cone_fundamentals,
+    from_stockman_rider_2023_individual_cone_fundamentals,
+)
 
-lms = from_individual_cone_fundamentals(
+stockman = from_stockman_rider_2023_individual_cone_fundamentals(
     observer_degree=2,
     l_shift_nm=2.0,
     m_shift_nm=-1.0,
 )
+
+asano = from_asano2016_individual_cone_fundamentals(
+    age=32,
+    field_size_degree=2,
+)
 ```
 
-这个入口内部调用 `color.generators` 中注册的
-`individual_cone_fundamentals / stockman_rider_2023` 生成器，然后包装成
+这些入口内部调用 `color.generators` 中注册的个体化 cone fundamental 生成器，然后包装成
 `MultiSpectralDistribution`。返回通道为：
 
 ```python
 ("l", "m", "s")
 ```
 
-它和 `from_cie2006_lms_2degree_fundamentals(...)` 的区别是：
+它们和 `from_cie2006_lms_2degree_fundamentals(...)` 的区别是：
 
 - `from_cie2006_lms_...` 读取 CVRL 静态标准数据；
-- `from_individual_cone_fundamentals(...)` 根据 Stockman/Rider 2023 公式即时生成，
+- `from_stockman_rider_2023_individual_cone_fundamentals(...)` 根据 Stockman/Rider 2023 公式即时生成，
   可以改变 photopigment OD、macular density、lens density 和 L/M/S 峰值偏移。
+- `from_asano2016_individual_cone_fundamentals(...)` 根据 Asano 2016 / CIEPO06
+  individual observer 语义即时生成，可以改变 age、field size、lens/macular
+  density deviation、photopigment OD deviation 和 L/M/S lambda-max shift。
 
 第一版不做 codon/hybrid 到 shift 的自动推导；如果需要个体化，直接传入
 `l_shift_nm`、`m_shift_nm`、`s_shift_nm` 等数值参数。

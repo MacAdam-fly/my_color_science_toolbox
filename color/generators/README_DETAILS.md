@@ -396,8 +396,16 @@ raw = generate(
 
 ## Individual Cone Fundamentals
 
-`individual_cone_fundamentals` 类别用于根据 Stockman/Rider 2023 公式生成
-个体化 LMS cone fundamentals。它返回最终的 corneal energy LMS：
+`individual_cone_fundamentals` 类别用于生成个体化 LMS cone fundamentals。
+当前注册了两个模型：
+
+- `stockman_rider_2023`：Stockman/Rider 2023 公式，参数包括 2/10 度、OD、
+  macular/lens density 和 L/M/S 峰值偏移。
+- `asano2016`：Asano et al. 2016 individual colorimetric observer model，
+  参数包括年龄、视场大小、lens/macular density deviation、photopigment OD
+  deviation 和 L/M/S lambda-max shift。
+
+二者都返回最终的 corneal energy LMS：
 
 ```python
 from color.generators import generate
@@ -408,6 +416,20 @@ raw = generate(
     observer_degree=2,
     l_shift_nm=2.0,
     m_shift_nm=-1.0,
+)
+```
+
+Asano 2016：
+
+```python
+from color.generators import generate
+
+raw = generate(
+    "individual_cone_fundamentals",
+    "asano2016",
+    age=45,
+    field_size_degree=4,
+    lens_density_deviation=10.0,
 )
 ```
 
@@ -425,12 +447,21 @@ raw = generate(
 也可以使用直接入口：
 
 ```python
-from color.generators import generate_individual_cone_fundamentals
+from color.generators import (
+    generate_asano2016_individual_cone_fundamentals,
+    generate_stockman_rider_2023_individual_cone_fundamentals,
+)
 
-raw = generate_individual_cone_fundamentals(observer_degree=10)
+stockman = generate_stockman_rider_2023_individual_cone_fundamentals(
+    observer_degree=10
+)
+asano = generate_asano2016_individual_cone_fundamentals(
+    age=32,
+    field_size_degree=10,
+)
 ```
 
-常用参数：
+Stockman/Rider 常用参数：
 
 | 参数 | 含义 |
 | --- | --- |
@@ -443,6 +474,11 @@ raw = generate_individual_cone_fundamentals(observer_degree=10)
 
 第一版不做 codon/hybrid 到 shift 的自动推导；如果需要个体观察者差异，
 请直接传入 shift 和密度参数。
+
+Asano 2016 的参数以 deviation 形式表达相对平均观察者的变化，例如
+`lens_density_deviation=10` 表示 lens density 增加约 10%。如果只需要 CIE 2006
+平均 2 度或 10 度 LMS fundamentals，优先使用 `color.spectra` 的 CIE 2006
+静态数据入口；Asano 入口适合需要年龄、视场和个体差异模型时使用。
 
 ## 从 generators 到 spectra
 
@@ -559,10 +595,8 @@ list_led_generators
 ### Individual Cone Fundamentals
 
 ```python
-macular_density_spectrum
-lens_density_spectrum
-cone_absorbance_spectra
-generate_individual_cone_fundamentals
+generate_stockman_rider_2023_individual_cone_fundamentals
+generate_asano2016_individual_cone_fundamentals
 generate_individual_cone_fundamental
 list_individual_cone_fundamental_generators
 ```

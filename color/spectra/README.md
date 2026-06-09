@@ -23,18 +23,20 @@ interpolated, reshaped, aligned, exported, and combined.
 from color.spectra import (
     SpectralShape,
     from_D65_illuminant,
+    from_asano2016_individual_cone_fundamentals,
     from_cie1931_xyz_cmfs,
     from_columns,
-    from_individual_cone_fundamentals,
+    from_stockman_rider_2023_individual_cone_fundamentals,
 )
 
 d65 = from_D65_illuminant()
 cmfs = from_cie1931_xyz_cmfs(interval_nm=1)
-lms = from_individual_cone_fundamentals(observer_degree=2)
+stockman = from_stockman_rider_2023_individual_cone_fundamentals(observer_degree=2)
+asano = from_asano2016_individual_cone_fundamentals(age=32, field_size_degree=2)
 
 d65_5nm = d65.reshape(SpectralShape(400, 700, 5))
 y_bar = cmfs["Y"]
-l_bar = lms["l"]
+l_bar = stockman["l"]
 values_450_550 = y_bar.sample([450, 550])
 ```
 
@@ -54,7 +56,8 @@ values_450_550 = y_bar.sample([450, 550])
 | `from_cie2012_xyz_10degree_cmfs` | Wrap CIE 2012 10-degree XYZ CMFs |
 | `from_cie2006_lms_2degree_fundamentals` | Wrap CIE 2006 2-degree LMS fundamentals |
 | `from_cie2006_lms_10degree_fundamentals` | Wrap CIE 2006 10-degree LMS fundamentals |
-| `from_individual_cone_fundamentals` | Wrap Stockman/Rider individual LMS fundamentals |
+| `from_stockman_rider_2023_individual_cone_fundamentals` | Wrap Stockman/Rider individual LMS fundamentals |
+| `from_asano2016_individual_cone_fundamentals` | Wrap Asano 2016 individual LMS fundamentals |
 
 ## Object Creation
 
@@ -83,7 +86,8 @@ For common standards, prefer the semantic shortcuts:
 | `from_cie2012_xyz_10degree_cmfs(interval_nm=1)` | CIE 2012 10-degree XYZ CMFs |
 | `from_cie2006_lms_2degree_fundamentals(interval_nm=1, energy="linE")` | CIE 2006 2-degree LMS fundamentals |
 | `from_cie2006_lms_10degree_fundamentals(interval_nm=1, energy="linE")` | CIE 2006 10-degree LMS fundamentals |
-| `from_individual_cone_fundamentals(...)` | Stockman/Rider 2023 individual LMS fundamentals |
+| `from_stockman_rider_2023_individual_cone_fundamentals(...)` | Stockman/Rider 2023 individual LMS fundamentals |
+| `from_asano2016_individual_cone_fundamentals(...)` | Asano 2016 individual LMS fundamentals |
 
 `interval_nm` selects an existing source file sampling interval; it does not
 interpolate. Use `reshape(...)` or `align(...)` when you need a new wavelength
@@ -93,11 +97,11 @@ CIE 2006 LMS shortcuts default to `fill_nan=0.0`, matching their common use as
 response functions for numerical integration. Generic constructors preserve
 missing values unless you explicitly pass `fill_nan`.
 
-`from_individual_cone_fundamentals(...)` wraps generated data rather than a
-static dataset. It accepts the same parameters as
-`color.individual_cone_fundamentals.generate_individual_cone_fundamentals(...)`,
-including `observer_degree`, `photopigment_od`, `macular_density_460`,
-`lens_density_400`, and L/M/S wavelength shifts.
+The individual-cone wrappers wrap generated data rather than static datasets.
+They accept the same parameters as their explicit
+`color.individual_cone_fundamentals` model functions. Stockman/Rider exposes
+`observer_degree`, density and L/M/S shift parameters; Asano 2016 exposes age,
+field size, density deviations, OD deviations and L/M/S lambda-max shifts.
 
 ## Objects And Access
 

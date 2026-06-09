@@ -21,3 +21,7 @@ def test_individual_cone_fundamental_examples_run():
         str(_EXAMPLES / "example_01_stockman_rider_2023.py"),
         run_name="__main__",
     )
+    runpy.run_path(
+        str(_EXAMPLES / "example_02_asano2016.py"),
+        run_name="__main__",
+    )

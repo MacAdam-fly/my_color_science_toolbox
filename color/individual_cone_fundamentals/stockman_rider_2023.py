@@ -2,21 +2,33 @@
 
 from __future__ import annotations
 
+from typing import Mapping
+
 import numpy as np
 
 from color.utils.names import canonical_method_name
 
-from .constants import (
+from ._constants import (
+    DEFAULT_LENS_DENSITY_400,
+    DEFAULT_MACULAR_DENSITY_460,
+    DEFAULT_PHOTOPIGMENT_OD,
     DEFAULT_WAVELENGTHS_NM,
     GeneratedConeDict,
     LENS_COEFFICIENTS,
+    LENS_TEMPLATE_400,
     L_TEMPLATE_ALIASES,
     L_SER_COEFFICIENTS,
     MACULAR_COEFFICIENTS,
+    MACULAR_TEMPLATE_460,
     M_COEFFICIENTS,
     S_COEFFICIENTS,
 )
-from .transforms import normalise_to_peak
+from ._transforms import (
+    apply_prereceptoral_filtering,
+    normalise_to_peak,
+    quantal_to_energy,
+    retinal_absorptance,
+)
 
 
 def as_wavelengths(wavelength_nm: np.ndarray | None) -> np.ndarray:
@@ -203,10 +215,122 @@ def cone_absorbance_spectra(
     }
 
 
+def _validate_non_negative(value: float, name: str) -> float:
+    """Return *value* as a non-negative finite float."""
+    value = float(value)
+    if not np.isfinite(value) or value < 0:
+        raise ValueError(f"{name} must be a finite non-negative value")
+    return value
+
+
+def _observer_degree(observer_degree: int) -> int:
+    """Validate and return observer field size."""
+    if observer_degree not in (2, 10):
+        raise ValueError("observer_degree must be 2 or 10")
+    return observer_degree
+
+
+def _column_stack(raw: Mapping[str, np.ndarray]) -> np.ndarray:
+    """Stack LMS columns from a raw mapping."""
+    return np.column_stack((raw["l"], raw["m"], raw["s"]))
+
+
+def stockman_rider_2023_model_components(
+    wavelength_nm: np.ndarray | None = None,
+    *,
+    observer_degree: int = 2,
+    photopigment_od: tuple[float, float, float] | None = None,
+    macular_density_460: float | None = None,
+    lens_density_400: float = DEFAULT_LENS_DENSITY_400,
+    l_shift_nm: float = 0.0,
+    m_shift_nm: float = 0.0,
+    s_shift_nm: float = 0.0,
+    l_template: str = "mean",
+) -> GeneratedConeDict:
+    """Return Stockman/Rider model components for one observer."""
+    wavelengths = as_wavelengths(wavelength_nm)
+    degree = _observer_degree(observer_degree)
+
+    if photopigment_od is None:
+        photopigment_od = DEFAULT_PHOTOPIGMENT_OD[degree]
+    od = np.asarray(photopigment_od, dtype=np.float64)
+    if od.shape != (3,) or not np.all(np.isfinite(od)) or np.any(od < 0):
+        raise ValueError("photopigment_od must contain three finite non-negative values")
+
+    if macular_density_460 is None:
+        macular_density_460 = DEFAULT_MACULAR_DENSITY_460[degree]
+    macular_density_460 = _validate_non_negative(
+        macular_density_460,
+        "macular_density_460",
+    )
+    lens_density_400 = _validate_non_negative(lens_density_400, "lens_density_400")
+
+    absorbance_raw = cone_absorbance_spectra(
+        wavelengths,
+        l_shift_nm=l_shift_nm,
+        m_shift_nm=m_shift_nm,
+        s_shift_nm=s_shift_nm,
+        l_template=l_template,
+    )
+    absorbance = _column_stack(absorbance_raw)
+    retinal = retinal_absorptance(absorbance, od)
+
+    macular = macular_density_spectrum(wavelengths)["optical_density"]
+    lens = lens_density_spectrum(wavelengths)["optical_density"]
+    macular_scale = macular_density_460 / MACULAR_TEMPLATE_460
+    lens_scale = lens_density_400 / LENS_TEMPLATE_400
+    prereceptoral_density = macular_scale * macular + lens_scale * lens
+
+    corneal_quantal = apply_prereceptoral_filtering(retinal, prereceptoral_density)
+    corneal_energy = quantal_to_energy(corneal_quantal, wavelengths)
+
+    return {
+        "wavelength": wavelengths,
+        "photopigment_absorbance": absorbance,
+        "photopigment_od": od,
+        "retinal_absorptance": retinal,
+        "macular_density": macular_scale * macular,
+        "lens_density": lens_scale * lens,
+        "prereceptoral_density": prereceptoral_density,
+        "corneal_quantal": corneal_quantal,
+        "corneal_energy": corneal_energy,
+    }
+
+
+def generate_stockman_rider_2023_individual_cone_fundamentals(
+    wavelength_nm: np.ndarray | None = None,
+    *,
+    observer_degree: int = 2,
+    photopigment_od: tuple[float, float, float] | None = None,
+    macular_density_460: float | None = None,
+    lens_density_400: float = DEFAULT_LENS_DENSITY_400,
+    l_shift_nm: float = 0.0,
+    m_shift_nm: float = 0.0,
+    s_shift_nm: float = 0.0,
+    l_template: str = "mean",
+) -> GeneratedConeDict:
+    """Generate Stockman/Rider corneal energy LMS cone fundamentals."""
+    components = stockman_rider_2023_model_components(
+        wavelength_nm,
+        observer_degree=observer_degree,
+        photopigment_od=photopigment_od,
+        macular_density_460=macular_density_460,
+        lens_density_400=lens_density_400,
+        l_shift_nm=l_shift_nm,
+        m_shift_nm=m_shift_nm,
+        s_shift_nm=s_shift_nm,
+        l_template=l_template,
+    )
+    corneal_energy = components["corneal_energy"]
+    return {
+        "wavelength": components["wavelength"],
+        "l": corneal_energy[:, 0],
+        "m": corneal_energy[:, 1],
+        "s": corneal_energy[:, 2],
+    }
+
+
 __all__ = [
-    "as_wavelengths",
-    "validate_shift",
     "macular_density_spectrum",
-    "lens_density_spectrum",
-    "cone_absorbance_spectra",
+    "generate_stockman_rider_2023_individual_cone_fundamentals",
 ]

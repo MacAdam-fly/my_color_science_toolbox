@@ -166,6 +166,7 @@ Absorbs UV and short-wavelength light in the crystalline lens. Increases with ag
 | `lens_ss_5nm.csv` | CVRL lens density spectrum (Stockman & Sharpe) |
 | `lens_ss_1nm.csv` | Same at 1nm |
 | `lens_ss_0p1nm.csv` | Same at 0.1nm |
+| `lens_ciepo06_components_5nm.csv` | CIEPO06 ocular media components `D_ocul,1`, `D_ocul,2`, and their age-32 sum |
 | `lens_smj.csv` | Stockman, MacLeod & Johnson (1993) lens density |
 | `lens_vnv.csv` | van Norren & Vos (1974) lens density |
 | `lens_ws.csv` | Wyszecki & Stiles (1967/1982) lens density |

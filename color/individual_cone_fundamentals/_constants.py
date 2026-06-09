@@ -1,4 +1,4 @@
-"""Constants for Stockman/Rider individual cone fundamentals."""
+"""Constants for individual cone fundamental models."""
 
 from __future__ import annotations
 
@@ -12,7 +12,13 @@ STOCKMAN_RIDER_REFERENCE = (
     "standard and individual human cone spectral sensitivities"
 )
 
+ASANO2016_REFERENCE = (
+    "Asano Y., Fairchild M. D. and Blondé L. (2016), Individual "
+    "Colorimetric Observer Model"
+)
+
 DEFAULT_WAVELENGTHS_NM = np.arange(360.0, 851.0, 1.0, dtype=np.float64)
+DEFAULT_ASANO2016_WAVELENGTHS_NM = np.arange(390.0, 831.0, 5.0, dtype=np.float64)
 
 DEFAULT_PHOTOPIGMENT_OD: dict[int, tuple[float, float, float]] = {
     2: (0.50, 0.50, 0.40),
@@ -160,7 +166,9 @@ LENS_COEFFICIENTS = (
 __all__ = [
     "GeneratedConeDict",
     "STOCKMAN_RIDER_REFERENCE",
+    "ASANO2016_REFERENCE",
     "DEFAULT_WAVELENGTHS_NM",
+    "DEFAULT_ASANO2016_WAVELENGTHS_NM",
     "DEFAULT_PHOTOPIGMENT_OD",
     "DEFAULT_MACULAR_DENSITY_460",
     "DEFAULT_LENS_DENSITY_400",

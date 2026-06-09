@@ -21,7 +21,10 @@ from color.generators import generate
 from color.generators.blackbody import blackbody_spd
 from color.generators.ideal import gaussian_spd, multi_gaussian_spd
 from color.generators.illuminants import daylight_spd
-from color.generators.individual_cone_fundamentals import generate_individual_cone_fundamentals
+from color.generators.individual_cone_fundamentals import (
+    generate_asano2016_individual_cone_fundamentals,
+    generate_stockman_rider_2023_individual_cone_fundamentals,
+)
 from color.generators.leds import single_led_spd
 
 bb = generate("blackbody", "blackbody_spd", temperature=6500)
@@ -33,7 +36,10 @@ multi_gaussian = multi_gaussian_spd(
     amplitudes=(0.8, 0.55, 1.0),
 )
 led = single_led_spd(peak_wavelength=630, half_spectral_width=20)
-lms = generate_individual_cone_fundamentals(observer_degree=2)
+stockman = generate_stockman_rider_2023_individual_cone_fundamentals(
+    observer_degree=2
+)
+asano = generate_asano2016_individual_cone_fundamentals(age=32, field_size_degree=2)
 ```
 
 ## Registered Categories
@@ -44,7 +50,7 @@ lms = generate_individual_cone_fundamentals(observer_degree=2)
 | `illuminants` | `A`, `cie_d_daylight` | CIE illuminant generation formulas |
 | `ideal` | `constant`, `zero`, `equal_energy`, `gaussian`, `multi_gaussian` | Idealised spectral distributions |
 | `leds` | `single`, `multi` | LED source models |
-| `individual_cone_fundamentals` | `stockman_rider_2023` | Individual LMS cone fundamentals |
+| `individual_cone_fundamentals` | `stockman_rider_2023`, `asano2016` | Individual LMS cone fundamentals |
 
 ## Public API Overview
 
@@ -85,10 +91,8 @@ multi_led_spd
 generate_led
 list_led_generators
 
-macular_density_spectrum
-lens_density_spectrum
-cone_absorbance_spectra
-generate_individual_cone_fundamentals
+generate_stockman_rider_2023_individual_cone_fundamentals
+generate_asano2016_individual_cone_fundamentals
 generate_individual_cone_fundamental
 list_individual_cone_fundamental_generators
 ```
@@ -171,8 +175,8 @@ rgb_led = multi_led_spd(
 
 ## Individual Cone Fundamentals
 
-The `individual_cone_fundamentals` category generates Stockman/Rider 2023
-corneal energy LMS cone fundamentals:
+The `individual_cone_fundamentals` category generates corneal energy LMS cone
+fundamentals. It currently registers Stockman/Rider 2023 and Asano 2016:
 
 ```python
 from color.generators import generate
@@ -184,12 +188,28 @@ lms = generate(
     l_shift_nm=2.0,
     m_shift_nm=-1.0,
 )
+
+asano = generate(
+    "individual_cone_fundamentals",
+    "asano2016",
+    age=40,
+    field_size_degree=4,
+)
 ```
 
-The direct function is also available:
+Explicit direct functions are also available:
 
 ```python
-from color.generators import generate_individual_cone_fundamentals
+from color.generators import (
+    generate_asano2016_individual_cone_fundamentals,
+    generate_stockman_rider_2023_individual_cone_fundamentals,
+)
 
-lms = generate_individual_cone_fundamentals(observer_degree=10)
+stockman = generate_stockman_rider_2023_individual_cone_fundamentals(
+    observer_degree=10
+)
+asano = generate_asano2016_individual_cone_fundamentals(
+    age=32,
+    field_size_degree=10,
+)
 ```

@@ -52,14 +52,14 @@ color/data/
 ### Standard Observer Data
 
 CVRL human visual-system reference data.  The production subfolders contain
-106 CSV files registered automatically by `color.datasets.standard_observers`.
+107 CSV files registered automatically by `color.datasets.standard_observers`.
 
 | Subfolder | Content | Files |
 | --- | --- | ---: |
 | `cmfs/` | CIE 1931/1964/2012 XYZ and RGB colour matching functions | 15 |
 | `cone_fundamentals/` | LMS cone fundamentals and related sensitivities | 27 |
 | `luminous_efficiency/` | Photopic and scotopic luminous efficiency functions | 29 |
-| `prereceptoral_filters/` | Macular pigment and lens density spectra | 11 |
+| `prereceptoral_filters/` | Macular pigment, lens density spectra, and CIEPO06 lens components | 12 |
 | `chromaticity_coordinates/` | CIE and MacLeod-Boynton chromaticity coordinates | 16 |
 | `photopigments/` | Photopigment absorption spectra | 7 |
 
