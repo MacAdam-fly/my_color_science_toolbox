@@ -29,7 +29,7 @@ def _plot_average_observer_check(default_observer):
     """Compare zero-deviation Asano output with CIE 2006 LMS data."""
     import matplotlib.pyplot as plt
 
-    reference = get_cie2006_lms_2degree_fundamentals(interval_nm=5, energy="linE")
+    reference = get_cie2006_lms_2degree_fundamentals(interval_nm=1, energy="linE")
     fig, axes = plt.subplots(2, 1, figsize=(7.16, 4.8), sharex=True)
 
     series = []

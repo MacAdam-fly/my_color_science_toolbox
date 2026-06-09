@@ -18,7 +18,7 @@ ASANO2016_REFERENCE = (
 )
 
 DEFAULT_WAVELENGTHS_NM = np.arange(360.0, 851.0, 1.0, dtype=np.float64)
-DEFAULT_ASANO2016_WAVELENGTHS_NM = np.arange(390.0, 831.0, 5.0, dtype=np.float64)
+DEFAULT_ASANO2016_WAVELENGTHS_NM = np.arange(390.0, 831.0, 1.0, dtype=np.float64)
 
 DEFAULT_PHOTOPIGMENT_OD: dict[int, tuple[float, float, float]] = {
     2: (0.50, 0.50, 0.40),
