@@ -40,11 +40,11 @@ def test_recover_spectrum_from_XYZ_round_trips_emission_XYZ() -> None:
     recovered = recover_spectrum_from_XYZ(
         target,
         shape=SpectralShape(400, 700, 1),
-        smoothness=1e-3,
     )
     closed = emission_to_XYZ(recovered, shape=SpectralShape(400, 700, 1))
 
     assert isinstance(recovered, SpectralDistribution)
+    assert recovered.metadata["recovery_method"] == "gaussian"
     assert np.allclose(closed, target, atol=2e-4)
     assert np.all(recovered.values >= 0.0)
 
@@ -58,11 +58,11 @@ def test_recover_spectrum_from_xyY_round_trips_emission_XYZ() -> None:
     recovered = recover_spectrum_from_xyY(
         target_xyY,
         shape=shape,
-        smoothness=1e-3,
     )
     closed = emission_to_XYZ(recovered, shape=shape)
 
     assert isinstance(recovered, SpectralDistribution)
+    assert recovered.metadata["recovery_method"] == "gaussian"
     assert np.allclose(closed, target, atol=2e-4)
 
 
@@ -71,9 +71,10 @@ def test_recover_spectrum_from_LMS_round_trips_emission_LMS() -> None:
     shape = SpectralShape(400, 700, 1)
     target = emission_to_LMS(original, shape=shape)
 
-    recovered = recover_spectrum_from_LMS(target, shape=shape, smoothness=1e-3)
+    recovered = recover_spectrum_from_LMS(target, shape=shape)
     closed = emission_to_LMS(recovered, shape=shape)
 
+    assert recovered.metadata["recovery_method"] == "gaussian"
     assert np.allclose(closed, target, atol=2e-4)
 
 
@@ -87,6 +88,7 @@ def test_recover_spectrum_from_responses_accepts_custom_responses() -> None:
     recovered = recover_spectrum_from_responses(target, responses, shape=shape)
     closed = matrix @ recovered.values
 
+    assert recovered.metadata["recovery_method"] == "gaussian"
     assert np.allclose(closed, target, atol=2e-4)
 
 
@@ -105,6 +107,7 @@ def test_recover_spectrum_batch_returns_multi_spectral_distribution() -> None:
 
     assert isinstance(recovered, MultiSpectralDistribution)
     assert recovered.labels == ("full", "half")
+    assert recovered.metadata["recovery_method"] == "gaussian"
     closed = emission_to_XYZ(recovered, shape=shape)
     assert np.allclose(closed, targets, atol=3e-4)
 

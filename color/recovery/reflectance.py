@@ -143,7 +143,7 @@ def recover_reflectance_from_XYZ(
     cmfs: ResponseSource = "cie1931_xyz_1nm",
     illuminant: IlluminantSource = "D65",
     shape: SpectralShape | None = None,
-    method: str | ReflectanceRecoveryOption = "bounded_least_squares",
+    method: str | ReflectanceRecoveryOption = "burns2019",
     labels: Sequence[str] | None = None,
     **method_options,
 ) -> Union[SpectralDistribution, MultiSpectralDistribution]:
@@ -163,6 +163,7 @@ def recover_reflectance_from_XYZ(
         the library wavelengths to match the recovery matrix wavelengths.
     method
         Reflectance recovery method name or reflectance recovery options object.
+        The default is ``"burns2019"``.
     labels
         Optional labels for batch recovery outputs.
     **method_options
@@ -182,8 +183,8 @@ def recover_reflectance_from_XYZ(
 
     Examples
     --------
-    >>> recover_reflectance_from_XYZ([24.0, 20.0, 18.0]).metadata["recovery_kind"]
-    'reflectance'
+    >>> recover_reflectance_from_XYZ([24.0, 20.0, 18.0]).metadata["recovery_method"]
+    'burns2019'
     """
     targets, is_single = as_recovery_targets(XYZ, name="XYZ")
     method_name, config = _normalise_reflectance_method(method, method_options)

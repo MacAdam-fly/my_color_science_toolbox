@@ -16,7 +16,6 @@ from color.colorimetry import emission_to_LMS, emission_to_XYZ
 from color.generators.ideal import gaussian_spd
 from color.plot import plot_lines, plot_style
 from color.recovery import (
-    BoundedLeastSquaresOptions,
     recover_spectrum_from_LMS,
     recover_spectrum_from_XYZ,
 )
@@ -53,12 +52,10 @@ def main() -> None:
     recovered_XYZ = recover_spectrum_from_XYZ(
         target_XYZ,
         shape=shape,
-        method=BoundedLeastSquaresOptions(smoothness=1e-3),
     )
     recovered_LMS = recover_spectrum_from_LMS(
         target_LMS,
         shape=shape,
-        method=BoundedLeastSquaresOptions(smoothness=1e-3),
     )
 
     closed_XYZ = emission_to_XYZ(recovered_XYZ, shape=shape)
@@ -67,9 +64,11 @@ def main() -> None:
     print("Target XYZ:", np.round(target_XYZ, 6))
     print("Recovered spectrum closed XYZ:", np.round(closed_XYZ, 6))
     print("XYZ recovery error:", np.linalg.norm(closed_XYZ - target_XYZ))
+    print("XYZ recovery method:", recovered_XYZ.metadata["recovery_method"])
     print("Target LMS:", np.round(target_LMS, 6))
     print("Recovered spectrum closed LMS:", np.round(closed_LMS, 6))
     print("LMS recovery error:", np.linalg.norm(closed_LMS - target_LMS))
+    print("LMS recovery method:", recovered_LMS.metadata["recovery_method"])
 
     with plot_style("presentation", font_scale=0.65, line_scale=0.85):
         fig, ax = plt.subplots(figsize=(7.16, 4.2))

@@ -320,7 +320,7 @@ def recover_spectrum_from_responses(
     responses: MultiSpectralDistribution,
     *,
     shape: SpectralShape | None = None,
-    method: str | SpectrumRecoveryOption = "bounded_least_squares",
+    method: str | SpectrumRecoveryOption = "gaussian",
     labels: Sequence[str] | None = None,
     **method_options,
 ) -> Union[SpectralDistribution, MultiSpectralDistribution]:
@@ -336,7 +336,8 @@ def recover_spectrum_from_responses(
         Optional recovery wavelength sampling. ``None`` uses the response
         sampling domain.
     method
-        Spectrum recovery method name or spectrum recovery options object.
+        Spectrum recovery method name or spectrum recovery options object. The
+        default is ``"gaussian"``.
     labels
         Optional labels for batch recovery outputs.
     **method_options
@@ -358,8 +359,8 @@ def recover_spectrum_from_responses(
     --------
     >>> from color.spectra import from_cie1931_xyz_cmfs
     >>> responses = from_cie1931_xyz_cmfs()
-    >>> recover_spectrum_from_responses([24.0, 20.0, 18.0], responses).metadata["recovery_kind"]
-    'spectrum'
+    >>> recover_spectrum_from_responses([24.0, 20.0, 18.0], responses).metadata["recovery_method"]
+    'gaussian'
     """
     method_name, config = _normalise_spectrum_method(method, method_options)
     return _recover_spectrum_from_responses_resolved(
@@ -377,7 +378,7 @@ def recover_spectrum_from_XYZ(
     *,
     cmfs: ResponseSource = DEFAULT_CMFS,
     shape: SpectralShape | None = None,
-    method: str | SpectrumRecoveryOption = "bounded_least_squares",
+    method: str | SpectrumRecoveryOption = "gaussian",
     labels: Sequence[str] | None = None,
     **method_options,
 ) -> Union[SpectralDistribution, MultiSpectralDistribution]:
@@ -393,7 +394,8 @@ def recover_spectrum_from_XYZ(
     shape
         Optional recovery wavelength sampling.
     method
-        Spectrum recovery method name or spectrum recovery options object.
+        Spectrum recovery method name or spectrum recovery options object. The
+        default is ``"gaussian"``.
     labels
         Optional labels for batch recovery outputs.
     **method_options
@@ -413,8 +415,8 @@ def recover_spectrum_from_XYZ(
 
     Examples
     --------
-    >>> recover_spectrum_from_XYZ([24.0, 20.0, 18.0]).metadata["recovery_kind"]
-    'spectrum'
+    >>> recover_spectrum_from_XYZ([24.0, 20.0, 18.0]).metadata["recovery_method"]
+    'gaussian'
     """
     resolved_method, config = _normalise_spectrum_method(method, method_options)
     if (
@@ -505,7 +507,7 @@ def recover_spectrum_from_LMS(
     fundamentals: ResponseSource = DEFAULT_FUNDAMENTALS,
     fill_nan: float | None = 0.0,
     shape: SpectralShape | None = None,
-    method: str | SpectrumRecoveryOption = "bounded_least_squares",
+    method: str | SpectrumRecoveryOption = "gaussian",
     labels: Sequence[str] | None = None,
     **method_options,
 ) -> Union[SpectralDistribution, MultiSpectralDistribution]:
@@ -522,7 +524,8 @@ def recover_spectrum_from_LMS(
     shape
         Optional recovery wavelength sampling.
     method
-        Spectrum recovery method name or spectrum recovery options object.
+        Spectrum recovery method name or spectrum recovery options object. The
+        default is ``"gaussian"``.
     labels
         Optional labels for batch recovery outputs.
     **method_options
@@ -541,8 +544,8 @@ def recover_spectrum_from_LMS(
 
     Examples
     --------
-    >>> recover_spectrum_from_LMS([12.0, 14.0, 3.0]).metadata["recovery_kind"]
-    'spectrum'
+    >>> recover_spectrum_from_LMS([12.0, 14.0, 3.0]).metadata["recovery_method"]
+    'gaussian'
     """
     return recover_spectrum_from_responses(
         LMS,

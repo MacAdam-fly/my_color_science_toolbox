@@ -29,7 +29,7 @@ Reflectance recovery from `XYZ`:
 ```python
 from color.colorimetry import reflectance_to_XYZ
 from color.recovery import (
-    BoundedLeastSquaresOptions,
+    Burns2019RecoveryOptions,
     recover_reflectance_from_XYZ,
 )
 
@@ -37,7 +37,7 @@ target_XYZ = [24.0, 20.0, 18.0]
 reflectance = recover_reflectance_from_XYZ(
     target_XYZ,
     illuminant="D65",
-    method=BoundedLeastSquaresOptions(bounds=(0.0, 1.0), smoothness=1e-3),
+    method=Burns2019RecoveryOptions(),
 )
 
 closed_XYZ = reflectance_to_XYZ(reflectance, illuminant="D65")
@@ -78,15 +78,17 @@ from color.recovery import (
     recover_spectrum_from_XYZ,
 )
 
-spectrum = recover_spectrum_from_XYZ(
-    target_XYZ,
-    method=BoundedLeastSquaresOptions(bounds=(0.0, float("inf"))),
-)
+spectrum = recover_spectrum_from_XYZ(target_XYZ)
 closed_XYZ = emission_to_XYZ(spectrum)
 
-parametric = recover_spectrum_from_XYZ(
+auto_parametric = recover_spectrum_from_XYZ(
     target_XYZ,
     method=AutoGaussianRecoveryOptions(),
+)
+
+baseline = recover_spectrum_from_XYZ(
+    target_XYZ,
+    method=BoundedLeastSquaresOptions(bounds=(0.0, float("inf"))),
 )
 ```
 
@@ -101,6 +103,11 @@ parametric = recover_spectrum_from_XYZ(
 
 PCA and dictionary methods are not expected to minimise `XYZ` closure error in
 all cases. They trade freedom for a reflectance-library prior.
+
+Default methods are intentionally different by problem type:
+
+- Effective spectrum recovery defaults to `gaussian`.
+- Reflectance recovery defaults to `burns2019`.
 
 ## Public API
 

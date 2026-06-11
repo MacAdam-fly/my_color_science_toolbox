@@ -32,14 +32,13 @@ database prior                    -> load_reflectance_library + PCA/Dictionary o
 从任意三通道响应函数恢复 effective spectrum。
 
 ```python
-from color.recovery import BoundedLeastSquaresOptions, recover_spectrum_from_responses
+from color.recovery import recover_spectrum_from_responses
 from color.spectra import from_cie1931_xyz_cmfs
 
 responses = from_cie1931_xyz_cmfs()
 spectrum = recover_spectrum_from_responses(
     [24.0, 20.0, 18.0],
     responses,
-    method=BoundedLeastSquaresOptions(bounds=(0.0, float("inf"))),
 )
 ```
 
@@ -53,17 +52,17 @@ spectra = recover_spectrum_from_responses(
 )
 ```
 
+默认 method 是 `gaussian`。如果需要自由度更高的非参数基线解，可以显式使用
+`BoundedLeastSquaresOptions(...)`。
+
 ### `recover_spectrum_from_XYZ(XYZ, ...)`
 
 从 `XYZ(Y=100)` 恢复 effective spectrum。自发光场景下可以把结果解释为 SPD。
 
 ```python
-from color.recovery import BoundedLeastSquaresOptions, recover_spectrum_from_XYZ
+from color.recovery import recover_spectrum_from_XYZ
 
-spectrum = recover_spectrum_from_XYZ(
-    [24.0, 20.0, 18.0],
-    method=BoundedLeastSquaresOptions(bounds=(0.0, float("inf"))),
-)
+spectrum = recover_spectrum_from_XYZ([24.0, 20.0, 18.0])
 ```
 
 参数化高斯：
@@ -93,12 +92,9 @@ spectrum = recover_spectrum_from_XYZ(
 从 `xyY` 恢复 effective spectrum。内部先转为 XYZ。
 
 ```python
-from color.recovery import BoundedLeastSquaresOptions, recover_spectrum_from_xyY
+from color.recovery import recover_spectrum_from_xyY
 
-spectrum = recover_spectrum_from_xyY(
-    [0.32, 0.31, 20.0],
-    method=BoundedLeastSquaresOptions(bounds=(0.0, float("inf"))),
-)
+spectrum = recover_spectrum_from_xyY([0.32, 0.31, 20.0])
 ```
 
 ### `recover_spectrum_from_LMS(LMS, ...)`
@@ -122,13 +118,12 @@ spectrum = recover_spectrum_from_LMS(
 在指定 illuminant 和 CMFs 下，从 `XYZ(Y=100)` 恢复 bounded reflectance。
 
 ```python
-from color.recovery import BoundedLeastSquaresOptions, recover_reflectance_from_XYZ
+from color.recovery import recover_reflectance_from_XYZ
 
 reflectance = recover_reflectance_from_XYZ(
     [24.0, 20.0, 18.0],
     illuminant="D65",
     cmfs="cie1931_xyz_1nm",
-    method=BoundedLeastSquaresOptions(bounds=(0.0, 1.0), smoothness=1e-3),
 )
 ```
 
@@ -480,14 +475,14 @@ print(REFLECTANCE_RECOVERY_METHODS.keys())
 
 ```text
 SPECTRUM_RECOVERY_METHODS:
+  gaussian              # default
   bounded_least_squares
-  gaussian
   multi_gaussian
   auto_gaussian
 
 REFLECTANCE_RECOVERY_METHODS:
+  burns2019             # default
   bounded_least_squares
-  burns2019
   meng2015
   pca
   dictionary
