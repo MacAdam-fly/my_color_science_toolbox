@@ -41,9 +41,10 @@ python examples/generators/example_02_ideal_spectra.py
 
 ## Integration Examples (`integration/`)
 
-- `example_01_long_colour_pipeline.py` - Generated LED spectrum and sRGB signal
-  through XYZ/LMS, Luv, CAM02-UCS with D50 viewing white, explicit chromatic
-  adaptation for Oklab, final Lab, CIEDE2000, CCT and dominant-wavelength analysis.
+- `example_01_long_colour_pipeline.py` - Full cross-module workflow from
+  generated LED, sRGB and Macbeth reflectance inputs through XYZ/LMS, CCT,
+  dominant wavelength, spaces, adaptation, appearance, difference, gamut,
+  recovery, plotting and figure export.
 
 ## IO Examples (`io/`)
 

@@ -93,9 +93,9 @@ non-uniform samples with at least 4 points -> cubic
 otherwise -> linear
 ```
 
-Sprague interpolation delegates to `colour.algebra.SpragueInterpolator` so the
-first implementation stays close to the reference library behavior. PCHIP uses
-SciPy's monotonicity-preserving piecewise cubic interpolator.
+Sprague interpolation is implemented locally with the CIE-style fifth-order
+formula for uniformly sampled data. PCHIP uses SciPy's
+monotonicity-preserving piecewise cubic interpolator.
 
 ## Extrapolation
 

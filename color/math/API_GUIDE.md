@@ -96,7 +96,7 @@ Sprague 要求：
 - `x` 等间隔。
 - 至少 6 个样本。
 
-当前实现调用本地 `colour.algebra.SpragueInterpolator`，用于保持和 colour-science 行为接近。
+当前实现为项目内本地实现，使用 Sprague 五次多项式和边界外推系数，不依赖 `colour-science`。
 
 ### 超出范围处理
 

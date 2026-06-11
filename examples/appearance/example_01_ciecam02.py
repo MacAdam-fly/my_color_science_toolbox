@@ -21,51 +21,6 @@ Y_B = 20.0
 CORRELATES = ("J", "C", "h", "s", "Q", "M", "H")
 
 
-def _compare_with_colour() -> None:
-    try:
-        from colour.appearance import CIECAM02_to_XYZ as colour_CIECAM02_to_XYZ
-        from colour.appearance import XYZ_to_CIECAM02 as colour_XYZ_to_CIECAM02
-        from colour.appearance import CAM_Specification_CIECAM02
-    except ImportError:
-        print("colour-science is not installed; skipping reference comparison.")
-        return
-
-    ours = XYZ_to_CIECAM02(XYZ, XYZ_W, L_A=L_A, Y_b=Y_B)
-    reference = colour_XYZ_to_CIECAM02(XYZ, XYZ_W, L_A, Y_B)
-
-    print()
-    print("Comparison with colour.appearance")
-    print("correlate        ours          colour         abs diff")
-    print("------------------------------------------------------")
-    for name in CORRELATES:
-        ours_value = float(getattr(ours, name))
-        reference_value = float(getattr(reference, name))
-        print(
-            f"{name:<9}"
-            f"{ours_value:14.8f}"
-            f"{reference_value:14.8f}"
-            f"{abs(ours_value - reference_value):14.3e}"
-        )
-
-    ours_xyz = CIECAM02_to_XYZ(
-        CIECAM02Specification(J=ours.J, C=ours.C, h=ours.h),
-        XYZ_W,
-        L_A=L_A,
-        Y_b=Y_B,
-    )
-    reference_xyz = colour_CIECAM02_to_XYZ(
-        CAM_Specification_CIECAM02(J=reference.J, C=reference.C, h=reference.h),
-        XYZ_W,
-        L_A,
-        Y_B,
-    )
-
-    print()
-    print(f"Our inverse XYZ:      {ours_xyz}")
-    print(f"colour inverse XYZ:   {reference_xyz}")
-    print(f"Inverse max diff:     {np.max(np.abs(ours_xyz - reference_xyz)):.3e}")
-
-
 def main() -> None:
     print("CIECAM02 appearance correlates for one XYZ stimulus")
     print(f"XYZ: {XYZ}")
@@ -93,7 +48,6 @@ def main() -> None:
     print()
     print(f"Roundtrip XYZ: {recovered}")
     print(f"Roundtrip max error: {np.max(np.abs(recovered - XYZ)):.3e}")
-    _compare_with_colour()
 
 
 if __name__ == "__main__":

@@ -12,12 +12,6 @@ from color.quality.ssi import SPECTRAL_SHAPE_SSI
 from color.spectra import SpectralDistribution, from_D65_illuminant, from_columns
 
 
-def _to_colour_sd(sd: SpectralDistribution):
-    from colour.colorimetry import SpectralDistribution as ColourSpectralDistribution
-
-    return ColourSpectralDistribution(dict(zip(sd.wavelengths, sd.values)))
-
-
 def test_spectral_shape_ssi() -> None:
     assert SPECTRAL_SHAPE_SSI.start == 375.0
     assert SPECTRAL_SHAPE_SSI.end == 675.0
@@ -46,39 +40,47 @@ def test_round_result_controls_rounding() -> None:
 
 
 @pytest.mark.parametrize(
-    "test_sd",
+    ("test_sd", "expected_rounded", "expected_float"),
     [
-        from_columns(
-            blackbody_spd(temperature=2856),
-            y="radiance",
-            name="Blackbody 2856 K",
+        (
+            from_columns(
+                blackbody_spd(temperature=2856),
+                y="radiance",
+                name="Blackbody 2856 K",
+            ),
+            47.0,
+            46.630366450061324,
         ),
-        from_columns(
-            blackbody_spd(temperature=6500),
-            y="radiance",
-            name="Blackbody 6500 K",
+        (
+            from_columns(
+                blackbody_spd(temperature=6500),
+                y="radiance",
+                name="Blackbody 6500 K",
+            ),
+            92.0,
+            91.7811974366554,
         ),
-        from_columns(
-            gaussian_spd(peak_wavelength=555, width=45, method="fwhm"),
-            y="spd",
-            name="Gaussian 555 nm",
+        (
+            from_columns(
+                gaussian_spd(peak_wavelength=555, width=45, method="fwhm"),
+                y="spd",
+                name="Gaussian 555 nm",
+            ),
+            -46.0,
+            -45.56900447332998,
         ),
     ],
 )
-def test_matches_colour_reference(test_sd: SpectralDistribution) -> None:
-    from colour.quality import spectral_similarity_index as colour_ssi
-
+def test_matches_reference_values(
+    test_sd: SpectralDistribution,
+    expected_rounded: float,
+    expected_float: float,
+) -> None:
     reference = from_D65_illuminant()
 
-    expected = colour_ssi(_to_colour_sd(test_sd), _to_colour_sd(reference))
     result = spectral_similarity_index(test_sd, reference)
-    assert result == pytest.approx(expected)
+    assert result == pytest.approx(expected_rounded)
 
-    expected_float = colour_ssi(
-        _to_colour_sd(test_sd),
-        _to_colour_sd(reference),
-        round_result=False,
-    )
     result_float = spectral_similarity_index(test_sd, reference, round_result=False)
     assert result_float == pytest.approx(expected_float)
 

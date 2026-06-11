@@ -27,47 +27,37 @@ from color.spaces import (
 from color.spaces.basic import DEFAULT_WHITEPOINT_XYZ
 
 
-def _whitepoint_xy(whitepoint_XYZ):
-    whitepoint = np.asarray(whitepoint_XYZ, dtype=np.float64)
-    return whitepoint[:2] / np.sum(whitepoint)
-
-
 def test_default_whitepoint_is_D65_reference_domain():
     np.testing.assert_allclose(DEFAULT_WHITEPOINT_XYZ, D65_XYZ)
     assert not DEFAULT_WHITEPOINT_XYZ.flags.writeable
 
 
-def test_Lab_matches_colour_reference():
-    colour = pytest.importorskip("colour")
+def test_Lab_matches_reference_values():
     XYZ = np.array([20.0, 30.0, 40.0])
-    illuminant = _whitepoint_xy(DEFAULT_WHITEPOINT_XYZ)
 
     np.testing.assert_allclose(
         XYZ_to_Lab(XYZ),
-        colour.XYZ_to_Lab(XYZ / 100.0, illuminant=illuminant),
+        [61.65422220953167, -37.32133643640639, -9.353076097916603],
         atol=1e-10,
     )
 
 
-def test_Luv_matches_colour_reference():
-    colour = pytest.importorskip("colour")
+def test_Luv_matches_reference_values():
     XYZ = np.array([20.0, 30.0, 40.0])
-    illuminant = _whitepoint_xy(DEFAULT_WHITEPOINT_XYZ)
 
     np.testing.assert_allclose(
         XYZ_to_Luv(XYZ),
-        colour.XYZ_to_Luv(XYZ / 100.0, illuminant=illuminant),
+        [61.65422220953167, -49.89095779912717, -8.583463561351373],
         atol=1e-10,
     )
 
 
-def test_Oklab_matches_colour_reference():
-    colour = pytest.importorskip("colour")
+def test_Oklab_matches_reference_values():
     XYZ = np.array([20.0, 30.0, 40.0])
 
     np.testing.assert_allclose(
         XYZ_to_Oklab(XYZ_D65_referred=XYZ),
-        colour.XYZ_to_Oklab(XYZ / 100.0),
+        [0.655537148295561, -0.114716132406121, -0.026210785608366],
         atol=1e-10,
     )
 

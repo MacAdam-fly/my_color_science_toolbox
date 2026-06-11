@@ -46,15 +46,16 @@ def test_supported_transforms_return_finite_matrices(transform):
     assert np.all(np.isfinite(matrix))
 
 
-def test_bradford_matrix_matches_colour_reference():
-    colour = pytest.importorskip("colour")
+def test_bradford_matrix_matches_reference_values():
     source_white = _normalise_whitepoint(D65_XYZ)
     target_white = _normalise_whitepoint(D50_XYZ)
 
-    expected = colour.adaptation.matrix_chromatic_adaptation_VonKries(
-        source_white,
-        target_white,
-        transform="Bradford",
+    expected = np.array(
+        [
+            [1.047808275577977, 0.022884567187994, -0.050129863134368],
+            [0.029538932636106, 0.990488467353025, -0.017049802683307],
+            [-0.009235404422460, 0.015045366226685, 0.752110622057374],
+        ]
     )
     actual = matrix_chromatic_adaptation_von_kries(
         source_white,

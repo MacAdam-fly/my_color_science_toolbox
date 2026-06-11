@@ -14,26 +14,24 @@ def _whitepoint_xy(whitepoint_XYZ):
     return whitepoint[:2] / np.sum(whitepoint)
 
 
-def test_XYZ_to_UVW_matches_colour_reference():
-    colour = pytest.importorskip("colour")
+def test_XYZ_to_UVW_matches_reference_values():
     XYZ = np.array([20.654008, 12.197225, 5.136952])
     whitepoint_xy = np.array([0.31270, 0.32900])
 
     np.testing.assert_allclose(
         XYZ_to_UVW(XYZ, whitepoint_xy=whitepoint_xy),
-        colour.XYZ_to_UVW(XYZ, illuminant=whitepoint_xy),
+        [94.5503572537347, 11.555365232355378, 40.54757404912667],
         atol=1e-8,
     )
 
 
-def test_UVW_to_XYZ_matches_colour_reference():
-    colour = pytest.importorskip("colour")
+def test_UVW_to_XYZ_matches_reference_values():
     UVW = np.array([94.55035725, 11.55536523, 40.54757405])
     whitepoint_xy = np.array([0.31270, 0.32900])
 
     np.testing.assert_allclose(
         UVW_to_XYZ(UVW, whitepoint_xy=whitepoint_xy),
-        colour.UVW_to_XYZ(UVW, illuminant=whitepoint_xy),
+        [20.654008000646236, 12.197225000555308, 5.136952001411407],
         atol=1e-8,
     )
 

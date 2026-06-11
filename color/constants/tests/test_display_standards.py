@@ -5,7 +5,6 @@ from __future__ import annotations
 from types import MappingProxyType
 
 import numpy as np
-from colour.models import RGB_COLOURSPACES
 
 from color.constants.display_standards import (
     ADOBE_RGB_TO_XYZ,
@@ -20,14 +19,14 @@ from color.constants.display_standards import (
 )
 
 
-_REFERENCE_NAMES = {
-    "sRGB": "sRGB",
-    "Rec.709": "ITU-R BT.709",
-    "Display P3": "Display P3",
-    "DCI-P3": "DCI-P3",
-    "Rec.2020": "ITU-R BT.2020",
-    "Adobe RGB (1998)": "Adobe RGB (1998)",
-    "NTSC (1953)": "NTSC (1953)",
+_REFERENCE_PRIMARIES_AND_WHITEPOINTS = {
+    "sRGB": (((0.6400, 0.3300), (0.3000, 0.6000), (0.1500, 0.0600)), (0.3127, 0.3290)),
+    "Rec.709": (((0.6400, 0.3300), (0.3000, 0.6000), (0.1500, 0.0600)), (0.3127, 0.3290)),
+    "Display P3": (((0.6800, 0.3200), (0.2650, 0.6900), (0.1500, 0.0600)), (0.3127, 0.3290)),
+    "DCI-P3": (((0.6800, 0.3200), (0.2650, 0.6900), (0.1500, 0.0600)), (0.3140, 0.3510)),
+    "Rec.2020": (((0.7080, 0.2920), (0.1700, 0.7970), (0.1310, 0.0460)), (0.3127, 0.3290)),
+    "Adobe RGB (1998)": (((0.6400, 0.3300), (0.2100, 0.7100), (0.1500, 0.0600)), (0.3127, 0.3290)),
+    "NTSC (1953)": (((0.6700, 0.3300), (0.2100, 0.7100), (0.1400, 0.0800)), (0.31006, 0.31616)),
 }
 
 
@@ -62,25 +61,24 @@ def test_rgb_definitions_have_required_fields():
         assert definition["transfer"]
 
 
-def test_primaries_and_whitepoints_match_colour():
-    for local_name, colour_name in _REFERENCE_NAMES.items():
+def test_primaries_and_whitepoints_match_reference_values():
+    for local_name, (primaries, white_xy) in _REFERENCE_PRIMARIES_AND_WHITEPOINTS.items():
         definition = RGB_COLOURSPACE_DEFINITIONS[local_name]
-        reference = RGB_COLOURSPACES[colour_name]
 
         np.testing.assert_allclose(
             np.asarray(definition["primaries"], dtype=float),
-            reference.primaries,
+            np.asarray(primaries, dtype=float),
             atol=1e-12,
         )
         np.testing.assert_allclose(
             np.asarray(definition["white_xy"], dtype=float),
-            reference.whitepoint,
+            np.asarray(white_xy, dtype=float),
             atol=1e-12,
         )
 
 
-def test_rgb_to_xyz_matrices_match_colour():
-    matrix_pairs = {
+def test_rgb_to_xyz_matrices_match_reference_values():
+    reference_matrices = {
         "sRGB": SRGB_TO_XYZ,
         "Display P3": DISPLAY_P3_TO_XYZ,
         "DCI-P3": DCIP3_TO_XYZ,
@@ -89,13 +87,36 @@ def test_rgb_to_xyz_matrices_match_colour():
         "Rec.709": REC709_TO_XYZ,
     }
 
-    for local_name, matrix in matrix_pairs.items():
-        colour_name = _REFERENCE_NAMES[local_name]
-        np.testing.assert_allclose(
-            matrix,
-            100.0 * RGB_COLOURSPACES[colour_name].matrix_RGB_to_XYZ,
-            atol=1e-12,
-        )
+    np.testing.assert_allclose(reference_matrices["sRGB"], [
+        [41.24, 35.76, 18.05],
+        [21.26, 71.52, 7.22],
+        [1.93, 11.92, 95.05],
+    ])
+    np.testing.assert_allclose(reference_matrices["Display P3"], [
+        [48.65709486482162, 26.566769316909306, 19.82172852343625],
+        [22.89745640697488, 69.17385218365064, 7.9286914093745],
+        [0.0, 4.511338185890264, 104.3944368900976],
+    ])
+    np.testing.assert_allclose(reference_matrices["DCI-P3"], [
+        [44.51698155645523, 27.71344092067778, 17.228266981556453],
+        [20.94916779127312, 72.15952541610446, 6.891306792622578],
+        [0.0, 4.706056005398175, 90.73553943616049],
+    ])
+    np.testing.assert_allclose(reference_matrices["Rec.2020"], [
+        [63.69580483012914, 14.461690358620832, 16.88809751641721],
+        [26.27002120112671, 67.79980715188708, 5.930171646986196],
+        [0.0, 2.807269304908743, 106.0985057710791],
+    ])
+    np.testing.assert_allclose(reference_matrices["Adobe RGB (1998)"], [
+        [57.667, 18.556, 18.823],
+        [29.734, 62.736, 7.529],
+        [2.703, 7.069, 99.134],
+    ])
+    np.testing.assert_allclose(reference_matrices["Rec.709"], [
+        [41.239079926595934, 35.7584339383878, 18.04807884018343],
+        [21.263900587151027, 71.5168678767756, 7.219231536073371],
+        [1.933081871559182, 11.919477979462599, 95.05321522496607],
+    ])
 
 
 def test_dcip3_matrix_matches_theatrical_white():

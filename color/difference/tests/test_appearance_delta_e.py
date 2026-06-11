@@ -15,8 +15,6 @@ from color.difference import (
 )
 from color.spaces import convert_color
 
-colour = pytest.importorskip("colour")
-
 
 JPAPBP_1 = np.array([54.90433134, -0.08450395, -0.06854831], dtype=np.float64)
 JPAPBP_2 = np.array([54.80352754, -3.96940084, -13.57591013], dtype=np.float64)
@@ -27,6 +25,15 @@ JPAPBP_BATCH_1 = np.array(
         [38.44219611, -18.90221743, 9.50210491],
     ],
     dtype=np.float64,
+)
+EXPECTED_CAM02UCS = np.array([14.055298239042095, 6.180450927197096, 6.033035960677172])
+EXPECTED_CAM02LCD = np.array([14.055546437777583, 6.422402808844308, 6.759018301012255])
+EXPECTED_CAM02SCD = np.array([14.055171852279539, 6.053532036893621, 5.627485775235552])
+EXPECTED_CAM16UCS = EXPECTED_CAM02UCS
+EXPECTED_CAM16LCD = EXPECTED_CAM02LCD
+EXPECTED_CAM16SCD = EXPECTED_CAM02SCD
+EXPECTED_CAM16UCS_BROADCAST = np.array(
+    [14.055298239042095, 38.69203543885979, 31.98870043717549]
 )
 JPAPBP_BATCH_2 = np.array(
     [
@@ -54,25 +61,24 @@ SRGB_2 = np.array(
 )
 
 
-def assert_matches_colour(function, reference, *args):
+def assert_matches_reference(function, expected, *args):
     result = function(*args)
-    expected = reference(*args)
     np.testing.assert_allclose(result, expected, rtol=1e-10, atol=1e-10)
 
 
 @pytest.mark.parametrize(
-    ("function", "reference"),
+    ("function", "expected"),
     [
-        (delta_E_CAM02UCS, colour.difference.delta_E_CAM02UCS),
-        (delta_E_CAM02LCD, colour.difference.delta_E_CAM02LCD),
-        (delta_E_CAM02SCD, colour.difference.delta_E_CAM02SCD),
-        (delta_E_CAM16UCS, colour.difference.delta_E_CAM16UCS),
-        (delta_E_CAM16LCD, colour.difference.delta_E_CAM16LCD),
-        (delta_E_CAM16SCD, colour.difference.delta_E_CAM16SCD),
+        (delta_E_CAM02UCS, EXPECTED_CAM02UCS),
+        (delta_E_CAM02LCD, EXPECTED_CAM02LCD),
+        (delta_E_CAM02SCD, EXPECTED_CAM02SCD),
+        (delta_E_CAM16UCS, EXPECTED_CAM16UCS),
+        (delta_E_CAM16LCD, EXPECTED_CAM16LCD),
+        (delta_E_CAM16SCD, EXPECTED_CAM16SCD),
     ],
 )
-def test_delta_e_cam_uniform_spaces_match_colour(function, reference):
-    assert_matches_colour(function, reference, JPAPBP_BATCH_1, JPAPBP_BATCH_2)
+def test_delta_e_cam_uniform_spaces_match_reference_values(function, expected):
+    assert_matches_reference(function, expected, JPAPBP_BATCH_1, JPAPBP_BATCH_2)
 
 
 def test_single_point_returns_scalar():
@@ -85,12 +91,7 @@ def test_batch_and_broadcast_shapes():
 
     assert result.shape == (3,)
     assert broadcast_result.shape == (3,)
-    np.testing.assert_allclose(
-        broadcast_result,
-        colour.difference.delta_E_CAM16UCS(JPAPBP_BATCH_1, JPAPBP_2),
-        rtol=1e-10,
-        atol=1e-10,
-    )
+    np.testing.assert_allclose(broadcast_result, EXPECTED_CAM16UCS_BROADCAST)
 
 
 def test_invalid_shape_raises():

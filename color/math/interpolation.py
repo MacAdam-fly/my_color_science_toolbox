@@ -10,6 +10,16 @@ from scipy.interpolate import PchipInterpolator, interp1d
 
 Interpolator = Literal["auto", "nearest", "linear", "cubic", "pchip", "sprague"]
 
+_SPRAGUE_BOUNDARY_COEFFICIENTS = np.array(
+    [
+        [884, -1960, 3033, -2648, 1080, -180],
+        [508, -540, 488, -367, 144, -24],
+        [-24, 144, -367, 488, -540, 508],
+        [-180, 1080, -2648, 3033, -1960, 884],
+    ],
+    dtype=np.float64,
+)
+
 
 def validate_samples(
     x: np.ndarray,
@@ -74,6 +84,77 @@ def resolve_interpolator(x: np.ndarray, method: Interpolator = "auto") -> str:
     return "linear"
 
 
+def _sprague_interpolate_1d(
+    x: np.ndarray,
+    y: np.ndarray,
+    target: np.ndarray,
+) -> np.ndarray:
+    """Return Sprague interpolated values for regularly spaced samples."""
+    if y.size < 6:
+        raise ValueError("Sprague interpolation requires at least 6 samples")
+    if not is_uniform(x):
+        raise ValueError("Sprague interpolation requires uniform samples")
+
+    interval = np.diff(x)[0]
+    xp = np.concatenate(
+        (
+            np.array([x[0] - 2.0 * interval, x[0] - interval], dtype=np.float64),
+            x,
+            np.array([x[-1] + interval, x[-1] + 2.0 * interval], dtype=np.float64),
+        )
+    )
+
+    start_extra = _SPRAGUE_BOUNDARY_COEFFICIENTS[:2] @ y[:6] / 209.0
+    end_extra = _SPRAGUE_BOUNDARY_COEFFICIENTS[2:] @ y[-6:] / 209.0
+    yp = np.concatenate((start_extra, y, end_extra))
+
+    indexes = np.searchsorted(xp, target) - 1
+    with np.errstate(divide="ignore", invalid="ignore"):
+        X = (target - xp[indexes]) / (xp[indexes + 1] - xp[indexes])
+
+    r = yp
+    a0 = r[indexes]
+    a1 = (
+        2.0 * r[indexes - 2]
+        - 16.0 * r[indexes - 1]
+        + 16.0 * r[indexes + 1]
+        - 2.0 * r[indexes + 2]
+    ) / 24.0
+    a2 = (
+        -r[indexes - 2]
+        + 16.0 * r[indexes - 1]
+        - 30.0 * r[indexes]
+        + 16.0 * r[indexes + 1]
+        - r[indexes + 2]
+    ) / 24.0
+    a3 = (
+        -9.0 * r[indexes - 2]
+        + 39.0 * r[indexes - 1]
+        - 70.0 * r[indexes]
+        + 66.0 * r[indexes + 1]
+        - 33.0 * r[indexes + 2]
+        + 7.0 * r[indexes + 3]
+    ) / 24.0
+    a4 = (
+        13.0 * r[indexes - 2]
+        - 64.0 * r[indexes - 1]
+        + 126.0 * r[indexes]
+        - 124.0 * r[indexes + 1]
+        + 61.0 * r[indexes + 2]
+        - 12.0 * r[indexes + 3]
+    ) / 24.0
+    a5 = (
+        -5.0 * r[indexes - 2]
+        + 25.0 * r[indexes - 1]
+        - 50.0 * r[indexes]
+        + 50.0 * r[indexes + 1]
+        - 25.0 * r[indexes + 2]
+        + 5.0 * r[indexes + 3]
+    ) / 24.0
+
+    return a0 + a1 * X + a2 * X**2 + a3 * X**3 + a4 * X**4 + a5 * X**5
+
+
 def interpolate_1d(
     x: np.ndarray,
     y: np.ndarray,
@@ -132,13 +213,7 @@ def interpolate_1d(
             raise ValueError("PCHIP interpolation requires at least 2 samples")
         result[inside] = PchipInterpolator(x_arr, y_arr)(inside_target)
     elif selected == "sprague":
-        if x_arr.size < 6:
-            raise ValueError("Sprague interpolation requires at least 6 samples")
-        if not is_uniform(x_arr):
-            raise ValueError("Sprague interpolation requires uniform samples")
-        from colour.algebra import SpragueInterpolator
-
-        result[inside] = SpragueInterpolator(x_arr, y_arr)(inside_target)
+        result[inside] = _sprague_interpolate_1d(x_arr, y_arr, inside_target)
     else:  # pragma: no cover - guarded by resolve_interpolator.
         raise ValueError(f"unsupported interpolator {selected!r}")
 

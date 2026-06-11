@@ -31,57 +31,54 @@ JMh = np.array([41.7310911325, 0.108842175669, 219.048432658])
 
 
 @pytest.mark.parametrize(
-    "forward, inverse, colour_forward, colour_inverse",
+    "forward, inverse, expected",
     [
         (
             JMh_CIECAM16_to_CAM16UCS,
             CAM16UCS_to_JMh_CIECAM16,
-            "JMh_CAM16_to_CAM16UCS",
-            "CAM16UCS_to_JMh_CAM16",
+            np.array([54.90433134171842, -0.084423616607959, -0.068483138796220]),
         ),
         (
             JMh_CIECAM16_to_CAM16LCD,
             CAM16LCD_to_JMh_CIECAM16,
-            "JMh_CAM16_to_CAM16LCD",
-            "CAM16LCD_to_JMh_CAM16",
+            np.array([54.90433134171842, -0.084503954944839, -0.068548308018960]),
         ),
         (
             JMh_CIECAM16_to_CAM16SCD,
             CAM16SCD_to_JMh_CIECAM16,
-            "JMh_CAM16_to_CAM16SCD",
-            "CAM16SCD_to_JMh_CAM16",
+            np.array([54.90433134171842, -0.084361780279910, -0.068432978118360]),
         ),
     ],
 )
-def test_JMh_CAM16_spaces_match_colour(forward, inverse, colour_forward, colour_inverse):
-    colour = pytest.importorskip("colour")
-
+def test_JMh_CAM16_spaces_match_reference_values(forward, inverse, expected):
     result = forward(JMh)
-    expected = getattr(colour, colour_forward)(JMh)
 
     np.testing.assert_allclose(result, expected, atol=1e-10)
-    np.testing.assert_allclose(inverse(result), getattr(colour, colour_inverse)(expected), atol=1e-10)
     np.testing.assert_allclose(inverse(result), JMh, atol=1e-9)
 
 
 @pytest.mark.parametrize(
-    "forward, inverse, colour_forward",
+    "forward, inverse, expected",
     [
-        (XYZ_to_CAM16UCS, CAM16UCS_to_XYZ, "XYZ_to_CAM16UCS"),
-        (XYZ_to_CAM16LCD, CAM16LCD_to_XYZ, "XYZ_to_CAM16LCD"),
-        (XYZ_to_CAM16SCD, CAM16SCD_to_XYZ, "XYZ_to_CAM16SCD"),
+        (
+            XYZ_to_CAM16UCS,
+            CAM16UCS_to_XYZ,
+            np.array([54.90445024274004, -0.085621245626298, -0.064679604779967]),
+        ),
+        (
+            XYZ_to_CAM16LCD,
+            CAM16LCD_to_XYZ,
+            np.array([54.90445024274004, -0.085701672397375, -0.064740360398843]),
+        ),
+        (
+            XYZ_to_CAM16SCD,
+            CAM16SCD_to_XYZ,
+            np.array([54.90445024274004, -0.085559339439958, -0.064632839895427]),
+        ),
     ],
 )
-def test_XYZ_CAM16_spaces_match_colour_and_round_trip(forward, inverse, colour_forward):
-    colour = pytest.importorskip("colour")
-
+def test_XYZ_CAM16_spaces_match_reference_values_and_round_trip(forward, inverse, expected):
     result = forward(XYZ, **VIEWING)
-    expected = getattr(colour, colour_forward)(
-        XYZ / 100.0,
-        XYZ_w=XYZ_W / 100.0,
-        L_A=318.31,
-        Y_b=20.0,
-    )
 
     np.testing.assert_allclose(result, expected, atol=1e-10)
     np.testing.assert_allclose(inverse(result, **VIEWING), XYZ, atol=1e-10)

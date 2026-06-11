@@ -48,7 +48,7 @@ def _illuminant_source(name: str) -> str | SpectralDistribution:
         wavelengths,
         values,
         name="CIE Illuminant C",
-        metadata={"source": "colour.SDS_ILLUMINANTS['C']"},
+        metadata={"source": "CIE Illuminant C tabulated data"},
     )
 
 

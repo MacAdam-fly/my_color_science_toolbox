@@ -22,44 +22,38 @@ from color.spaces import (
 REFERENCE_XYZ = np.array([20.654008, 12.197225, 5.136952])
 
 
-def test_IPT_matches_colour_reference():
-    colour = pytest.importorskip("colour")
-
+def test_IPT_matches_reference_values():
     np.testing.assert_allclose(
         XYZ_to_IPT(XYZ_D65_referred=REFERENCE_XYZ),
-        colour.XYZ_to_IPT(REFERENCE_XYZ / 100.0),
+        [0.384261908184953, 0.384873060321313, 0.188868377372146],
         atol=1e-10,
     )
 
 
-def test_IPT_to_XYZ_matches_colour_reference():
-    colour = pytest.importorskip("colour")
+def test_IPT_to_XYZ_matches_reference_values():
     IPT = np.array([0.38426191, 0.38487306, 0.18886838])
 
     np.testing.assert_allclose(
         IPT_to_XYZ(IPT),
-        100.0 * colour.IPT_to_XYZ(IPT),
+        [20.654008204367006, 12.197225157761446, 5.136952001146179],
         atol=1e-6,
     )
 
 
-def test_Jzazbz_matches_colour_reference():
-    colour = pytest.importorskip("colour")
-
+def test_Jzazbz_matches_reference_values():
     np.testing.assert_allclose(
         XYZ_to_Jzazbz(XYZ_D65_referred=REFERENCE_XYZ),
-        colour.XYZ_to_Jzazbz(REFERENCE_XYZ / 100.0),
+        [0.005350476093659, 0.009243017319821, 0.005260072163359],
         atol=1e-10,
     )
 
 
-def test_Jzazbz_to_XYZ_matches_colour_reference():
-    colour = pytest.importorskip("colour")
+def test_Jzazbz_to_XYZ_matches_reference_values():
     Jzazbz = np.array([0.00535048, 0.00924302, 0.00526007])
 
     np.testing.assert_allclose(
         Jzazbz_to_XYZ(Jzazbz),
-        100.0 * colour.Jzazbz_to_XYZ(Jzazbz),
+        [20.654027553952197, 12.19723883169166, 5.136967366499685],
         atol=1e-5,
     )
 

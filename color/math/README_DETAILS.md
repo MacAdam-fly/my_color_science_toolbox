@@ -64,11 +64,11 @@ auto
 其他情况 -> linear
 ```
 
-这个策略的目的不是替用户判断所有科学场景，而是给 spectra 默认流程一个稳定、接近 colour-science 风格的插值选择。
+这个策略的目的不是替用户判断所有科学场景，而是给 spectra 默认流程一个稳定、适合规则采样光谱数据的插值选择。
 
 ### Sprague
 
-Sprague 插值要求等间隔采样且至少 6 个样本。当前实现调用 `colour.algebra.SpragueInterpolator`，这是为了让第一版结果尽量贴近 colour-science 的参考实现。
+Sprague 插值要求等间隔采样且至少 6 个样本。当前实现为项目内本地实现，使用 CIE 风格的五次多项式公式，并在首尾按 Sprague 边界外推系数补充额外样本点。
 
 ### PCHIP
 

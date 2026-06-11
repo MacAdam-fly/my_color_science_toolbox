@@ -16,19 +16,16 @@ EXAMPLE_XYZ = np.array([19.01, 20.0, 21.78])
 EXAMPLE_WHITE = np.array([95.05, 100.0, 108.88])
 
 
-def test_xyz_to_ciecam16_matches_colour_reference_example() -> None:
-    colour = pytest.importorskip("colour")
-
+def test_xyz_to_ciecam16_matches_reference_values() -> None:
     specification = XYZ_to_CIECAM16(EXAMPLE_XYZ, EXAMPLE_WHITE, L_A=318.31, Y_b=20.0)
-    reference = colour.XYZ_to_CIECAM16(EXAMPLE_XYZ, EXAMPLE_WHITE, 318.31, 20.0)
 
-    assert specification.J == pytest.approx(reference.J, abs=1e-12)
-    assert specification.C == pytest.approx(reference.C, abs=1e-12)
-    assert specification.h == pytest.approx(reference.h, abs=1e-12)
-    assert specification.s == pytest.approx(reference.s, abs=1e-12)
-    assert specification.Q == pytest.approx(reference.Q, abs=1e-12)
-    assert specification.M == pytest.approx(reference.M, abs=1e-12)
-    assert specification.H == pytest.approx(reference.H, abs=1e-12)
+    assert specification.J == pytest.approx(41.73120790512664, abs=1e-12)
+    assert specification.C == pytest.approx(0.10335573870906986, abs=1e-12)
+    assert specification.h == pytest.approx(217.067959767393, abs=1e-12)
+    assert specification.s == pytest.approx(2.3450150729795514, abs=1e-12)
+    assert specification.Q == pytest.approx(195.37170899282242, abs=1e-12)
+    assert specification.M == pytest.approx(0.10743677233590453, abs=1e-12)
+    assert specification.H == pytest.approx(275.5949861452017, abs=1e-12)
     assert specification.HC is None
 
 

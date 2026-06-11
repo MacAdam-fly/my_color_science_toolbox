@@ -1,532 +1,296 @@
-# color_science_toolbox 功能能力综述
+# color_science_toolbox
 
-## 1. 模块关系总览
+`color_science_toolbox` is a low-level color-science toolkit. It organizes
+standard datasets, spectral objects, colorimetric calculations, color-space
+conversion, appearance models, color differences, gamut analysis, spectral
+recovery, plotting, and IO into a coherent computation framework.
 
-当前工程的主线是从数据到光谱，从光谱到色度学结果，再进入颜色空间、色貌、色差、质量评价和可视化。
+Chinese documentation: [`readme_cn.md`](readme_cn.md)
 
-```text
-color.data
-  内置标准数据
-      |
-      v
-color.datasets -----------+
-  静态数据读取             |
-                          v
-color.generators ----> color.spectra ----> color.colorimetry
-  公式生成数据          光谱对象封装        XYZ / LMS / 色温 / 主波长 / 光度量
-                                              |
-                                              v
-                         +---------------- color.adaptation
-                         |                  显式色适应
-                         |
-                         +---------------- color.appearance
-                         |                  CIECAM02 / CIECAM16 色貌模型
-                         |
-                         +---------------- color.spaces
-                         |                  RGB / Lab / Luv / Oklab / CAM-UCS 等空间转换
-                         |
-                         +---------------- color.difference
-                         |                  Lab / CAM-UCS / Oklab / Jzazbz 色差
-                         |
-                         +---------------- color.quality
-                         |                  SSI 光谱相似度
-                         |
-                         +---------------- color.plot
-                                            光谱、色度图、色温、色域、转换图谱可视化
+## Architecture
+
+The project has one primary representation pipeline: data sources become
+spectral objects, spectral objects become colorimetric quantities, and those
+quantities become `XYZ / LMS / xyY / uv / CCT / Duv` values. The other modules
+operate around these representations: converting, adapting, comparing,
+recovering, plotting, and reading/writing data.
+
+![color_science_toolbox architecture](docs/architecture.svg)
+
+Core principles:
+
+- `datasets`, `generators`, and `individual_cone_fundamentals` are the main data
+  sources.
+- `spectra -> colorimetry` is the base forward pipeline.
+- `adaptation` is an `XYZ -> XYZ` operation; `appearance` maps between `XYZ` and
+  appearance correlates; `spaces` uses `XYZ` as the central conversion hub.
+- `difference` compares coordinates already in the same space. `gamut` combines
+  `XYZ / xy / Lab / LCH / primaries / standard gamut data`. `recovery` solves
+  inverse problems from `XYZ / xyY / LMS` back to spectra or reflectances.
+- `io` is a foundation module for file IO. `plot` is a presentation layer and
+  does not change scientific computation semantics.
+
+## Environment Setup
+
+This is a pure Python toolkit. The current dependency set has been validated in
+the project `.venv` with `Python 3.9.0`; use `Python >= 3.9`.
+
+Minimal PowerShell setup:
+
+```powershell
+py -3.9 -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv\Scripts\python.exe -m pytest -m "not examples" --import-mode=importlib -q --basetemp .pytest_tmp
 ```
 
-可以把整个项目理解为一条主链路：
+`requirements.txt` is the pinned dependency entrypoint. For day-to-day work,
+run the tests for the modules you changed first. See
+[`TESTING_GUIDE.md`](TESTING_GUIDE.md) for the shorter testing workflow.
 
-```text
-标准数据 / 公式数据
-    -> 光谱信号
-    -> XYZ / LMS / 色度学量
-    -> 颜色空间 / 色貌 / 色差 / 可视化
+## Module Overview
+
+### Foundation
+
+`constants / data / math / utils` provide standard constants, built-in data
+files, pure numerical utilities, and shared validation/dispatch helpers.
+
+```python
+from color.constants import D65_XYZ
+from color.math import gaussian_values
+from color.utils import as_last_axis_triplets
 ```
 
-## 2. 数据与光谱层
+### Data Sources
 
-### `color.data`
+Static datasets:
 
-`color.data` 是内置标准数据仓库。它保存的是静态数据文件，本身不负责计算。
+```python
+from color.datasets import get_color_card, get_reflectance_spectrum
 
-当前覆盖的数据类型包括：
-
-- 标准观察者数据。
-- 标准照明体数据。
-- 色卡反射率数据。
-- 色彩系统数据。
-- 色域和显示标准相关数据。
-
-### `color.datasets`
-
-`color.datasets` 负责读取和解析 `color.data` 中的静态文件，返回原始 `dict[str, ndarray]`。
-
-它的核心能力是：
-
-- 按 category / name 获取标准数据。
-- 描述数据集元信息。
-- 缓存读取结果。
-- 处理 CSV、Excel、特殊格式文件和部分特殊 parser。
-- 针对标准观察者提供常用语义入口。
-
-当前重点支持的数据类别包括：
-
-- 标准观察者：
-  - XYZ CMFs。
-  - LMS cone fundamentals。
-  - 光视效率函数。
-  - 色度坐标表。
-  - prereceptoral filters。
-  - photopigments。
-- 标准照明体。
-- 色卡数据。
-- 色彩系统数据。
-
-### `color.generators`
-
-`color.generators` 负责由公式或参数生成光谱数据，输出同样是原始字典。
-
-当前实现的生成能力包括：
-
-- 黑体辐射光谱。
-- CIE A 光源。
-- CIE D 系列日光光谱。
-- 理想光谱：
-  - constant SPD。
-  - zero SPD。
-  - equal-energy SPD。
-  - Gaussian SPD。
-- LED 光谱：
-  - single LED。
-  - multi LED 混合光谱。
-
-它和 `datasets` 的区别是：`datasets` 读取已有标准文件，`generators` 根据公式生成数据。
-
-### `color.spectra`
-
-`color.spectra` 把原始表格数据包装成可计算的光谱对象。
-
-当前实现的光谱对象包括：
-
-- `SpectralShape`：规则波长采样域。
-- `SpectralDistribution`：单通道光谱。
-- `MultiSpectralDistribution`：多通道光谱。
-
-当前核心能力包括：
-
-- 从 datasets 包装光谱对象。
-- 从原始 column dict 包装光谱对象。
-- 直接由数组构造光谱对象。
-- 单通道和多通道访问。
-- `keys()` 和 `[]` 访问，与原始 dict 使用体验对齐。
-- 采样、插值、外推、trim、reshape、align。
-- 多种插值方法，包括 linear、nearest、PCHIP、Sprague 等。
-- numpy / pandas / dict 导出。
-- 同 shape 光谱对象之间的简单算术。
-- 常用标准观察者和 D65 照明体的便捷包装入口。
-
-`spectra` 是数据层进入计算层的关键桥梁。
-
-## 3. 色度学计算层
-
-### `color.colorimetry`
-
-`color.colorimetry` 是当前工程中最核心的颜色科学计算层。
-
-它已经实现的主要能力包括：
-
-#### 光谱到响应值
-
-- 自发光光谱到 `XYZ`。
-- 反射率光谱在照明体下到 `XYZ`。
-- 自发光光谱到 `LMS`。
-- 反射率光谱在照明体下到 `LMS`。
-
-这部分把 `spectra` 光谱对象转成后续颜色空间计算所需的三刺激值或锥响应。
-
-#### 色度坐标转换
-
-- `XYZ <-> xyY`。
-- `XYZ -> xy`。
-- `xy <-> CIE 1960 uv`。
-- `xy <-> CIE 1976 u'v'`。
-
-其中 `uv1960` 是 CCT / Duv 的核心图面，`u'v'1976` 与 Luv 相关。
-
-#### LMS / XYZ 直接转换
-
-- CIE 2006 LMS 到 XYZ。
-- XYZ 到 CIE 2006 LMS。
-
-#### 光度学和明度
-
-- 明视觉光视效率函数。
-- 暗视觉光视效率函数。
-- luminous flux。
-- luminous efficiency。
-- luminous efficacy。
-- CIE `L*` 与相对亮度 `Y` 的转换。
-
-#### 主波长和纯度
-
-- 主波长。
-- 互补波长。
-- 兴奋纯度。
-- 色度纯度。
-- 判断色度点是否位于色度轨迹内部。
-- 完整色度分析结果对象。
-- 根据主波长 + 纯度反向构造 xy。
-
-#### 色温
-
-- CCT 与 mired 转换。
-- CIE D 系列 daylight xy。
-- McCamy 1992 CCT 近似。
-- Robertson 1968 CCT + Duv。
-- Ohno 2013 CCT + Duv。
-- CCT + Duv 到 xy 的反向构造。
-- 完整色温分析结果对象。
-
-## 4. 色适应与色貌模型
-
-### `color.adaptation`
-
-`color.adaptation` 负责显式色适应。
-
-当前支持的色适应变换包括：
-
-- Von Kries。
-- Bradford。
-- CAT02。
-- CAT16。
-
-它提供从源白点到目标白点的色适应矩阵，以及对 XYZ 数据执行色适应的函数。
-
-工程设计上，色适应不会被普通空间转换偷偷执行。需要色适应时，使用者应显式调用这一层。
-
-### `color.appearance`
-
-`color.appearance` 负责色貌模型本体。
-
-当前实现的色貌模型包括：
-
-- CIECAM02。
-- CIECAM16。
-
-每个模型都支持：
-
-- 正向：`XYZ -> appearance correlates`。
-- 反向：`appearance specification -> XYZ`。
-- Average / Dim / Dark 等观察环境。
-- 自定义白点、适应场亮度、背景亮度等观察条件。
-
-色貌模型输出的是 `J, C, h, s, Q, M, H` 等色貌相关量；它们本身不是普通颜色空间。基于色貌模型构造的均匀空间位于 `color.spaces`。
-
-## 5. 颜色空间层
-
-### `color.spaces`
-
-`color.spaces` 负责颜色空间定义、注册和转换。它的核心设计是：
-
-```text
-XYZ 是唯一全局中枢
-convert_color 负责空间路由
-SpaceSpec 表达带参数的空间实例
-RGB 标准空间使用独立注册表
+macbeth = get_color_card("macbeth")
+munsell = get_reflectance_spectrum("munsell_matt")
 ```
 
-### 已实现 RGB 标准空间
+Generated spectra and model data:
 
-当前 RGB 层已经覆盖：
+```python
+from color.generators import daylight_spd, multi_gaussian_spd
 
-- sRGB。
-- Rec.709 / ITU-R BT.709。
-- Display P3 / P3-D65。
-- DCI-P3。
-- Rec.2020 / ITU-R BT.2020。
-- Adobe RGB (1998)。
-- NTSC (1953)。
-
-RGB 层支持：
-
-- RGB 到 XYZ。
-- XYZ 到 RGB。
-- RGB 到 RGB。
-- sRGB 便捷入口。
-- transfer function 编码 / 解码。
-- 不自动裁剪 RGB。
-- 可选显式 RGB-to-RGB 色适应参数。
-
-### 已实现基础 / 经典颜色空间
-
-当前 basic 空间包括：
-
-- `xyY`。
-- `Lab`。
-- `LCHab`。
-- `Luv`。
-- `LCHuv`。
-- `Lshuv`。
-- `UVW`。
-- `Oklab`。
-- `Oklch`。
-- `IPT`。
-- `Jzazbz`。
-- `JzCzhz`。
-
-其中：
-
-- `xy`、`uv1960`、`u'v'1976` 是二维色度 helper，不注册为完整颜色空间节点。
-- `Lab / Luv / UVW` 带参考白点参数。
-- `Oklab / IPT / Jzazbz` 要求 D65-referred XYZ。
-
-### 已实现色貌均匀空间
-
-基于 CIECAM02 的均匀空间：
-
-- CAM02-UCS。
-- CAM02-LCD。
-- CAM02-SCD。
-
-基于 CIECAM16 的均匀空间：
-
-- CAM16-UCS。
-- CAM16-LCD。
-- CAM16-SCD。
-
-这些空间依赖 `color.appearance` 中的色貌模型，并通过 `SpaceSpec` 接收观察条件参数。
-
-### 转换路由能力
-
-`spaces` 目前可以完成：
-
-- RGB 与 XYZ 之间转换。
-- XYZ 与各颜色空间之间转换。
-- 派生空间与父空间之间转换，例如 `LCHab <-> Lab`、`Oklch <-> Oklab`。
-- 不同颜色空间之间通过 XYZ 中枢转换。
-- 描述单条转换路径。
-- 绘制当前注册的完整转换图谱。
-
-## 6. 色差与光源质量
-
-### `color.difference`
-
-`difference` 只负责计算同一颜色空间内两个坐标的差异，不负责颜色空间转换。
-
-当前实现的色差包括：
-
-#### 标准 Lab 色差
-
-- CIE 1976。
-- CIE 1994。
-- CIE 2000。
-- CMC。
-
-#### 色貌均匀空间距离
-
-- CAM02-UCS。
-- CAM02-LCD。
-- CAM02-SCD。
-- CAM16-UCS。
-- CAM16-LCD。
-- CAM16-SCD。
-
-#### 现代空间距离
-
-- Oklab。
-- Jzazbz。
-
-典型使用方式是先用 `spaces` 转到目标空间，再用 `difference` 计算距离。
-
-### `color.quality`
-
-`quality` 是光源质量指标模块。
-
-当前实现：
-
-- Academy Spectral Similarity Index，简称 SSI。
-
-SSI 比较两个光谱分布本身的相似度，不等同于 CRI、TM-30 或 CQS。它最适合用来比较测试光源和参考光源的光谱形状接近程度。
-
-## 7. 可视化层
-
-### `color.plot`
-
-`plot` 负责把已有计算结果可视化，不改变计算结果。
-
-当前已经实现的绘图能力包括：
-
-#### 光谱绘图
-
-- 单通道光谱曲线。
-- 多通道光谱曲线。
-- 统一光谱坐标轴样式。
-
-#### 色度图
-
-- CIE 1931 xy 色度图。
-- CIE 1960 UCS uv 色度图。
-- CIE 1976 UCS u'v' 色度图。
-- 色度图近似 sRGB 背景填色。
-- xy 点叠加绘制。
-
-#### 色温图
-
-- CIE 1960 uv 中的普朗克轨迹。
-- CIE 1960 uv 中的 CIE D 日光轨迹。
-- CCT + Duv 偏移点。
-- CCT 与 mired 曲线。
-
-#### 色块和色域
-
-- XYZ 到 sRGB 预览色块。
-- 色块 strip。
-- 色块 grid。
-- RGB 色域三角形。
-
-#### 转换关系图
-
-- 单条颜色空间转换路径。
-- 当前注册颜色空间的完整转换图谱。
-
-## 8. 支撑模块
-
-### `color.constants`
-
-保存项目中重要的标准常量，例如：
-
-- 标准白点。
-- RGB 显示标准定义。
-- 色适应矩阵。
-- LMS / XYZ 转换矩阵。
-
-### `color.math`
-
-提供数学基础能力，尤其是光谱插值相关算法。当前主要服务 `spectra`。
-
-### `color.utils`
-
-提供跨模块复用的基础工具，包括：
-
-- 数组形状和有限值校验。
-- name / method canonicalization。
-- method dispatch。
-- kwargs 过滤。
-- 数值尺度转换 helper。
-
-它是底层工具层，不承载颜色科学语义。
-
-## 9. 已经可以展示的完整能力链路
-
-### 光谱到颜色空间再到色差
-
-```text
-LED / 黑体 / 色卡反射率
-    -> spectra 光谱对象
-    -> colorimetry 积分得到 XYZ / LMS
-    -> spaces 转到 Lab / CAM16-UCS / Oklab
-    -> difference 计算色差
+d65_like = daylight_spd(cct=6500)
+led_like = multi_gaussian_spd(peak_wavelengths=(450, 540, 620))
 ```
 
-### 色卡反射率计算
+Individualized LMS cone fundamentals:
 
-```text
-color_cards 数据
-    -> 某个 patch 的反射率光谱
-    -> D65 照明体 + CIE 1931 CMFs
-    -> reflectance_to_XYZ
-    -> Lab / Luv / CAM-UCS
-    -> 色差或可视化
+```python
+from color.individual_cone_fundamentals import (
+    generate_asano2016_individual_cone_fundamentals,
+)
+
+lms = generate_asano2016_individual_cone_fundamentals(
+    age=40,
+    field_size_degree=10,
+)
 ```
 
-### RGB 图像或 RGB 数值处理
+### Spectral Objects
 
-```text
-sRGB encoded RGB
-    -> RGB_to_XYZ
-    -> Lab / LCHab / Oklab / Jzazbz / CAM16-UCS
-    -> 修改空间坐标
-    -> XYZ_to_sRGB
-    -> 预览或输出
+Wrap raw column data into spectral objects:
+
+```python
+from color.datasets import get_color_card
+from color.spectra import from_columns
+
+raw = get_color_card("macbeth")
+patch = from_columns(raw, y="Blue Sky", name="Macbeth Blue Sky")
+aligned = patch.align(patch.shape)
 ```
 
-### 色温分析和可视化
+### Colorimetry
 
-```text
-xy / uv
-    -> CCT + Duv
-    -> 反向构造 xy
-    -> CIE 1960 uv 色温轨迹图
+Compute core colorimetric quantities from spectra:
+
+```python
+from color.colorimetry import XYZ_to_xy, analyze_temperature, reflectance_to_XYZ
+
+XYZ = reflectance_to_XYZ(patch, illuminant="D65")
+xy = XYZ_to_xy(XYZ)
+temperature = analyze_temperature(xy)
 ```
 
-### 主波长和色品几何分析
+### Color Models And Spaces
 
-```text
-xy 色度点
-    -> 主波长 / 互补波长 / 纯度
-    -> 主波长 + 纯度反向构造 xy
+Explicit chromatic adaptation:
+
+```python
+from color.adaptation import adapt_to_D65
+from color.constants import D50_XYZ
+
+XYZ_D65 = adapt_to_D65(XYZ, source_white_XYZ=D50_XYZ)
 ```
 
-## 10. 工程规模概览
+Appearance model:
 
-以下统计排除了 `.venv`、`.git`、`__pycache__` 和 `.pytest_tmp` 等目录。这里的“有效代码行”按物理行统计：非空、非 `#` 开头的 Python 行会计入；docstring 计入有效代码行。
+```python
+from color.appearance import XYZ_to_CIECAM16
+from color.constants import D65_XYZ
 
-### 总体规模
+spec = XYZ_to_CIECAM16(XYZ, XYZ_w=D65_XYZ, L_A=64, Y_b=20)
+```
 
-| 项目 | 数量 |
-| --- | ---: |
-| Python 文件总数 | 215 |
-| Python 总行数 | 26,443 |
-| 有效代码行 | 21,190 |
-| 空行 | 4,969 |
-| 注释行 | 284 |
-| Markdown 文档 | 48 |
-| 内置数据文件 | 116 |
-| 测试文件 | 59 |
-| example 文件 | 44 |
+Color-space conversion:
 
-### 按用途拆分
+```python
+from color.constants import D65_XYZ
+from color.spaces import SpaceSpec, convert_color
 
-| 类型 | 文件数 | 总行数 | 有效代码行 |
-| --- | ---: | ---: | ---: |
-| 核心源码 `color/` 非 tests | 109 | 13,895 | 11,381 |
-| 测试 | 59 | 7,593 | 5,822 |
-| examples | 44 | 4,851 | 3,911 |
-| 其他根目录脚本 | 3 | 104 | 76 |
+XYZ_D65 = SpaceSpec("XYZ", whitepoint_XYZ=D65_XYZ)
+Lab = convert_color(XYZ, "XYZ", "Lab")
+Oklab = convert_color(XYZ, XYZ_D65, "Oklab")
+sRGB = convert_color(XYZ, "XYZ", "sRGB")
+```
 
-### 核心模块代码量
+### Analysis And Inverse Problems
 
-| 模块 | Python 文件 | 有效代码行 |
-| --- | ---: | ---: |
-| `color.spaces` | 35 | 4,021 |
-| `color.colorimetry` | 28 | 2,921 |
-| `color.datasets` | 17 | 2,599 |
-| `color.spectra` | 9 | 1,609 |
-| `color.plot` | 11 | 1,192 |
-| `color.difference` | 12 | 926 |
-| `color.generators` | 10 | 920 |
-| `color.appearance` | 6 | 843 |
-| `color.constants` | 9 | 555 |
-| `color.utils` | 9 | 548 |
-| `color.adaptation` | 4 | 306 |
-| `color.math` | 5 | 303 |
-| `color.quality` | 4 | 191 |
+Color difference:
 
-从规模上看，项目已经不是零散脚本集合，而是一个拥有标准数据、核心计算、颜色空间、色差评价、质量评价、可视化、测试和示例的中等规模颜色科学工具箱。
+```python
+from color.difference import delta_E_CIE2000
 
-## 11. 当前工程能力总结
+delta_E = delta_E_CIE2000(Lab, Lab)
+```
 
-当前项目已经形成了较完整的颜色科学主干：
+Gamut analysis:
 
-- 能读取和生成光谱数据。
-- 能把离散光谱封装成可插值、可对齐的对象。
-- 能完成光谱到 XYZ / LMS 的核心色度学计算。
-- 能做色温、主波长、光度量、明度等常用色度学分析。
-- 能进行显式色适应和 CIECAM02 / CIECAM16 色貌计算。
-- 能在多个 RGB、经典空间、现代空间和 CAM 均匀空间之间转换。
-- 能计算 Lab、CAM-UCS、Oklab、Jzazbz 等空间中的色差。
-- 能计算 SSI 光谱相似度。
-- 能绘制光谱、色度图、色温轨迹、色域和转换图谱。
+```python
+from color.gamut import analyze_gamut
 
-也就是说，当前工程已经可以从“标准数据或光谱生成”一路串到“颜色计算、空间转换、色差评价和可视化展示”。
+analysis = analyze_gamut("Display P3")
+print(analysis.xy_area, analysis.lab_volume)
+```
+
+Spectral or reflectance recovery:
+
+```python
+from color.recovery import recover_reflectance_from_XYZ
+
+recovered = recover_reflectance_from_XYZ(
+    XYZ,
+    illuminant="D65",
+    shape=patch.shape,
+)
+```
+
+### Presentation And IO
+
+Plot and save figures:
+
+```python
+from color.io import save_figure
+from color.plot import plot_lines, plot_style
+
+with plot_style("presentation"):
+    fig, ax = plot_lines(
+        (patch.wavelengths, patch.values),
+        xlabel="Wavelength (nm)",
+        ylabel="Reflectance",
+    )
+save_figure("patch_reflectance.png", fig=fig)
+```
+
+Read spectral tables or images:
+
+```python
+from color.io import read_image, read_spectral_csv
+
+spectrum = read_spectral_csv("spectrum.csv", x="wavelength", y="spd")
+image = read_image("image.png")
+```
+
+## End-To-End Example
+
+The runnable companion script is:
+
+[`examples/integration/example_01_long_colour_pipeline.py`](examples/integration/example_01_long_colour_pipeline.py)
+
+Run it with:
+
+```powershell
+.\.venv\Scripts\python.exe examples\integration\example_01_long_colour_pipeline.py
+```
+
+It uses three input routes:
+
+```text
+1. generators -> spectra: generated three-peak LED emission spectrum.
+2. spaces: encoded sRGB [0.4, 0.5, 0.6] converted to XYZ.
+3. datasets -> spectra: Macbeth "Blue Sky" reflectance spectrum.
+```
+
+Main pipeline:
+
+```text
+datasets / generators
+-> spectra
+-> colorimetry: XYZ, LMS, xy, relative Y, CCT+Duv, dominant wavelength
+-> spaces: Lab, Luv, Oklab, CAM16-UCS
+-> adaptation: D65 -> D50 for CAM16 viewing
+-> appearance: CIECAM16 correlates
+-> difference: CIEDE2000 against Macbeth Foliage
+-> gamut: coarse sRGB gamut analysis
+-> recovery: Blue Sky XYZ back to reflectance
+-> plot/io: save original-vs-recovered reflectance figure
+```
+
+Output figure:
+
+```text
+examples/integration/output/01_long_colour_pipeline_reflectance_recovery.png
+```
+
+`relative Y` is the luminance channel of `XYZ`. Applying `CCT / Duv` analysis to
+an object-color `xy` is a chromaticity description, not a claim that the object
+has a physical color temperature.
+
+## Dependency Boundary
+
+Main dependencies:
+
+- `numpy`: arrays and numerical computation.
+- `scipy`: optimization, interpolation, geometry, and numerical algorithms.
+- `pandas`, `openpyxl`, `xlrd`: CSV / Excel data reading.
+- `matplotlib`: plotting.
+- `Pillow`, `imageio`: image IO.
+- `colour-science`: retained as an optional reference/development dependency;
+  core runtime paths and regular tests do not directly depend on it.
+
+Currently out of scope or not a focus:
+
+- ICC/profile management.
+- GUI or interactive applications.
+- Unique multi-primary device color-space weight solving.
+- Full CRI / TM-30 / CQS color-quality systems.
+
+## Documentation
+
+Most mature modules have three documentation layers:
+
+- `README.md`: English quick entrypoint.
+- `README_DETAILS.md`: Chinese design notes, boundaries, and caveats.
+- `API_GUIDE.md`: Chinese guide for top-level public APIs.
+
+The `examples/` directory contains runnable workflows. The integration example is
+the best starting point for seeing how modules connect.
+
+## Testing
+
+Prefer focused tests during development, then run broader regression before
+closing a larger change.
+
+Common commands:
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest color\<module>\tests -q --basetemp .pytest_tmp
+.\.venv\Scripts\python.exe -m pytest -m "not examples" --import-mode=importlib -q --basetemp .pytest_tmp
+.\.venv\Scripts\python.exe -m pytest -q --basetemp .pytest_tmp
+```

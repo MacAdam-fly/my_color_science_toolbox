@@ -45,9 +45,8 @@ def test_macadam_limits_published_xy_boundary_is_closed():
     np.testing.assert_allclose(xy[0], xy[-1])
 
 
-def test_is_within_macadam_limits_matches_colour():
-    colour = pytest.importorskip("colour")
-    xyY_colour = np.array(
+def test_is_within_macadam_limits_matches_reference_values():
+    xyY_reference = np.array(
         [
             [0.3205, 0.4131, 0.51],
             [0.0005, 0.0031, 0.001],
@@ -56,7 +55,7 @@ def test_is_within_macadam_limits_matches_colour():
         ],
         dtype=np.float64,
     )
-    xyY_project = xyY_colour.copy()
+    xyY_project = xyY_reference.copy()
     xyY_project[:, 2] *= 100.0
     XYZ = np.column_stack((
         xyY_project[:, 0] * xyY_project[:, 2] / xyY_project[:, 1],
@@ -65,7 +64,7 @@ def test_is_within_macadam_limits_matches_colour():
     ))
 
     actual = is_within_macadam_limits(XYZ, "A", tolerance=1e-7)
-    expected = colour.volume.is_within_macadam_limits(xyY_colour, "A")
+    expected = np.array([True, False, False, True])
     np.testing.assert_array_equal(actual, expected)
 
 

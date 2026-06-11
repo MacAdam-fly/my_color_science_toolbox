@@ -1,0 +1,116 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="980" viewBox="0 0 1500 980" role="img" aria-labelledby="title desc">
+  <title id="title">color_science_toolbox architecture</title>
+  <desc id="desc">A structured architecture diagram for color_science_toolbox. Every stable module has its own box, with foundation, sources, main pipeline, operations, analysis, inverse, plotting, and IO separated.</desc>
+  <defs>
+    <style>
+      .title { font: 700 34px Arial, Helvetica, sans-serif; fill: #1f2933; }
+      .subtitle { font: 400 15px Arial, Helvetica, sans-serif; fill: #52606d; }
+      .section { font: 700 17px Arial, Helvetica, sans-serif; fill: #334e68; }
+      .module { font: 700 17px Arial, Helvetica, sans-serif; fill: #1f2933; }
+      .small { font: 400 12.5px Arial, Helvetica, sans-serif; fill: #334e68; }
+      .frame { stroke: #9fb3c8; stroke-width: 1.4; rx: 20; ry: 20; }
+      .box { stroke: #243b53; stroke-width: 1.55; rx: 12; ry: 12; }
+      .arrow { stroke: #52606d; stroke-width: 2.1; fill: none; marker-end: url(#arrowhead); }
+      .note { font: 400 12px Arial, Helvetica, sans-serif; fill: #627d98; }
+    </style>
+    <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#52606d" />
+    </marker>
+  </defs>
+
+  <rect width="1500" height="980" fill="#ffffff" />
+  <text x="750" y="44" text-anchor="middle" class="title">color_science_toolbox Architecture</text>
+  <text x="750" y="70" text-anchor="middle" class="subtitle">Stable low-level colour science modules: shared foundation, data sources, main representation pipeline, operations, analysis, inverse problems, and plotting.</text>
+
+  <!-- Shared Foundation -->
+  <rect x="70" y="98" width="1360" height="118" class="frame" fill="#f8fafc" />
+  <text x="750" y="128" text-anchor="middle" class="section">Shared Foundation</text>
+  <text x="750" y="151" text-anchor="middle" class="note">Common infrastructure used by many modules. Arrows are intentionally omitted to avoid a dependency web.</text>
+
+  <rect x="200" y="168" width="180" height="34" class="box" fill="#ffffff" />
+  <text x="290" y="190" text-anchor="middle" class="module">constants</text>
+  <rect x="430" y="168" width="180" height="34" class="box" fill="#ffffff" />
+  <text x="520" y="190" text-anchor="middle" class="module">data</text>
+  <rect x="660" y="168" width="180" height="34" class="box" fill="#ffffff" />
+  <text x="750" y="190" text-anchor="middle" class="module">math</text>
+  <rect x="890" y="168" width="180" height="34" class="box" fill="#ffffff" />
+  <text x="980" y="190" text-anchor="middle" class="module">utils</text>
+  <rect x="1120" y="168" width="180" height="34" class="box" fill="#ffffff" />
+  <text x="1210" y="190" text-anchor="middle" class="module">io</text>
+
+  <!-- Sources and main pipeline -->
+  <rect x="70" y="255" width="395" height="300" class="frame" fill="#fbfdff" />
+  <text x="267.5" y="286" text-anchor="middle" class="section">Sources</text>
+
+  <rect x="110" y="320" width="315" height="54" class="box" fill="#e8f1ff" />
+  <text x="267.5" y="344" text-anchor="middle" class="module">datasets</text>
+  <text x="267.5" y="363" text-anchor="middle" class="small">static standard data to raw dict</text>
+
+  <rect x="110" y="398" width="315" height="54" class="box" fill="#e8f1ff" />
+  <text x="267.5" y="422" text-anchor="middle" class="module">generators</text>
+  <text x="267.5" y="441" text-anchor="middle" class="small">formula and model generated raw dict</text>
+
+  <rect x="110" y="476" width="315" height="54" class="box" fill="#e8f1ff" />
+  <text x="267.5" y="500" text-anchor="middle" class="module">individual_cone_fundamentals</text>
+  <text x="267.5" y="519" text-anchor="middle" class="small">Stockman/Rider and Asano LMS models</text>
+
+  <rect x="555" y="255" width="395" height="300" class="frame" fill="#fbfdff" />
+  <text x="752.5" y="286" text-anchor="middle" class="section">Main Representation Pipeline</text>
+
+  <rect x="600" y="330" width="305" height="60" class="box" fill="#e3f8f5" />
+  <text x="752.5" y="354" text-anchor="middle" class="module">spectra</text>
+  <text x="752.5" y="373" text-anchor="middle" class="small">spectral objects, shapes, resampling</text>
+
+  <rect x="600" y="450" width="305" height="66" class="box" fill="#e3fcec" />
+  <text x="752.5" y="474" text-anchor="middle" class="module">colorimetry</text>
+  <text x="752.5" y="493" text-anchor="middle" class="small">XYZ, LMS, xyY, uv, CCT, Duv</text>
+  <text x="752.5" y="510" text-anchor="middle" class="small">dominant wavelength, photometry</text>
+
+  <path class="arrow" d="M425 347 L600 360" />
+  <path class="arrow" d="M425 425 L600 360" />
+  <path class="arrow" d="M425 503 L600 360" />
+  <path class="arrow" d="M752.5 390 L752.5 450" />
+
+  <rect x="1035" y="255" width="395" height="300" class="frame" fill="#fbfdff" />
+  <text x="1232.5" y="286" text-anchor="middle" class="section">Colour Operations Around XYZ</text>
+
+  <rect x="1075" y="320" width="315" height="54" class="box" fill="#fff7e6" />
+  <text x="1232.5" y="344" text-anchor="middle" class="module">adaptation</text>
+  <text x="1232.5" y="363" text-anchor="middle" class="small">explicit XYZ to XYZ white-point adaptation</text>
+
+  <rect x="1075" y="398" width="315" height="54" class="box" fill="#fff7e6" />
+  <text x="1232.5" y="422" text-anchor="middle" class="module">appearance</text>
+  <text x="1232.5" y="441" text-anchor="middle" class="small">XYZ to/from CIECAM02 or CIECAM16 correlates</text>
+
+  <rect x="1075" y="476" width="315" height="54" class="box" fill="#fff7e6" />
+  <text x="1232.5" y="500" text-anchor="middle" class="module">spaces</text>
+  <text x="1232.5" y="519" text-anchor="middle" class="small">XYZ-centred RGB, Lab, Luv, Oklab, CAM-UCS</text>
+
+  <path class="arrow" d="M905 483 L1075 347" />
+  <path class="arrow" d="M905 483 L1075 425" />
+  <path class="arrow" d="M905 483 L1075 503" />
+
+  <!-- Analysis / inverse -->
+  <rect x="70" y="610" width="1360" height="185" class="frame" fill="#fdfcff" />
+  <text x="750" y="641" text-anchor="middle" class="section">Analysis And Inverse Problems</text>
+  <text x="750" y="664" text-anchor="middle" class="note">These modules consume one or more representations above. They are not children of adaptation, appearance, or spaces.</text>
+
+  <rect x="150" y="700" width="320" height="62" class="box" fill="#f3e8ff" />
+  <text x="310" y="724" text-anchor="middle" class="module">difference</text>
+  <text x="310" y="744" text-anchor="middle" class="small">same-space coordinates to distance</text>
+
+  <rect x="590" y="700" width="320" height="62" class="box" fill="#f3e8ff" />
+  <text x="750" y="724" text-anchor="middle" class="module">gamut</text>
+  <text x="750" y="744" text-anchor="middle" class="small">XYZ, xy, Lab, LCH, primaries to boundaries</text>
+
+  <rect x="1030" y="700" width="320" height="62" class="box" fill="#f3e8ff" />
+  <text x="1190" y="724" text-anchor="middle" class="module">recovery</text>
+  <text x="1190" y="744" text-anchor="middle" class="small">XYZ, xyY, LMS to spectrum or reflectance</text>
+
+  <!-- Boundary / presentation -->
+  <rect x="70" y="840" width="1360" height="104" class="frame" fill="#f8fafc" />
+  <text x="750" y="869" text-anchor="middle" class="section">Presentation</text>
+  <text x="750" y="891" text-anchor="middle" class="note">Plotting consumes results from the scientific modules but does not change calculation semantics.</text>
+  <rect x="620" y="900" width="260" height="30" class="box" fill="#ffffff" />
+  <text x="750" y="920" text-anchor="middle" class="module">plot</text>
+</svg>

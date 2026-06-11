@@ -134,7 +134,7 @@ RGB_COLOURSPACE_DEFINITIONS = MappingProxyType(
             white_name="D65",
             transfer="srgb",
             matrix_RGB_to_XYZ=SRGB_TO_XYZ,
-            reference="IEC 61966-2-1 / colour.models.RGB_COLOURSPACES['sRGB']",
+            reference="IEC 61966-2-1 sRGB",
         ),
         "Rec.709": _rgb_definition(
             name="Rec.709",
@@ -144,7 +144,7 @@ RGB_COLOURSPACE_DEFINITIONS = MappingProxyType(
             white_name="D65",
             transfer="bt709",
             matrix_RGB_to_XYZ=REC709_TO_XYZ,
-            reference="ITU-R BT.709 / colour.models.RGB_COLOURSPACES['ITU-R BT.709']",
+            reference="ITU-R BT.709",
         ),
         "Display P3": _rgb_definition(
             name="Display P3",
@@ -154,7 +154,7 @@ RGB_COLOURSPACE_DEFINITIONS = MappingProxyType(
             white_name="D65",
             transfer="srgb",
             matrix_RGB_to_XYZ=DISPLAY_P3_TO_XYZ,
-            reference="Display P3 / colour.models.RGB_COLOURSPACES['Display P3']",
+            reference="Display P3 / P3-D65",
         ),
         "DCI-P3": _rgb_definition(
             name="DCI-P3",
@@ -164,7 +164,7 @@ RGB_COLOURSPACE_DEFINITIONS = MappingProxyType(
             white_name="DCP white",
             transfer="gamma_2p6",
             matrix_RGB_to_XYZ=DCIP3_TO_XYZ,
-            reference="DCI-P3 / colour.models.RGB_COLOURSPACES['DCI-P3']",
+            reference="DCI-P3 theatrical white",
         ),
         "Rec.2020": _rgb_definition(
             name="Rec.2020",
@@ -174,7 +174,7 @@ RGB_COLOURSPACE_DEFINITIONS = MappingProxyType(
             white_name="D65",
             transfer="bt2020",
             matrix_RGB_to_XYZ=REC2020_TO_XYZ,
-            reference="ITU-R BT.2020 / colour.models.RGB_COLOURSPACES['ITU-R BT.2020']",
+            reference="ITU-R BT.2020",
         ),
         "Adobe RGB (1998)": _rgb_definition(
             name="Adobe RGB (1998)",
@@ -184,7 +184,7 @@ RGB_COLOURSPACE_DEFINITIONS = MappingProxyType(
             white_name="D65",
             transfer="adobe_rgb_1998",
             matrix_RGB_to_XYZ=ADOBE_RGB_TO_XYZ,
-            reference="Adobe RGB (1998) / colour.models.RGB_COLOURSPACES['Adobe RGB (1998)']",
+            reference="Adobe RGB (1998)",
         ),
         "NTSC (1953)": _rgb_definition(
             name="NTSC (1953)",
@@ -194,7 +194,7 @@ RGB_COLOURSPACE_DEFINITIONS = MappingProxyType(
             white_name="C",
             transfer="gamma_2p8",
             matrix_RGB_to_XYZ=NTSC_1953_TO_XYZ,
-            reference="NTSC (1953) / colour.models.RGB_COLOURSPACES['NTSC (1953)']",
+            reference="NTSC (1953)",
         ),
     }
 )

@@ -103,9 +103,7 @@ def test_is_within_pointer_gamut_boundary_vertices_and_batch_shape():
     assert not bool(result[1])
 
 
-def test_is_within_pointer_gamut_matches_colour_for_representative_points():
-    colour = pytest.importorskip("colour")
-
+def test_is_within_pointer_gamut_matches_reference_values_for_representative_points():
     XYZ = np.array(
         [
             [32.05, 41.31, 51.00],
@@ -115,6 +113,6 @@ def test_is_within_pointer_gamut_matches_colour_for_representative_points():
         dtype=np.float64,
     )
     ours = is_within_pointer_gamut(XYZ, tolerance=1e-7)
-    expected = colour.volume.is_within_pointer_gamut(XYZ / 100.0)
+    expected = np.array([True, False, True])
 
     np.testing.assert_array_equal(ours, expected)

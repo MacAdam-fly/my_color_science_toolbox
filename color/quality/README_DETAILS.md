@@ -61,7 +61,7 @@ SSI 固定采样域常量 `SPECTRAL_SHAPE_SSI` 属于高级实现细节；如需
 
 ## 计算流程
 
-当前实现对齐 `colour.quality.spectral_similarity_index`：
+当前实现对齐 Academy SSI 参考流程：
 
 1. 将测试光谱和参考光谱线性对齐到 `375-675 nm, 1 nm`。
 2. 范围外光谱值使用 `0` 填充。

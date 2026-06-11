@@ -106,3 +106,60 @@ def test_sprague_interpolates_uniform_samples():
     )
     assert result.shape == (2,)
     assert np.all(np.isfinite(result))
+
+
+@pytest.mark.parametrize(
+    ("x", "y", "target", "expected"),
+    [
+        (
+            np.arange(400, 461, 10, dtype=float),
+            np.array([0.02, 0.05, 0.11, 0.22, 0.38, 0.55, 0.71]),
+            np.array([405, 415, 425, 435, 445, 455], dtype=float),
+            np.array(
+                [
+                    0.03296276913875598,
+                    0.07463217703349283,
+                    0.158046875,
+                    0.296015625,
+                    0.46565266148325357,
+                    0.6310967404306221,
+                ]
+            ),
+        ),
+        (
+            np.arange(0, 8, dtype=float),
+            np.array([5.92, 9.37, 10.8135, 4.51, 69.59, 27.8007, 86.05, 42.0]),
+            np.array([0, 0.25, 0.5, 0.75, 1.5, 3.2, 5.8, 7], dtype=float),
+            np.array(
+                [
+                    5.9200000000001864,
+                    6.729516121107766,
+                    7.218502560556223,
+                    7.8140625146017255,
+                    12.235688333582534,
+                    14.841160480000015,
+                    77.13156897607655,
+                    41.99999999999997,
+                ]
+            ),
+        ),
+        (
+            np.arange(400, 461, 10, dtype=float),
+            np.array([0.0, 0.1, 0.3, 0.6, 0.7, 1.0, 0.8]),
+            np.array([400, 401, 409, 451, 459, 460], dtype=float),
+            np.array(
+                [
+                    3.3306690738754696e-16,
+                    0.008187619617224877,
+                    0.08753824162679436,
+                    1.0072386184210524,
+                    0.8338759868421054,
+                    0.80000000000000004,
+                ]
+            ),
+        ),
+    ],
+)
+def test_sprague_matches_fixed_reference_values(x, y, target, expected):
+    result = interpolate_1d(x, y, target, method="sprague")
+    np.testing.assert_allclose(result, expected, rtol=1e-12, atol=1e-12)
