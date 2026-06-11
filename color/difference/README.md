@@ -69,9 +69,11 @@ delta_E_Jzazbz(Jzazbz_1, Jzazbz_2)
 Generic dispatcher:
 
 ```python
-DELTA_E_METHODS
 delta_E(a, b, method="CIE 2000", **kwargs)
 ```
+
+The method registry is available for advanced inspection from
+`color.difference.methods`.
 
 ## Method Names
 

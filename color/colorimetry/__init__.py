@@ -14,8 +14,6 @@ from .chromaticity import (
     xy_to_uv1960,
 )
 from .cone_responses import (
-    DEFAULT_FUNDAMENTALS,
-    DEFAULT_ILLUMINANT,
     emission_to_LMS,
 )
 from .cone_responses import reflectance_to_LMS
@@ -32,10 +30,6 @@ from .dominant import (
 )
 from .lightness import Lstar_to_Y, Y_to_Lstar
 from .photometry import (
-    DEFAULT_PHOTOPIC_K_M,
-    DEFAULT_PHOTOPIC_LEF,
-    DEFAULT_SCOTOPIC_K_M,
-    DEFAULT_SCOTOPIC_LEF,
     luminous_efficacy,
     luminous_efficiency,
     luminous_flux,
@@ -61,26 +55,11 @@ from .temperature import (
     xy_to_CCT,
     xy_to_CCT_Duv,
 )
-from .tristimulus import DEFAULT_CMFS, emission_to_XYZ, reflectance_to_XYZ
+from .tristimulus import emission_to_XYZ, reflectance_to_XYZ
 from .transformations import LMS_to_XYZ, XYZ_to_LMS
 
-# Spectral-conversion defaults.
-__all__ = [
-    "DEFAULT_CMFS",  # default XYZ colour matching functions dataset name
-    "DEFAULT_FUNDAMENTALS",  # default LMS cone fundamentals dataset name
-    "DEFAULT_ILLUMINANT",  # default illuminant dataset name for reflectance conversion
-]
-
-# Photometry defaults.
-__all__ += [
-    "DEFAULT_PHOTOPIC_LEF",  # default photopic luminous efficiency function
-    "DEFAULT_SCOTOPIC_LEF",  # default scotopic luminous efficiency function
-    "DEFAULT_PHOTOPIC_K_M",  # default photopic maximum luminous efficacy
-    "DEFAULT_SCOTOPIC_K_M",  # default scotopic maximum luminous efficacy
-]
-
 # Chromaticity conversions.
-__all__ += [
+__all__ = [
     "XYZ_to_xyY",  # convert tristimulus values to xyY coordinates
     "xyY_to_XYZ",  # convert xyY coordinates to tristimulus values
     "XYZ_to_xy",  # convert tristimulus values to xy chromaticity coordinates

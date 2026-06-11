@@ -34,8 +34,9 @@ correlates.
 - `SpaceSpec` carries endpoint-specific parameters such as Lab whitepoints or
   CAM viewing conditions.
 - `convert_color(...)` never performs hidden chromatic adaptation.
-- RGB standards are managed by their own `RGB_COLORSPACES` registry.
-- Generic colour-space nodes are managed by `SPACE_REGISTRY`.
+- RGB standards and generic colour-space nodes are managed by internal
+  registries; normal code should use `get_*`, `list_*` and `register_*`
+  helpers instead of accessing registry mappings directly.
 - `Oklab`, `IPT` and `Jzazbz` require D65-referred XYZ input.
 
 If your XYZ values are not D65-referred, adapt them explicitly before using
@@ -284,11 +285,12 @@ This reports:
 JzCzhz -> Jzazbz -> XYZ -> Lab
 ```
 
-Use `plot_conversion_path(...)` for one route and `plot_conversion_graph(...)`
-for the full registered graph:
+Use `color.spaces.plotting.plot_conversion_path(...)` for one route and
+`color.spaces.plotting.plot_conversion_graph(...)` for the full registered
+graph:
 
 ```python
-from color.spaces import plot_conversion_graph, plot_conversion_path
+from color.spaces.plotting import plot_conversion_graph, plot_conversion_path
 
 fig_path, ax_path = plot_conversion_path(path)
 fig_graph, ax_graph = plot_conversion_graph()

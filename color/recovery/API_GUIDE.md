@@ -397,7 +397,7 @@ reflectance = recover_reflectance_from_XYZ(
 
 如果显式传入 `shape`，必须与 library 的波长网格一致。
 
-## 矩阵与 Solver
+## 高级子模块入口
 
 ### `response_recovery_matrix(responses, shape=None, k=1.0)`
 
@@ -409,7 +409,7 @@ A = k * interval * responses.T
 ```
 
 ```python
-from color.recovery import response_recovery_matrix
+from color.recovery.matrix import response_recovery_matrix
 from color.spectra import from_cie1931_xyz_cmfs
 
 responses = from_cie1931_xyz_cmfs()
@@ -427,7 +427,7 @@ k = 100 / sum(illuminant * ybar * interval)
 ```
 
 ```python
-from color.recovery import reflectance_recovery_matrix
+from color.recovery.matrix import reflectance_recovery_matrix
 
 A, wavelengths, shape = reflectance_recovery_matrix(
     cmfs="cie1931_xyz_1nm",
@@ -440,7 +440,7 @@ A, wavelengths, shape = reflectance_recovery_matrix(
 构造二阶差分平滑矩阵。
 
 ```python
-from color.recovery import second_difference_matrix
+from color.recovery.solvers import second_difference_matrix
 
 D = second_difference_matrix(10)
 ```
@@ -451,7 +451,7 @@ D = second_difference_matrix(10)
 
 ```python
 import numpy as np
-from color.recovery import solve_bounded_least_squares
+from color.recovery.solvers import solve_bounded_least_squares
 
 A = np.array([[1.0, 0.5, 0.0], [0.0, 0.5, 1.0], [0.2, 0.2, 0.2]])
 targets = np.array([[1.0, 1.0, 0.4]])
@@ -470,7 +470,7 @@ x = solve_bounded_least_squares(
 查看当前注册方法。
 
 ```python
-from color.recovery import SPECTRUM_RECOVERY_METHODS, REFLECTANCE_RECOVERY_METHODS
+from color.recovery.methods import SPECTRUM_RECOVERY_METHODS, REFLECTANCE_RECOVERY_METHODS
 
 print(SPECTRUM_RECOVERY_METHODS.keys())
 print(REFLECTANCE_RECOVERY_METHODS.keys())
@@ -498,7 +498,7 @@ REFLECTANCE_RECOVERY_METHODS:
 解析 method 名称到规范名和 solver。
 
 ```python
-from color.recovery import (
+from color.recovery.methods import (
     resolve_reflectance_recovery_method,
     resolve_spectrum_recovery_method,
 )

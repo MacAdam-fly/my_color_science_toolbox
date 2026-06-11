@@ -18,7 +18,7 @@ from .lab_delta_e import (
     delta_E_CMC,
 )
 from .jzazbz_delta_e import delta_E_Jzazbz
-from .methods import DELTA_E_METHODS, delta_E
+from .methods import delta_E
 from .oklab_delta_e import delta_E_Oklab
 
 __all__ = [
@@ -44,6 +44,5 @@ __all__ += [
 ]
 
 __all__ += [
-    "DELTA_E_METHODS",  # registered delta E method names
     "delta_E",  # dispatch to a registered delta E method
 ]

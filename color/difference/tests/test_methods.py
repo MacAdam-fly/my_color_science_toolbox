@@ -6,7 +6,6 @@ import numpy as np
 import pytest
 
 from color.difference import (
-    DELTA_E_METHODS,
     delta_E,
     delta_E_CAM02LCD,
     delta_E_CAM02SCD,
@@ -21,6 +20,7 @@ from color.difference import (
     delta_E_Jzazbz,
     delta_E_Oklab,
 )
+from color.difference.methods import DELTA_E_METHODS
 
 
 LAB_BATCH_1 = np.array(

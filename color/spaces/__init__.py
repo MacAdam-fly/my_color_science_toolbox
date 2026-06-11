@@ -29,7 +29,6 @@ from .appearance import (
     XYZ_to_CAM16UCS,
 )
 from .basic import (
-    DEFAULT_WHITEPOINT_XYZ,
     IPT_hue_angle,
     IPT_to_XYZ,
     JzCzhz_to_Jzazbz,
@@ -67,21 +66,14 @@ from .basic import (
 from .conversion import convert_color
 from .conversion import (
     ConversionPath,
-    ConversionPathEdge,
-    ConversionPathNode,
     describe_conversion_path,
 )
-from .plotting import plot_conversion_graph, plot_conversion_path
 from .registry import (
-    ColorSpaceNode,
-    SPACE_REGISTRY,
     get_colourspace_node,
     list_colourspace_nodes,
 )
 from .rgb import (
     RGBColorSpace,
-    RGB_COLORSPACES,
-    RGB_COLOURSPACE_DEFINITIONS,
     RGB_colourspace_from_primaries_XYZ,
     RGB_colourspace_from_primaries_xy,
     RGB_to_RGB,
@@ -97,30 +89,17 @@ from .spec import SpaceSpec
 
 # Generic colour-space graph.
 __all__ = [
-    "ColorSpaceNode",  # colour-space conversion graph node
-    "SPACE_REGISTRY",  # registered generic colour-space nodes
     "get_colourspace_node",  # resolve a generic colour-space node by name or alias
     "list_colourspace_nodes",  # list registered generic colour-space nodes
     "SpaceSpec",  # colour-space instance with endpoint parameters
     "convert_color",  # convert between registered colour-space nodes
-    "ConversionPathNode",  # described colour-space conversion path node
-    "ConversionPathEdge",  # described colour-space conversion path edge
     "ConversionPath",  # described colour-space conversion route
     "describe_conversion_path",  # describe the route convert_color would use
-    "plot_conversion_path",  # plot a described colour-space conversion route
-    "plot_conversion_graph",  # plot the registered colour-space conversion graph
-]
-
-# Reference whitepoint.
-__all__ += [
-    "DEFAULT_WHITEPOINT_XYZ",  # default D65 reference whitepoint for Lab and Luv
 ]
 
 # RGB colour spaces.
 __all__ += [
     "RGBColorSpace",  # RGB colour-space definition object
-    "RGB_COLOURSPACE_DEFINITIONS",  # RGB colour-space standard definitions
-    "RGB_COLORSPACES",  # registered RGB colour spaces
     "get_RGB_colourspace",  # resolve an RGB colour space by name or alias
     "list_RGB_colourspaces",  # list registered RGB colour-space names
     "register_RGB_colourspace",  # register a custom RGB colour space

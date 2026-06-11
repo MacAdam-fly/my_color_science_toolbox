@@ -14,7 +14,6 @@ from color.gamut import (
 )
 from color.spaces import (
     RGBColorSpace,
-    RGB_COLORSPACES,
     RGB_colourspace_from_primaries_XYZ,
     RGB_colourspace_from_primaries_xy,
     RGB_to_RGB,
@@ -28,6 +27,7 @@ from color.spaces import (
     sRGB_to_XYZ,
 )
 from color.constants import D65_XYZ
+from color.spaces.rgb import RGB_COLORSPACES
 from color.spaces.rgb.transfer import decode_transfer, encode_transfer
 
 

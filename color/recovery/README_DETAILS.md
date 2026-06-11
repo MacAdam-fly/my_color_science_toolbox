@@ -261,8 +261,8 @@ XYZ = reflectance_to_XYZ(reflectance, illuminant="D65")
 
 可以继续扩展新的 recovery methods，但应先判断它属于哪一层：
 
-- effective spectrum method：注册到 `SPECTRUM_RECOVERY_METHODS`
-- reflectance method：注册到 `REFLECTANCE_RECOVERY_METHODS`
+- effective spectrum method：注册到 `color.recovery.methods.SPECTRUM_RECOVERY_METHODS`
+- reflectance method：注册到 `color.recovery.methods.REFLECTANCE_RECOVERY_METHODS`
 - library-prior method：必须显式接受 `ReflectanceLibrary`
 
 Basis、Smits、sparse dictionary 等可以后续作为新 method 扩展

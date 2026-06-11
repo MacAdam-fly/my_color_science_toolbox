@@ -123,17 +123,10 @@ Burns2019RecoveryOptions
 Meng2015RecoveryOptions
 PCAReflectanceOptions
 DictionaryReflectanceOptions
-
-response_recovery_matrix
-reflectance_recovery_matrix
-second_difference_matrix
-solve_bounded_least_squares
-
-SPECTRUM_RECOVERY_METHODS
-REFLECTANCE_RECOVERY_METHODS
-resolve_spectrum_recovery_method
-resolve_reflectance_recovery_method
 ```
+
+Advanced matrix builders, solvers and method registries remain available from
+`color.recovery.matrix`, `color.recovery.solvers` and `color.recovery.methods`.
 
 ## Scale
 

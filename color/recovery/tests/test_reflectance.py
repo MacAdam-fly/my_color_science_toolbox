@@ -9,9 +9,9 @@ from color.colorimetry import XYZ_to_xyY, reflectance_to_XYZ
 from color.recovery import (
     recover_reflectance_from_XYZ,
     recover_reflectance_from_xyY,
-    reflectance_recovery_matrix,
-    second_difference_matrix,
 )
+from color.recovery.matrix import reflectance_recovery_matrix
+from color.recovery.solvers import second_difference_matrix
 from color.spectra import MultiSpectralDistribution, SpectralDistribution
 
 

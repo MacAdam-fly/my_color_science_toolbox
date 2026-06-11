@@ -9,20 +9,6 @@
 
 ## 顶层 API 总览
 
-### 默认常量
-
-| API | 功能 |
-| --- | --- |
-| `DEFAULT_CMFS` | 默认 XYZ CMFs 数据集名 |
-| `DEFAULT_FUNDAMENTALS` | 默认 LMS fundamentals 数据集名 |
-| `DEFAULT_ILLUMINANT` | 默认反射率积分照明体 |
-| `DEFAULT_PHOTOPIC_LEF` | 默认明视觉光视效率函数 |
-| `DEFAULT_SCOTOPIC_LEF` | 默认暗视觉光视效率函数 |
-| `DEFAULT_PHOTOPIC_K_M` | 默认明视觉最大光效 |
-| `DEFAULT_SCOTOPIC_K_M` | 默认暗视觉最大光效 |
-
-### 主要计算入口
-
 | API | 功能 |
 | --- | --- |
 | `emission_to_XYZ`, `reflectance_to_XYZ` | 光谱到 XYZ |
@@ -37,29 +23,10 @@
 | `xy_from_dominant_wavelength_pe`, `xy_from_dominant_wavelength_pc` | 主波长 + 纯度反向构造 xy |
 | `analyze_temperature`, `xy_to_CCT_Duv`, `CCT_Duv_to_xy`, `uv_to_CCT`, `CCT_to_uv` | 色温和 Duv |
 
-## 默认常量
-
-用途：查看高层函数默认使用的数据集和光度常数。
-
-```python
-from color.colorimetry import (
-    DEFAULT_CMFS,
-    DEFAULT_FUNDAMENTALS,
-    DEFAULT_ILLUMINANT,
-    DEFAULT_PHOTOPIC_LEF,
-    DEFAULT_SCOTOPIC_LEF,
-    DEFAULT_PHOTOPIC_K_M,
-    DEFAULT_SCOTOPIC_K_M,
-)
-
-print(DEFAULT_CMFS)
-print(DEFAULT_FUNDAMENTALS)
-print(DEFAULT_ILLUMINANT)
-print(DEFAULT_PHOTOPIC_LEF, DEFAULT_PHOTOPIC_K_M)
-print(DEFAULT_SCOTOPIC_LEF, DEFAULT_SCOTOPIC_K_M)
-```
-
-注意：常量用于理解默认条件。科研复现代码中建议显式传入 CMFs、illuminant 或 fundamentals。
+默认数据集名和光度常数不再作为 `color.colorimetry` 顶层 API。高级检查时从
+具体子模块导入，例如 `color.colorimetry.tristimulus.DEFAULT_CMFS` 或
+`color.colorimetry.photometry.DEFAULT_PHOTOPIC_K_M`。科研复现代码中更推荐显式传入
+CMFs、illuminant 或 fundamentals。
 
 ## 光谱到 XYZ / LMS
 

@@ -37,7 +37,6 @@ from . import standard_observers  # noqa: F401
 # Re-export the core registry API
 from ._registry import (
     DatasetEntry,
-    canonicalize_name,
     clear_cache,
     describe,
     get,
@@ -62,7 +61,6 @@ from .standard_observers import (
 
 __all__ = [
     "DatasetEntry",  # metadata record for a registered dataset
-    "canonicalize_name",  # resolve a dataset name to its canonical name
     "get",  # load a registered dataset as raw arrays
     "describe",  # describe a registered dataset
     "clear_cache",  # clear cached dataset loads

@@ -8,7 +8,6 @@
 | API | 功能 | 推荐场景 |
 | --- | --- | --- |
 | `DatasetEntry` | 描述一个注册数据集 | 注册自定义静态数据 |
-| `canonicalize_name` | 数据资源名规范化 | 调试 category/name 匹配 |
 | `get` | 通用数据读取入口 | 已知 category 和 name |
 | `describe` | 查看注册信息 | 检查来源、列名、metadata |
 | `clear_cache` | 清除读取缓存 | 文件修改后强制重读 |
@@ -152,22 +151,16 @@ for entry in matches:
 
 注意：搜索用于发现数据，不保证结果唯一；真正读取仍应使用明确的 category/name。
 
-### `canonicalize_name(value)`
-
-用途：查看 datasets 资源名匹配规则。
-
-输入：任意字符串。  
-返回：规范化后的字符串。
+高级调试时，datasets 的资源名规范化函数保留在子模块 registry 中：
 
 ```python
-from color.datasets import canonicalize_name
+from color.datasets._registry import canonicalize_name
 
 print(canonicalize_name(" CIE 1931 XYZ 1 nm "))
 print(canonicalize_name("0.1 nm"))
-print(canonicalize_name("V(lambda)"))
 ```
 
-注意：这是 datasets 的资源名规则，会保留小数采样间隔等语义；不要和普通 method name 规范化混用。
+普通用户不需要直接调用它；优先使用 `get(...)`、`list_datasets(...)` 和 `search(...)`。
 
 ## 注册自定义静态数据
 

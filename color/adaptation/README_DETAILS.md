@@ -36,10 +36,11 @@ CAT02
 CAT16
 ```
 
-对应矩阵从 `color.constants.adaptation_matrices` 维护，并在本模块中重新导出：
+对应矩阵从 `color.constants.adaptation_matrices` 维护，并通过
+`color.adaptation.matrices` 提供高级入口：
 
 ```python
-from color.adaptation import (
+from color.adaptation.matrices import (
     CAT_VON_KRIES,
     CAT_BRADFORD,
     CAT_CAT02,
@@ -48,7 +49,8 @@ from color.adaptation import (
 )
 ```
 
-保留这些矩阵为顶层 API 是有意的：它们是色适应模块的核心标准常量，不是临时实现细节。
+这些矩阵不再放在 `color.adaptation` 顶层；普通工作流应使用
+`chromatic_adaptation_XYZ(...)` 或 D65 便捷函数。
 
 ## Von Kries 类矩阵计算
 

@@ -2,14 +2,7 @@
 
 from __future__ import annotations
 
-from .matrix import reflectance_recovery_matrix, response_recovery_matrix
 from .library import ReflectanceLibrary, load_reflectance_library
-from .methods import (
-    REFLECTANCE_RECOVERY_METHODS,
-    SPECTRUM_RECOVERY_METHODS,
-    resolve_reflectance_recovery_method,
-    resolve_spectrum_recovery_method,
-)
 from .options import (
     AutoGaussianRecoveryOptions,
     BoundedLeastSquaresOptions,
@@ -21,7 +14,6 @@ from .options import (
     PCAReflectanceOptions,
 )
 from .reflectance import recover_reflectance_from_XYZ, recover_reflectance_from_xyY
-from .solvers import second_difference_matrix, solve_bounded_least_squares
 from .spectrum import (
     recover_spectrum_from_LMS,
     recover_spectrum_from_responses,
@@ -57,16 +49,3 @@ __all__ += [
     "DictionaryReflectanceOptions",  # options for dictionary reflectance recovery
 ]
 
-__all__ += [
-    "response_recovery_matrix",  # build the spectrum-to-response linear matrix
-    "reflectance_recovery_matrix",  # build the reflectance-to-XYZ linear matrix
-    "second_difference_matrix",  # build the smoothness regularisation matrix
-    "solve_bounded_least_squares",  # shared bounded smooth least-squares solver
-]
-
-__all__ += [
-    "SPECTRUM_RECOVERY_METHODS",  # registered effective-spectrum recovery methods
-    "REFLECTANCE_RECOVERY_METHODS",  # registered reflectance recovery methods
-    "resolve_spectrum_recovery_method",  # resolve an effective-spectrum recovery method
-    "resolve_reflectance_recovery_method",  # resolve a reflectance recovery method
-]

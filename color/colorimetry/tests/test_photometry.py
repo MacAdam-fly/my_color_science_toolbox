@@ -6,8 +6,6 @@ import numpy as np
 import pytest
 
 from color.colorimetry import (
-    DEFAULT_PHOTOPIC_K_M,
-    DEFAULT_SCOTOPIC_K_M,
     luminous_efficacy,
     luminous_efficiency,
     luminous_flux,
@@ -20,6 +18,7 @@ from color.colorimetry import (
     scotopic_luminous_efficiency_function,
     scotopic_luminous_flux,
 )
+from color.colorimetry.photometry import DEFAULT_PHOTOPIC_K_M, DEFAULT_SCOTOPIC_K_M
 from color.spectra import MultiSpectralDistribution, SpectralDistribution
 
 

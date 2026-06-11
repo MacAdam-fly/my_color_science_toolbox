@@ -8,13 +8,12 @@ import numpy as np
 import pytest
 
 from color.adaptation import (
-    CAT_BRADFORD,
-    CHROMATIC_ADAPTATION_TRANSFORMS,
     adapt_from_D65,
     adapt_to_D65,
     chromatic_adaptation_XYZ,
     matrix_chromatic_adaptation_von_kries,
 )
+from color.adaptation.matrices import CAT_BRADFORD, CHROMATIC_ADAPTATION_TRANSFORMS
 from color.constants import D50_XYZ, D65_XYZ
 
 

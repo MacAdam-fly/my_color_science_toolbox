@@ -10,7 +10,7 @@
 - `XYZ` 是唯一全局转换中枢。
 - `convert_color(...)` 做统一路由。
 - `Oklab`、`IPT`、`Jzazbz` 要求输入为 D65-referred XYZ。
-- RGB 标准空间和普通空间分别由 RGB 注册表与 `SPACE_REGISTRY` 管理。
+- RGB 标准空间和普通空间分别由 RGB 子模块注册表与 generic registry 管理。
 
 ## 顶层 API 总览
 
@@ -18,23 +18,18 @@
 
 | API | 功能 |
 | --- | --- |
-| `ColorSpaceNode` | 普通颜色空间图节点 |
-| `SPACE_REGISTRY` | 普通颜色空间注册表 |
 | `get_colourspace_node` | 解析普通颜色空间节点 |
 | `list_colourspace_nodes` | 列出普通颜色空间节点 |
 | `SpaceSpec` | 带参数的空间端点 |
 | `convert_color` | 通过 XYZ 中枢转换颜色 |
-| `ConversionPathNode`, `ConversionPathEdge`, `ConversionPath` | 转换路径描述对象 |
+| `ConversionPath` | 转换路径描述对象 |
 | `describe_conversion_path` | 描述转换路径，不执行数值转换 |
-| `plot_conversion_path`, `plot_conversion_graph` | 绘制单条路径或完整注册图 |
-| `DEFAULT_WHITEPOINT_XYZ` | 默认 D65 `Y=100` 白点 |
 
 ### RGB
 
 | API | 功能 |
 | --- | --- |
 | `RGBColorSpace` | RGB 空间对象 |
-| `RGB_COLOURSPACE_DEFINITIONS`, `RGB_COLORSPACES` | RGB 标准定义和注册表 |
 | `get_RGB_colourspace`, `list_RGB_colourspaces`, `register_RGB_colourspace` | RGB 注册表入口 |
 | `RGB_colourspace_from_primaries_xy`, `RGB_colourspace_from_primaries_XYZ` | 自定义三基色 RGB 空间 |
 | `RGB_to_XYZ`, `XYZ_to_RGB`, `RGB_to_RGB`, `sRGB_to_XYZ`, `XYZ_to_sRGB` | RGB / XYZ 转换 |
@@ -68,20 +63,20 @@
 
 ## 转换图、注册表和 `SpaceSpec`
 
-### `ColorSpaceNode` / `SPACE_REGISTRY`
+### `get_colourspace_node(...)` / `list_colourspace_nodes()`
 
-用途：描述普通颜色空间节点和全局普通空间注册表。
+用途：解析和列出普通颜色空间节点。
 
 ```python
-from color.spaces import SPACE_REGISTRY, get_colourspace_node, list_colourspace_nodes
+from color.spaces import get_colourspace_node, list_colourspace_nodes
 
 print(list_colourspace_nodes())
 node = get_colourspace_node("Lab")
 print(node.name, node.parent, node.family)
-print("Lab" in SPACE_REGISTRY)
 ```
 
-注意：RGB 标准不直接放进 `SPACE_REGISTRY`；它们由 `RGB_COLORSPACES` 管理。
+注意：底层 `ColorSpaceNode` 和 `SPACE_REGISTRY` 保留在 `color.spaces.node` 与
+`color.spaces.registry`，不作为 `color.spaces` 顶层 API。
 
 ### `SpaceSpec(name, **parameters)`
 
@@ -157,7 +152,7 @@ Luv_D65 = convert_color(
 
 注意：这只是参数化空间转换；如果需要白点适应，请显式调用 `color.adaptation`。
 
-### `ConversionPathNode` / `ConversionPathEdge` / `ConversionPath`
+### `ConversionPath`
 
 用途：保存 `describe_conversion_path(...)` 的结构化结果。
 
@@ -181,34 +176,18 @@ print(path.nodes)
 print(path.edges)
 ```
 
-### `plot_conversion_path(...)` / `plot_conversion_graph(...)`
-
-用途：绘制单条转换路径或当前注册图谱。
+绘图函数属于 `color.spaces.plotting`：
 
 ```python
-from color.spaces import describe_conversion_path, plot_conversion_path
+from color.spaces import describe_conversion_path
+from color.spaces.plotting import plot_conversion_graph, plot_conversion_path
 
 path = describe_conversion_path("sRGB", "CAM16-UCS")
-fig, ax = plot_conversion_path(path)
+fig_path, ax_path = plot_conversion_path(path)
+fig_graph, ax_graph = plot_conversion_graph()
 ```
 
-```python
-from color.spaces import plot_conversion_graph
-
-fig, ax = plot_conversion_graph()
-```
-
-注意：这两个函数属于 `color.spaces.plotting` 的能力，顶层保留是因为它们直接服务转换路由审查。
-
-### `DEFAULT_WHITEPOINT_XYZ`
-
-用途：默认 D65 `Y=100` 白点。
-
-```python
-from color.spaces import DEFAULT_WHITEPOINT_XYZ
-
-print(DEFAULT_WHITEPOINT_XYZ)
-```
+默认 D65 `Y=100` 白点保留在 `color.spaces.basic.DEFAULT_WHITEPOINT_XYZ`。
 
 ## RGB 空间
 
@@ -224,19 +203,6 @@ print(srgb.name)
 print(srgb.white_xy)
 print(srgb.matrix_RGB_to_XYZ)
 ```
-
-### `RGB_COLOURSPACE_DEFINITIONS` / `RGB_COLORSPACES`
-
-用途：查看标准定义和已注册 RGB 空间。
-
-```python
-from color.spaces import RGB_COLORSPACES, RGB_COLOURSPACE_DEFINITIONS
-
-print(RGB_COLOURSPACE_DEFINITIONS.keys())
-print(RGB_COLORSPACES.keys())
-```
-
-注意：`RGB_COLORSPACES` 是只读视图；注册自定义空间用 `register_RGB_colourspace(...)`。
 
 ### `get_RGB_colourspace(...)` / `list_RGB_colourspaces()`
 

@@ -13,18 +13,6 @@ XYZ(source white) -> XYZ(target white)
 
 ## 顶层 API 总览
 
-### 色适应矩阵常量
-
-| API | 功能 |
-| --- | --- |
-| `CAT_VON_KRIES` | Von Kries transform matrix |
-| `CAT_BRADFORD` | Bradford transform matrix |
-| `CAT_CAT02` | CAT02 transform matrix |
-| `CAT_CAT16` | CAT16 transform matrix |
-| `CHROMATIC_ADAPTATION_TRANSFORMS` | 支持的 transform 名称到矩阵的只读映射 |
-
-### 色适应函数
-
 | API | 功能 |
 | --- | --- |
 | `matrix_chromatic_adaptation_von_kries` | 计算 Von Kries 类色适应矩阵 |
@@ -32,32 +20,13 @@ XYZ(source white) -> XYZ(target white)
 | `adapt_to_D65` | 从任意源白点适应到项目 D65 |
 | `adapt_from_D65` | 从项目 D65 适应到目标白点 |
 
-## 矩阵常量
-
-### `CAT_VON_KRIES` / `CAT_BRADFORD` / `CAT_CAT02` / `CAT_CAT16`
-
-用途：查看或复用标准色适应 transform 矩阵。
+矩阵常量不再作为 `color.adaptation` 顶层 API。高级验证或调试时从子模块导入：
 
 ```python
-from color.adaptation import CAT_BRADFORD, CAT_CAT02, CAT_CAT16, CAT_VON_KRIES
+from color.adaptation.matrices import CAT_BRADFORD, CHROMATIC_ADAPTATION_TRANSFORMS
 
-print(CAT_VON_KRIES)
 print(CAT_BRADFORD)
-print(CAT_CAT02)
-print(CAT_CAT16)
-```
-
-注意：普通工作流不需要直接操作这些矩阵；用 `chromatic_adaptation_XYZ(...)` 即可。
-
-### `CHROMATIC_ADAPTATION_TRANSFORMS`
-
-用途：查看当前支持的 transform 名称。
-
-```python
-from color.adaptation import CHROMATIC_ADAPTATION_TRANSFORMS
-
 print(CHROMATIC_ADAPTATION_TRANSFORMS.keys())
-print(CHROMATIC_ADAPTATION_TRANSFORMS["Bradford"])
 ```
 
 ## 色适应矩阵

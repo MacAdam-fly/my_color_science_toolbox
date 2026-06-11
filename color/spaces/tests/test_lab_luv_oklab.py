@@ -7,7 +7,6 @@ import pytest
 
 from color.constants import D50_XYZ, D65_XYZ
 from color.spaces import (
-    DEFAULT_WHITEPOINT_XYZ,
     Lab_to_LCHab,
     Lab_to_XYZ,
     LCHab_to_Lab,
@@ -25,6 +24,7 @@ from color.spaces import (
     XYZ_to_Oklab,
     convert_color,
 )
+from color.spaces.basic import DEFAULT_WHITEPOINT_XYZ
 
 
 def _whitepoint_xy(whitepoint_XYZ):

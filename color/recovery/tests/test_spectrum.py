@@ -11,8 +11,8 @@ from color.recovery import (
     recover_spectrum_from_responses,
     recover_spectrum_from_XYZ,
     recover_spectrum_from_xyY,
-    response_recovery_matrix,
 )
+from color.recovery.matrix import response_recovery_matrix
 from color.spectra import (
     MultiSpectralDistribution,
     SpectralDistribution,

@@ -8,12 +8,13 @@ SSI compares the spectral shape of two light sources. It is useful when the
 question is "how similar are these two SPDs?" rather than "how accurately does
 this light render object colours?"
 
-For the Chinese detailed notes, see [README_DETAILS.md](README_DETAILS.md).
+For the Chinese API guide, see [API_GUIDE.md](API_GUIDE.md). For Chinese
+detailed notes, see [README_DETAILS.md](README_DETAILS.md).
 
 ## Current API
 
 ```python
-from color.quality import SPECTRAL_SHAPE_SSI, spectral_similarity_index
+from color.quality import spectral_similarity_index
 ```
 
 ## Quick Start

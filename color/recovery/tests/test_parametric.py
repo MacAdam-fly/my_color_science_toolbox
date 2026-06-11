@@ -10,6 +10,8 @@ from color.math import gaussian_values
 from color.recovery import (
     recover_spectrum_from_LMS,
     recover_spectrum_from_XYZ,
+)
+from color.recovery.methods import (
     resolve_reflectance_recovery_method,
     resolve_spectrum_recovery_method,
 )

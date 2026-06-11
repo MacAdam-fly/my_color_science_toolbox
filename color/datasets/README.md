@@ -39,7 +39,6 @@ views of cached data; call `.copy()` before modifying values.
 | API | Purpose |
 | --- | --- |
 | `DatasetEntry` | Registration record for one static dataset |
-| `canonicalize_name` | Canonical resource-name matching helper |
 | `get` | Load a registered dataset |
 | `describe` | Inspect a `DatasetEntry` without loading data |
 | `clear_cache` | Clear cached dataset reads |

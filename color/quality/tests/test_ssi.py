@@ -7,7 +7,8 @@ import pytest
 
 from color.generators.blackbody import blackbody_spd
 from color.generators.ideal import gaussian_spd
-from color.quality import SPECTRAL_SHAPE_SSI, spectral_similarity_index
+from color.quality import spectral_similarity_index
+from color.quality.ssi import SPECTRAL_SHAPE_SSI
 from color.spectra import SpectralDistribution, from_D65_illuminant, from_columns
 
 

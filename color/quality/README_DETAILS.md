@@ -49,13 +49,15 @@ SSI 不是 CRI、TM-30 或 CQS。
 ## 当前 API
 
 ```python
-from color.quality import SPECTRAL_SHAPE_SSI, spectral_similarity_index
+from color.quality import spectral_similarity_index
 ```
 
 | API | 作用 |
 | --- | --- |
-| `SPECTRAL_SHAPE_SSI` | SSI 固定采样域，`375-675 nm, 1 nm` |
 | `spectral_similarity_index(test, reference, round_result=True)` | 计算测试光源相对参考光源的 SSI |
+
+SSI 固定采样域常量 `SPECTRAL_SHAPE_SSI` 属于高级实现细节；如需检查，
+从 `color.quality.ssi` 导入。
 
 ## 计算流程
 

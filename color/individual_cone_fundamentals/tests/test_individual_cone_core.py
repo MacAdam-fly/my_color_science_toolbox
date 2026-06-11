@@ -196,8 +196,8 @@ def test_invalid_inputs_raise(kwargs, match):
 def test_asano2016_default_shape_and_normalisation():
     raw = generate_asano2016_individual_cone_fundamentals()
     values = _stack(raw)
-    assert raw["wavelength"].shape == (89,)
-    assert values.shape == (89, 3)
+    assert raw["wavelength"].shape == (441,)
+    assert values.shape == (441, 3)
     assert np.isfinite(values).all()
     np.testing.assert_allclose(values.max(axis=0), [1.0, 1.0, 1.0])
 
@@ -217,7 +217,7 @@ def test_asano2016_components_match_final_lms():
         macular_density_deviation=-5.0,
         photopigment_shift_nm=(2.0, -1.0, 0.0),
     )
-    _assert_component_shapes(components, 89)
+    _assert_component_shapes(components, 441)
     np.testing.assert_allclose(components["corneal_energy"], _stack(raw))
 
 
@@ -240,10 +240,11 @@ def test_asano2016_zero_deviations_match_cie2006_average_observers():
         (2.0, get_cie2006_lms_2degree_fundamentals),
         (10.0, get_cie2006_lms_10degree_fundamentals),
     ):
+        reference = getter(interval_nm=5, energy="linE")
         generated = generate_asano2016_individual_cone_fundamentals(
             field_size_degree=field_size,
+            wavelength_nm=reference["wavelength"],
         )
-        reference = getter(interval_nm=5, energy="linE")
         values = _stack(generated)
         ref_values = _stack(reference)
         finite = np.isfinite(ref_values)

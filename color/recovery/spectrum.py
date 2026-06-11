@@ -6,8 +6,9 @@ from typing import Sequence, Union
 
 import numpy as np
 
-from color.colorimetry import DEFAULT_CMFS, XYZ_to_xy, analyze_chromaticity, xyY_to_XYZ
 from color.colorimetry.cone_responses import DEFAULT_FUNDAMENTALS
+from color.colorimetry import XYZ_to_xy, analyze_chromaticity, xyY_to_XYZ
+from color.colorimetry.tristimulus import DEFAULT_CMFS
 from color.spectra import (
     MultiSpectralDistribution,
     SpectralDistribution,

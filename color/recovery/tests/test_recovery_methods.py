@@ -4,17 +4,17 @@ from __future__ import annotations
 
 import pytest
 
-from color.recovery import (
+from color.recovery.burns2019 import solve_burns2019_reflectance
+from color.recovery.dictionary import solve_dictionary_reflectance
+from color.recovery.methods import (
     REFLECTANCE_RECOVERY_METHODS,
     SPECTRUM_RECOVERY_METHODS,
     resolve_reflectance_recovery_method,
     resolve_spectrum_recovery_method,
-    solve_bounded_least_squares,
 )
-from color.recovery.burns2019 import solve_burns2019_reflectance
-from color.recovery.dictionary import solve_dictionary_reflectance
 from color.recovery.meng2015 import solve_meng2015_reflectance
 from color.recovery.pca import solve_pca_reflectance
+from color.recovery.solvers import solve_bounded_least_squares
 
 
 @pytest.mark.parametrize(

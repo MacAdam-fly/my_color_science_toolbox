@@ -4,12 +4,9 @@ from __future__ import annotations
 
 import pytest
 
-from color.spaces import (
-    ColorSpaceNode,
-    SPACE_REGISTRY,
-    get_colourspace_node,
-    list_colourspace_nodes,
-)
+from color.spaces import get_colourspace_node, list_colourspace_nodes
+from color.spaces.node import ColorSpaceNode
+from color.spaces.registry import SPACE_REGISTRY
 from color.spaces.basic.xyy import SPACE_NODES as XYY_SPACE_NODES
 
 
