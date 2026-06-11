@@ -114,7 +114,8 @@ def integrate_responses(
     interval = common_shape.interval
 
     if mode == "reflectance":
-        assert illuminant is not None
+        if illuminant is None:
+            raise ValueError("illuminant is required for reflectance mode")
         aligned_illuminant = _align_single(illuminant, common_shape)
         source_values = source_values * aligned_illuminant.values.reshape(1, -1)
         if k is None:

@@ -12,7 +12,25 @@ from ._registry import GeneratedDict, GeneratorEntry, generate, list_generators,
 def illuminant_a_spd(
     wavelength_nm: np.ndarray | None = None,
 ) -> GeneratedDict:
-    """Compute CIE Standard Illuminant A relative spectral power distribution."""
+    """Compute CIE Standard Illuminant A relative SPD.
+
+    Parameters
+    ----------
+    wavelength_nm
+        Wavelength samples in nanometres. Defaults to ``300-830 nm`` at
+        ``1 nm`` spacing.
+
+    Returns
+    -------
+    dict[str, ndarray]
+        Raw mapping with ``"wavelength"`` and ``"spd"`` columns.
+
+    Notes
+    -----
+    This is the formula-generated A illuminant, normalised by the CIE formula
+    near ``100`` at 560 nm. Static file-backed illuminant A is available from
+    ``color.datasets``.
+    """
     if wavelength_nm is None:
         wavelength_nm = np.arange(300, 831, 1.0, dtype=np.float64)
     else:
@@ -33,7 +51,28 @@ def daylight_spd(
     wavelength_nm: np.ndarray | None = None,
     cct: float = 6500.0,
 ) -> GeneratedDict:
-    """Compute CIE D-series relative spectral power distribution."""
+    """Compute a CIE D-series daylight relative SPD.
+
+    Parameters
+    ----------
+    wavelength_nm
+        Wavelength samples in nanometres. Defaults to ``300-830 nm`` at
+        ``10 nm`` spacing.
+    cct
+        Correlated colour temperature in kelvin. The CIE D-series model is
+        valid here for ``4000-25000 K``.
+
+    Returns
+    -------
+    dict[str, ndarray]
+        Raw mapping with ``"wavelength"`` and ``"spd"`` columns.
+
+    Notes
+    -----
+    ``daylight_spd(...)`` generates the full spectral distribution. It is not
+    the same API as ``CCT_to_xy_CIE_D(...)``, which only returns daylight
+    chromaticity coordinates.
+    """
     if not 4000 <= cct <= 25000:
         raise ValueError(f"CCT must be between 4000 and 25000 K, got {cct}")
 
@@ -117,7 +156,7 @@ register(GeneratorEntry(
 
 
 def generate_illuminant(name: str, **kwargs) -> GeneratedDict:
-    """Generate a CIE illuminant spectral distribution."""
+    """Generate a registered formula-based illuminant spectral distribution."""
     return generate("illuminants", name, **kwargs)
 
 

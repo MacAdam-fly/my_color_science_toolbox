@@ -20,7 +20,27 @@ def blackbody_spd(
     wavelength_nm: np.ndarray | None = None,
     temperature: float = 6500.0,
 ) -> GeneratedDict:
-    """Compute Planck spectral radiance at *temperature* in kelvin."""
+    """Compute Planck blackbody spectral radiance.
+
+    Parameters
+    ----------
+    wavelength_nm
+        Wavelength samples in nanometres. Defaults to ``300-830 nm`` at
+        ``1 nm`` spacing.
+    temperature
+        Blackbody temperature in kelvin.
+
+    Returns
+    -------
+    dict[str, ndarray]
+        Raw mapping with ``"wavelength"`` and ``"radiance"`` columns.
+
+    Notes
+    -----
+    The returned radiance is not peak-normalised and is not scaled to
+    ``Y=100``. Downstream colour values therefore preserve the physical scale
+    implied by Planck's law.
+    """
     if temperature <= 0:
         raise ValueError(f"temperature must be positive, got {temperature}")
 
@@ -50,7 +70,7 @@ register(GeneratorEntry(
 
 
 def generate_blackbody(name: str = "blackbody_spd", **kwargs) -> GeneratedDict:
-    """Generate blackbody radiation spectral data."""
+    """Generate registered blackbody radiation spectral data."""
     return generate("blackbody", name, **kwargs)
 
 

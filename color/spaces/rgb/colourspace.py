@@ -28,7 +28,42 @@ def _readonly_array(
 
 @dataclass(frozen=True)
 class RGBColorSpace:
-    """RGB colour-space definition."""
+    """RGB colour-space definition for three-primary RGB systems.
+
+    The matrices operate on linear RGB and project XYZ values in the same
+    numeric scale as the stored matrix, normally the project Y=100 XYZ domain.
+    ``transfer`` describes the opto-electronic/electro-optical encoding used by
+    ``RGB_to_XYZ`` and ``XYZ_to_RGB`` when decoding or encoding is enabled.
+
+    Parameters
+    ----------
+    name
+        Primary RGB colour-space name.
+    aliases
+        Alternative names accepted by the RGB registry.
+    primaries
+        RGB primary chromaticities with shape ``(3, 2)``.
+    white_xy
+        RGB whitepoint chromaticity.
+    transfer
+        Transfer-function identifier or gamma descriptor.
+
+    Returns
+    -------
+    RGBColorSpace
+        Immutable RGB colour-space definition.
+
+    Notes
+    -----
+    Custom RGB spaces are ordinary objects until explicitly registered with
+    ``register_RGB_colourspace``.
+
+    Examples
+    --------
+    >>> from color.spaces import get_RGB_colourspace
+    >>> get_RGB_colourspace("sRGB").name
+    'sRGB'
+    """
 
     name: str
     aliases: tuple[str, ...]

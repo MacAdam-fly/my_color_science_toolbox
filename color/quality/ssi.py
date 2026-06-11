@@ -61,7 +61,27 @@ def spectral_similarity_index(
     *,
     round_result: bool = True,
 ) -> np.ndarray:
-    """Return the Academy Spectral Similarity Index of two spectra."""
+    """Return the Academy Spectral Similarity Index of two spectra.
+
+    Parameters
+    ----------
+    test, reference
+        Test and reference spectral power distributions.
+    round_result
+        If ``True``, return the rounded SSI score. If ``False``, return the
+        unrounded floating-point value.
+
+    Returns
+    -------
+    numpy scalar
+        SSI score. Identical spectra return ``100``.
+
+    Notes
+    -----
+    SSI compares the shapes of two SPDs after alignment to the Academy
+    ``375-675 nm`` sampling domain. It is not CRI, TM-30 or CQS, and it does
+    not use reflectance colour samples.
+    """
     matrix = _integration_matrix()
     test_values = matrix @ _as_ssi_values(test, "test")
     reference_values = matrix @ _as_ssi_values(reference, "reference")

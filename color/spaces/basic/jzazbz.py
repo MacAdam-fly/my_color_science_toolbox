@@ -96,7 +96,33 @@ def _Izazbz_to_XYZ(Izazbz: np.ndarray) -> np.ndarray:
 
 
 def XYZ_to_Jzazbz(XYZ_D65_referred: Sequence[float] | np.ndarray) -> np.ndarray:
-    """Convert D65-referred CIE XYZ values on the Y=100 scale to Jzazbz values."""
+    """Convert D65-referred CIE XYZ values on the Y=100 scale to Jzazbz values.
+
+    The implementation follows the Safdar Jzazbz transform while preserving the
+    project convention that public XYZ input is Y=100. Non-D65 XYZ values must
+    be adapted before entering this function.
+
+    Parameters
+    ----------
+    XYZ_D65_referred
+        D65-referred XYZ values with final axis ``(X, Y, Z)`` on the Y=100
+        scale.
+
+    Returns
+    -------
+    numpy.ndarray
+        Jzazbz values with final axis ``(Jz, az, bz)``.
+
+    Notes
+    -----
+    Jzazbz has HDR/PQ semantics internally, but this package exposes it through
+    the same public Y=100 XYZ convention as other spaces.
+
+    Examples
+    --------
+    >>> XYZ_to_Jzazbz([19.01, 20.0, 21.78]).shape
+    (3,)
+    """
     xyz = to_domain_1(
         as_last_axis_triplets(XYZ_D65_referred, name="XYZ_D65_referred"),
         source_scale="100",
@@ -108,7 +134,32 @@ def XYZ_to_Jzazbz(XYZ_D65_referred: Sequence[float] | np.ndarray) -> np.ndarray:
 
 
 def Jzazbz_to_XYZ(Jzazbz: Sequence[float] | np.ndarray) -> np.ndarray:
-    """Convert Jzazbz values to D65-referred CIE XYZ values on the Y=100 scale."""
+    """Convert Jzazbz values to D65-referred CIE XYZ values on the Y=100 scale.
+
+    The returned XYZ values are in the project D65 reference domain. Use an
+    explicit chromatic-adaptation step if the result must be referred to another
+    whitepoint.
+
+    Parameters
+    ----------
+    Jzazbz
+        Jzazbz values with final axis ``(Jz, az, bz)``.
+
+    Returns
+    -------
+    numpy.ndarray
+        D65-referred XYZ values on the Y=100 scale.
+
+    Notes
+    -----
+    This inverse returns the project D65 reference domain, not the whitepoint of
+    any earlier non-D65 source.
+
+    Examples
+    --------
+    >>> Jzazbz_to_XYZ([0.01, 0.002, 0.001]).shape
+    (3,)
+    """
     jzazbz = as_last_axis_triplets(Jzazbz, name="Jzazbz")
     J_z = jzazbz[..., 0]
     I_z = (J_z + JZAZBZ_D0) / (
@@ -119,7 +170,16 @@ def Jzazbz_to_XYZ(Jzazbz: Sequence[float] | np.ndarray) -> np.ndarray:
 
 
 def Jzazbz_to_JzCzhz(Jzazbz: Sequence[float] | np.ndarray) -> np.ndarray:
-    """Convert Jzazbz values to cylindrical JzCzhz values."""
+    """Convert Jzazbz values to cylindrical JzCzhz values.
+
+    The output final axis is ``Jz, Cz, hz`` with hue in degrees on
+    ``[0, 360)``. Batch dimensions are preserved.
+
+    Notes
+    -----
+    This is a cylindrical coordinate transform inside Jzazbz; no XYZ conversion
+    is involved.
+    """
     jzazbz = as_last_axis_triplets(Jzazbz, name="Jzazbz")
     C_z = np.hypot(jzazbz[..., 1], jzazbz[..., 2])
     h_z = np.mod(np.degrees(np.arctan2(jzazbz[..., 2], jzazbz[..., 1])), 360.0)
@@ -127,7 +187,15 @@ def Jzazbz_to_JzCzhz(Jzazbz: Sequence[float] | np.ndarray) -> np.ndarray:
 
 
 def JzCzhz_to_Jzazbz(JzCzhz: Sequence[float] | np.ndarray) -> np.ndarray:
-    """Convert cylindrical JzCzhz values to Jzazbz values."""
+    """Convert cylindrical JzCzhz values to Jzazbz values.
+
+    The input final axis is ``Jz, Cz, hz`` with hue in degrees. Batch dimensions
+    are preserved.
+
+    Notes
+    -----
+    This is the inverse cylindrical transform for ``Jzazbz_to_JzCzhz``.
+    """
     jzczhz = as_last_axis_triplets(JzCzhz, name="JzCzhz")
     h_z = np.radians(jzczhz[..., 2])
     a_z = jzczhz[..., 1] * np.cos(h_z)

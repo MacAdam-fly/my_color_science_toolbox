@@ -38,7 +38,17 @@ def XYZ_to_UVW(
     whitepoint_XYZ: Sequence[float] | np.ndarray | None = None,
     whitepoint_xy: Sequence[float] | np.ndarray | None = None,
 ) -> np.ndarray:
-    """Convert CIE XYZ tristimulus values to CIE 1964 U*V*W* coordinates."""
+    """Convert CIE XYZ tristimulus values to CIE 1964 U*V*W* coordinates.
+
+    ``whitepoint_XYZ`` or ``whitepoint_xy`` selects the UVW reference whitepoint;
+    they are mutually exclusive. UVW is a historical space and is provided for
+    reproduction and comparison rather than as a modern perceptual baseline.
+
+    Notes
+    -----
+    The input final axis is ``(X, Y, Z)``. The output final axis is
+    ``(U*, V*, W*)``.
+    """
     xyz = as_last_axis_triplets(XYZ, name="XYZ")
     xy_n = _resolve_whitepoint_xy(whitepoint_XYZ, whitepoint_xy)
 
@@ -56,7 +66,16 @@ def UVW_to_XYZ(
     whitepoint_XYZ: Sequence[float] | np.ndarray | None = None,
     whitepoint_xy: Sequence[float] | np.ndarray | None = None,
 ) -> np.ndarray:
-    """Convert CIE 1964 U*V*W* coordinates to CIE XYZ tristimulus values."""
+    """Convert CIE 1964 U*V*W* coordinates to CIE XYZ tristimulus values.
+
+    Use the same reference whitepoint form as the forward conversion. The
+    returned XYZ values preserve the Y scale encoded in the UVW ``W`` component.
+
+    Notes
+    -----
+    The input final axis is ``(U*, V*, W*)``. The output final axis is
+    ``(X, Y, Z)``.
+    """
     uvw = as_last_axis_triplets(UVW, name="UVW")
     xy_n = _resolve_whitepoint_xy(whitepoint_XYZ, whitepoint_xy)
     uv_n = xy_to_uv1960(xy_n)

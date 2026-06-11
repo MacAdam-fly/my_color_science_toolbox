@@ -188,7 +188,7 @@ def get_gamut_data(name: str, **kwargs: Any) -> SpectralDict:
 
     Parameters
     ----------
-    name : str
+    name
         ``'pointer'``, ``'pointer_raw'`` or ``'macadam_limits_A/C/D65'``.
     **kwargs
         For ``'pointer'``: ``L`` — filter by L* level (20, 30, …, 90).
@@ -197,6 +197,17 @@ def get_gamut_data(name: str, **kwargs: Any) -> SpectralDict:
     Returns
     -------
     dict[str, ndarray]
+
+    Notes
+    -----
+    This is only the raw static data layer. Boundary objects, xy boundaries,
+    coverage and inside checks are implemented in ``color.gamut``.
+
+    Examples
+    --------
+    >>> pointer = get_gamut_data("pointer", L=50)
+    >>> {"L", "C", "hab"}.issubset(pointer)
+    True
     """
     from ._registry import get
     return get("gamut_data", name, **kwargs)

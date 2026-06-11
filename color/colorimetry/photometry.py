@@ -74,7 +74,21 @@ def photopic_luminous_efficiency_function(
 ) -> SpectralDistribution:
     """Return a photopic luminous efficiency function.
 
-    By default, this returns ``standard_observers.luminous_efficiency/vl1924_1nm``.
+    Parameters
+    ----------
+    name
+        Dataset name in ``standard_observers.luminous_efficiency``.
+
+    Returns
+    -------
+    SpectralDistribution
+        Photopic luminous efficiency function.
+
+    Notes
+    -----
+    The default is CIE 1924 ``V(lambda)``. Use
+    ``photopic_luminous_*`` wrappers when you also want the matched
+    ``K_m=683 lm/W`` default.
     """
     return _load_lef(name)
 
@@ -84,8 +98,20 @@ def scotopic_luminous_efficiency_function(
 ) -> SpectralDistribution:
     """Return a scotopic luminous efficiency function.
 
-    By default, this returns
-    ``standard_observers.luminous_efficiency/scotopic_v_1nm``.
+    Parameters
+    ----------
+    name
+        Dataset name in ``standard_observers.luminous_efficiency``.
+
+    Returns
+    -------
+    SpectralDistribution
+        Scotopic luminous efficiency function.
+
+    Notes
+    -----
+    Use ``scotopic_luminous_*`` wrappers when you also want the matched
+    ``K_m=1700 lm/W`` default.
     """
     return _load_lef(name)
 
@@ -98,7 +124,35 @@ def luminous_flux(
 ) -> float | np.ndarray:
     """Return luminous flux using the given luminous efficiency function.
 
-    If ``lef`` is omitted, the CIE 1924 photopic ``V(lambda)`` function is used.
+    Parameters
+    ----------
+    spectrum
+        Spectral distribution or multi-spectral distribution.
+    lef
+        Luminous efficiency function as a dataset name or
+        ``SpectralDistribution``. If omitted, photopic ``V(lambda)`` is used.
+    K_m
+        Maximum luminous efficacy constant in lm/W.
+
+    Returns
+    -------
+    float or ndarray
+        Luminous flux-like integrated quantity. Multi-channel spectra return
+        one value per channel.
+
+    Notes
+    -----
+    This is the generic entry for custom LEFs. Prefer
+    ``photopic_luminous_flux`` or ``scotopic_luminous_flux`` for standard
+    matched defaults.
+
+    Examples
+    --------
+    >>> from color.generators import gaussian_spd
+    >>> from color.spectra import from_columns
+    >>> sd = from_columns(gaussian_spd(), y="spd")
+    >>> luminous_flux(sd) > 0
+    True
     """
     lef_sd = photopic_luminous_efficiency_function() if lef is None else _load_lef(lef)
     flux = float(K_m) * _integrate_product(spectrum, lef_sd)
@@ -111,7 +165,10 @@ def luminous_efficiency(
 ) -> float | np.ndarray:
     """Return luminous efficiency using the given luminous efficiency function.
 
-    If ``lef`` is omitted, the CIE 1924 photopic ``V(lambda)`` function is used.
+    Notes
+    -----
+    The value is the integral of ``spectrum * LEF`` divided by the integral of
+    ``spectrum``. A zero spectral integral raises ``ZeroDivisionError``.
     """
     lef_sd = photopic_luminous_efficiency_function() if lef is None else _load_lef(lef)
     numerator = _integrate_product(spectrum, lef_sd)
@@ -128,7 +185,13 @@ def luminous_efficacy(
     *,
     K_m: float = DEFAULT_PHOTOPIC_K_M,
 ) -> float | np.ndarray:
-    """Return luminous efficacy in lm/W using the given LEF."""
+    """Return luminous efficacy in lm/W using the given LEF.
+
+    Notes
+    -----
+    This is ``K_m * luminous_efficiency(...)``. Use the photopic/scotopic
+    wrappers for matched standard constants.
+    """
     efficacy = float(K_m) * np.asarray(luminous_efficiency(spectrum, lef))
     return _as_scalar_or_array(np.atleast_1d(efficacy), spectrum)
 
@@ -139,7 +202,12 @@ def photopic_luminous_flux(
     lef: LuminousEfficiencySource = DEFAULT_PHOTOPIC_LEF,
     K_m: float = DEFAULT_PHOTOPIC_K_M,
 ) -> float | np.ndarray:
-    """Return photopic luminous flux with matched default LEF and ``K_m``."""
+    """Return photopic luminous flux with matched default LEF and ``K_m``.
+
+    Notes
+    -----
+    The defaults pair CIE 1924 ``V(lambda)`` with ``K_m=683 lm/W``.
+    """
     return luminous_flux(spectrum, lef, K_m=K_m)
 
 
@@ -149,7 +217,13 @@ def scotopic_luminous_flux(
     lef: LuminousEfficiencySource = DEFAULT_SCOTOPIC_LEF,
     K_m: float = DEFAULT_SCOTOPIC_K_M,
 ) -> float | np.ndarray:
-    """Return scotopic luminous flux with matched default LEF and ``K_m``."""
+    """Return scotopic luminous flux with matched default LEF and ``K_m``.
+
+    Notes
+    -----
+    The defaults pair the scotopic luminous efficiency function with
+    ``K_m=1700 lm/W``.
+    """
     return luminous_flux(spectrum, lef, K_m=K_m)
 
 

@@ -94,7 +94,33 @@ def planckian_table_Ohno2013(
     end: float = CCT_MAXIMAL_OHNO2013,
     spacing: float = CCT_DEFAULT_SPACING_OHNO2013,
 ) -> np.ndarray:
-    """Generate the Planckian uv table used by Ohno (2013)."""
+    """Generate the Planckian uv table used by Ohno (2013).
+
+    Parameters
+    ----------
+    cmfs
+        XYZ CMFs as a dataset name or ``MultiSpectralDistribution``.
+    start, end
+        CCT range in kelvins.
+    spacing
+        Multiplicative temperature spacing. Values closer to ``1`` create a
+        denser table.
+
+    Returns
+    -------
+    ndarray
+        Table columns ``(CCT, u, v)``.
+
+    Notes
+    -----
+    The table is generated from blackbody SPDs integrated through the given
+    CMFs and cached internally for repeated calls.
+
+    Examples
+    --------
+    >>> planckian_table_Ohno2013(start=1000, end=1100, spacing=1.01).shape[1]
+    3
+    """
     start = float(as_finite_array(start, name="start"))
     end = float(as_finite_array(end, name="end"))
     spacing = float(as_finite_array(spacing, name="spacing"))
@@ -125,7 +151,33 @@ def uv_to_CCT_Ohno2013(
     end: float = CCT_MAXIMAL_OHNO2013,
     spacing: float = CCT_DEFAULT_SPACING_OHNO2013,
 ) -> np.ndarray:
-    """Return CCT and Duv from CIE 1960 UCS uv using Ohno (2013)."""
+    """Return CCT and Duv from CIE 1960 UCS uv using Ohno (2013).
+
+    Parameters
+    ----------
+    uv
+        CIE 1960 UCS coordinates with final-axis shape ``(..., 2)``.
+    cmfs
+        XYZ CMFs used to generate the Planckian table.
+    start, end, spacing
+        Planckian-table CCT range and sampling density.
+
+    Returns
+    -------
+    ndarray
+        Values with final-axis ``(CCT, Duv)``.
+
+    Notes
+    -----
+    Ohno 2013 uses a dense Planckian table and local geometric/parabolic
+    correction. It is typically more precise than Robertson 1968, at higher
+    computational cost.
+
+    Examples
+    --------
+    >>> uv_to_CCT_Ohno2013([0.1978, 0.3122]).shape
+    (2,)
+    """
     uv_arr = as_last_axis_pairs(uv, name="uv")
     uv_flat = uv_arr.reshape(-1, 2)
     table = planckian_table_Ohno2013(
@@ -200,7 +252,13 @@ def CCT_to_uv_Ohno2013(
     *,
     cmfs: str | MultiSpectralDistribution = DEFAULT_CMFS_OHNO2013,
 ) -> np.ndarray:
-    """Return CIE 1960 UCS uv from CCT and Duv using Ohno (2013)."""
+    """Return CIE 1960 UCS uv from CCT and Duv using Ohno (2013).
+
+    Notes
+    -----
+    The input final axis is ``(CCT, Duv)``. The result is constructed from the
+    local Planckian point and normal direction in CIE 1960 UCS.
+    """
     cct_duv = as_last_axis_pairs(CCT_Duv, name="CCT_Duv")
     CCT = cct_duv[..., 0]
     D_uv = cct_duv[..., 1]

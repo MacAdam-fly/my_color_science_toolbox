@@ -147,7 +147,44 @@ def recover_reflectance_from_XYZ(
     labels: Sequence[str] | None = None,
     **method_options,
 ) -> Union[SpectralDistribution, MultiSpectralDistribution]:
-    """Recover bounded smooth reflectance spectra from XYZ values."""
+    """Recover bounded reflectance spectra from XYZ values.
+
+    Parameters
+    ----------
+    XYZ
+        Target XYZ tristimulus values on the project Y=100 scale, with shape
+        ``(3,)`` or ``(n, 3)``.
+    cmfs
+        XYZ colour matching functions as a dataset name or spectral object.
+    illuminant
+        Illuminant SPD as a dataset name or spectral object.
+    shape
+        Optional recovery wavelength sampling. Library-based methods require
+        the library wavelengths to match the recovery matrix wavelengths.
+    method
+        Reflectance recovery method name or reflectance recovery options object.
+    labels
+        Optional labels for batch recovery outputs.
+    **method_options
+        Method-specific keyword options for string method calls.
+
+    Returns
+    -------
+    SpectralDistribution or MultiSpectralDistribution
+        Recovered reflectance for one target or a multi-channel object for
+        multiple targets.
+
+    Notes
+    -----
+    This function solves for reflectance ``r`` in the same forward model used by
+    ``reflectance_to_XYZ``. Do not recover an effective spectrum and divide by
+    the illuminant when reflectance bounds or material-like curves matter.
+
+    Examples
+    --------
+    >>> recover_reflectance_from_XYZ([24.0, 20.0, 18.0]).metadata["recovery_kind"]
+    'reflectance'
+    """
     targets, is_single = as_recovery_targets(XYZ, name="XYZ")
     method_name, config = _normalise_reflectance_method(method, method_options)
     _resolved, solver = resolve_reflectance_recovery_method(method_name)
@@ -207,7 +244,8 @@ def recover_reflectance_from_XYZ(
         recovery_kind="reflectance",
     )
     if uses_library:
-        assert library is not None
+        if library is None:
+            raise ValueError("library is required for library-based recovery methods")
         metadata.update(
             {
                 "library_datasets": library.metadata.get("datasets"),
@@ -264,7 +302,32 @@ def recover_reflectance_from_xyY(
     xyY: Sequence[float] | np.ndarray,
     **kwargs,
 ) -> Union[SpectralDistribution, MultiSpectralDistribution]:
-    """Recover bounded smooth reflectance spectra from xyY values."""
+    """Recover bounded reflectance spectra from xyY values.
+
+    Parameters
+    ----------
+    xyY
+        Target ``x, y, Y`` values with shape ``(3,)`` or ``(n, 3)``. ``Y`` uses
+        the project Y=100 convention.
+    **kwargs
+        Forwarded to ``recover_reflectance_from_XYZ`` after converting xyY to
+        XYZ.
+
+    Returns
+    -------
+    SpectralDistribution or MultiSpectralDistribution
+        Recovered reflectance.
+
+    Notes
+    -----
+    This is a convenience wrapper; illuminant, CMFs and method semantics are
+    identical to ``recover_reflectance_from_XYZ``.
+
+    Examples
+    --------
+    >>> recover_reflectance_from_xyY([0.32, 0.31, 20.0]).metadata["recovery_kind"]
+    'reflectance'
+    """
     xyy, _ = as_recovery_targets(xyY, name="xyY")
     XYZ = xyY_to_XYZ(xyy)
     if np.asarray(xyY, dtype=np.float64).ndim == 1:

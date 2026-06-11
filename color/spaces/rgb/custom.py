@@ -124,7 +124,46 @@ def RGB_colourspace_from_primaries_xy(
     white_name: str = "custom",
     reference: str = "",
 ) -> RGBColorSpace:
-    """Create a three-primary RGB colour space from primary xy coordinates."""
+    """Create a three-primary RGB colour space from primary xy coordinates.
+
+    The RGB-to-XYZ matrix is solved from the three primary chromaticities and a
+    chosen whitepoint. Passing ``whitepoint_xy`` creates a Y=100 whitepoint;
+    passing ``whitepoint_XYZ`` preserves the supplied XYZ scale and warns when
+    that scale is outside the project Y=100 reference domain.
+
+    Parameters
+    ----------
+    name
+        Custom RGB colour-space name.
+    primaries_xy
+        Three primary chromaticities with shape ``(3, 2)``.
+    whitepoint_xy
+        Whitepoint chromaticity used to build a Y=100 whitepoint.
+    whitepoint_XYZ
+        Whitepoint tristimulus values; preserves the supplied XYZ scale.
+    transfer
+        Named transfer function or gamma descriptor.
+
+    Returns
+    -------
+    RGBColorSpace
+        Unregistered custom RGB colour-space object.
+
+    Notes
+    -----
+    Exactly one of ``whitepoint_xy`` and ``whitepoint_XYZ`` must be provided.
+    Register the returned object before using its name in ``convert_color``.
+
+    Examples
+    --------
+    >>> space = RGB_colourspace_from_primaries_xy(
+    ...     "Example RGB",
+    ...     [[0.64, 0.33], [0.30, 0.60], [0.15, 0.06]],
+    ...     whitepoint_xy=[0.3127, 0.3290],
+    ... )
+    >>> space.matrix_RGB_to_XYZ.shape
+    (3, 3)
+    """
     primaries = _as_primaries_xy(primaries_xy)
     if whitepoint_xy is None and whitepoint_XYZ is None:
         raise ValueError("either whitepoint_xy or whitepoint_XYZ must be provided")
@@ -160,7 +199,41 @@ def RGB_colourspace_from_primaries_XYZ(
     reference: str = "",
     warn_if_non_Y100: bool = True,
 ) -> RGBColorSpace:
-    """Create a three-primary RGB colour space from measured primary XYZ values."""
+    """Create a three-primary RGB colour space from measured primary XYZ values.
+
+    Each row of ``primaries_XYZ`` is the measured R, G, or B primary stimulus.
+    The whitepoint is the sum of the three primary rows and no re-balancing or
+    normalization is applied, which makes this constructor suitable for
+    device-measured primaries that are already in a shared XYZ scale.
+
+    Parameters
+    ----------
+    name
+        Custom RGB colour-space name.
+    primaries_XYZ
+        Three measured primary tristimulus rows with shape ``(3, 3)``.
+    transfer
+        Named transfer function or gamma descriptor.
+    warn_if_non_Y100
+        Warn when the summed whitepoint is outside the project Y=100 domain.
+
+    Returns
+    -------
+    RGBColorSpace
+        Unregistered custom RGB colour-space object.
+
+    Notes
+    -----
+    This constructor assumes the primaries have already been measured or
+    balanced consistently. It does not normalize the summed whitepoint.
+
+    Examples
+    --------
+    >>> primaries = [[41.2, 21.3, 1.9], [35.8, 71.5, 11.9], [18.0, 7.2, 95.0]]
+    >>> space = RGB_colourspace_from_primaries_XYZ("Measured RGB", primaries)
+    >>> space.white_xy.shape
+    (2,)
+    """
     primaries = np.asarray(primaries_XYZ, dtype=np.float64)
     if primaries.shape != (3, 3):
         raise ValueError(f"primaries_XYZ must have shape (3, 3), got {primaries.shape}")

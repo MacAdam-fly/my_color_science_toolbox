@@ -9,7 +9,30 @@ import numpy as np
 
 @dataclass(frozen=True)
 class SpectralShape:
-    """Regular wavelength sampling domain."""
+    """Regular wavelength sampling domain.
+
+    Parameters
+    ----------
+    start, end
+        Inclusive wavelength bounds, usually in nanometres.
+    interval
+        Positive sampling interval.
+
+    Returns
+    -------
+    SpectralShape
+        Immutable regular sampling descriptor.
+
+    Notes
+    -----
+    ``wavelengths`` includes the end value, appending it when the interval
+    does not land exactly on ``end``.
+
+    Examples
+    --------
+    >>> SpectralShape(400, 700, 10).wavelengths.shape
+    (31,)
+    """
 
     start: float
     end: float

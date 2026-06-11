@@ -71,7 +71,31 @@ def delta_E(
     method: str = "CIE 2000",
     **kwargs: Any,
 ) -> np.ndarray | np.float64:
-    """Return Delta E between two arrays using a registered method."""
+    """Dispatch a colour-difference calculation by method name.
+
+    Parameters
+    ----------
+    a, b
+        Coordinate arrays with final axis length 3. Inputs must already be in
+        the same colour space required by ``method``.
+    method
+        Registered method name, e.g. ``"CIE 2000"``, ``"CAM16-UCS"``,
+        ``"Oklab"`` or ``"Jzazbz"``.
+    **kwargs
+        Method-specific options such as ``textiles`` for CIE 1994/2000 or
+        ``l``/``c`` for CMC.
+
+    Returns
+    -------
+    ndarray or numpy scalar
+        Broadcast colour-difference values.
+
+    Notes
+    -----
+    This dispatcher does not infer input colour space, whitepoint or viewing
+    conditions. Use ``color.spaces`` first when RGB/XYZ/Lab/CAM/Oklab/Jzazbz
+    conversion is required.
+    """
     try:
         _, function = resolve_method(method, _METHOD_INDEX, DELTA_E_METHODS)
     except ValueError as exc:

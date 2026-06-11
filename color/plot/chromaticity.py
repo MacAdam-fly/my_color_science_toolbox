@@ -191,7 +191,30 @@ def chromaticity_background_image(
     samples: int = 256,
     normalise: bool = True,
 ) -> np.ndarray:
-    """Return a clipped sRGB image for a chromaticity diagram background."""
+    """Return a clipped sRGB preview image for a chromaticity background.
+
+    Parameters
+    ----------
+    method
+        Chromaticity diagram method: ``"CIE 1931"``, ``"CIE 1960 UCS"`` or
+        ``"CIE 1976 UCS"``.
+    samples
+        Background image width and height in pixels.
+    normalise
+        Whether to normalise each preview pixel by its maximum RGB channel
+        before clipping.
+
+    Returns
+    -------
+    ndarray
+        RGB image with shape ``(samples, samples, 3)`` and values in
+        ``[0, 1]``.
+
+    Notes
+    -----
+    The colours are visual aids produced through xyY -> XYZ -> clipped sRGB.
+    They are not strict colour-managed renderings of all chromaticities.
+    """
     if samples <= 1:
         raise ValueError("samples must be greater than 1")
     definition = _resolve_chromaticity_method(method)
@@ -289,7 +312,15 @@ def plot_locus_wavelength_labels(
     offset_scale: float = 0.025,
     color: str = "0.25",
 ):
-    """Plot wavelength labels along a spectral locus."""
+    """Plot wavelength labels along a spectral locus.
+
+    Notes
+    -----
+    The default recommended usage is through
+    ``plot_cie1931_diagram(show_wavelength_labels=True)`` or the UCS diagram
+    equivalents. Hand-picked labels usually work better than fixed wavelength
+    intervals because locus geometry is highly non-uniform.
+    """
     wavelengths_arr = np.asarray(wavelengths, dtype=np.float64)
     coordinates_arr = np.asarray(coordinates, dtype=np.float64)
     if wavelengths_arr.ndim != 1:
@@ -343,7 +374,18 @@ def plot_chromaticity_background(
     alpha: float = 1.0,
     normalise: bool = True,
 ):
-    """Plot a clipped chromaticity diagram background."""
+    """Plot a clipped chromaticity diagram background.
+
+    Returns
+    -------
+    fig, ax
+        Matplotlib figure and axes.
+
+    Notes
+    -----
+    The background image is clipped to the spectral locus polygon. It is a
+    visual preview, not a colour-management transform.
+    """
     from matplotlib.patches import Polygon
 
     definition = _resolve_chromaticity_method(method)
@@ -409,7 +451,29 @@ def plot_cie1931_diagram(
     wavelength_label_range: tuple[float, float] = (400.0, 700.0),
     wavelength_label_fontsize: float = 7.0,
 ):
-    """Plot the CIE 1931 xy chromaticity diagram."""
+    """Plot the CIE 1931 xy chromaticity diagram.
+
+    Parameters
+    ----------
+    ax
+        Optional existing axes.
+    whitepoint_xy
+        Optional whitepoint marker. Pass ``None`` to suppress it.
+    show_background
+        Whether to draw an approximate clipped sRGB background.
+    show_wavelength_labels
+        Whether to annotate selected locus wavelengths.
+
+    Returns
+    -------
+    fig, ax
+        Matplotlib figure and axes.
+
+    Notes
+    -----
+    No title is applied by default. In journal style, prefer panel labels and
+    captions over axes titles.
+    """
     using_existing_axes = ax is not None
     if show_background:
         fig, ax = plot_xy_chromaticity_background(
@@ -557,7 +621,27 @@ def plot_cie1960_ucs_diagram(
     wavelength_label_range: tuple[float, float] = (400.0, 700.0),
     wavelength_label_fontsize: float = 7.0,
 ):
-    """Plot the CIE 1960 UCS uv chromaticity diagram."""
+    """Plot the CIE 1960 UCS uv chromaticity diagram.
+
+    Parameters
+    ----------
+    ax
+        Optional existing axes.
+    whitepoint_uv
+        Optional CIE 1960 UCS whitepoint marker. Pass ``None`` to suppress it.
+    show_background
+        Whether to draw an approximate clipped sRGB background.
+
+    Returns
+    -------
+    fig, ax
+        Matplotlib figure and axes.
+
+    Notes
+    -----
+    CIE 1960 UCS ``uv`` is the preferred chromaticity plane for CCT + Duv
+    visualisation.
+    """
     return _plot_chromaticity_locus(
         method="CIE 1960 UCS",
         ax=ax,
@@ -595,7 +679,27 @@ def plot_cie1976_ucs_diagram(
     wavelength_label_range: tuple[float, float] = (400.0, 700.0),
     wavelength_label_fontsize: float = 7.0,
 ):
-    """Plot the CIE 1976 UCS u'v' chromaticity diagram."""
+    """Plot the CIE 1976 UCS u'v' chromaticity diagram.
+
+    Parameters
+    ----------
+    ax
+        Optional existing axes.
+    whitepoint_upvp
+        Optional CIE 1976 UCS whitepoint marker. Pass ``None`` to suppress it.
+    show_background
+        Whether to draw an approximate clipped sRGB background.
+
+    Returns
+    -------
+    fig, ax
+        Matplotlib figure and axes.
+
+    Notes
+    -----
+    CIE 1976 ``u'v'`` is useful for Luv-related chromaticity displays. It is
+    still a two-dimensional chromaticity diagram, not full Luv.
+    """
     return _plot_chromaticity_locus(
         method="CIE 1976 UCS",
         ax=ax,
@@ -626,7 +730,13 @@ def plot_chromaticity_points(
     title: str | None = None,
     **kwargs,
 ):
-    """Plot chromaticity points on an existing or new axes."""
+    """Plot chromaticity points on an existing or new axes.
+
+    Notes
+    -----
+    This helper only draws points and optional text labels. Use a diagram
+    function first when you need the spectral locus background.
+    """
     fig, ax = plot_points(
         xy,
         ax=ax,

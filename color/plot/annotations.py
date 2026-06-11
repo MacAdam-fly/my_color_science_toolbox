@@ -18,7 +18,27 @@ def panel_label(
     va: str = "bottom",
     **kwargs: Any,
 ) -> Any:
-    """Add a journal-style panel label to one axes."""
+    """Add a journal-style panel label to one axes.
+
+    Parameters
+    ----------
+    ax
+        Matplotlib axes.
+    label
+        Panel label text, usually ``"a"``, ``"b"`` and so on.
+    x, y
+        Axes-relative label position.
+
+    Returns
+    -------
+    Text
+        Matplotlib text artist.
+
+    Notes
+    -----
+    Panel labels are intended for multi-panel scientific figures. They should
+    not be used as long descriptive titles.
+    """
     if fontsize is None:
         import matplotlib.pyplot as plt
 
@@ -88,7 +108,13 @@ def add_panel_labels(
     y: float = 1.04,
     **kwargs: Any,
 ) -> list[Any]:
-    """Add panel labels to a sequence/grid of axes and return text artists."""
+    """Add panel labels to a sequence/grid of axes and return text artists.
+
+    Notes
+    -----
+    If labels are omitted, labels are generated as ``a, b, c, ...`` or
+    uppercase equivalents when ``case="upper"``.
+    """
     flat_axes = _flatten_axes(axes)
     if labels is None:
         labels = _default_panel_labels(len(flat_axes), case=case)

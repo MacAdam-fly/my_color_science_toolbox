@@ -293,8 +293,25 @@ def available_palettes() -> tuple[str, ...]:
 def palette(name: str = "journal") -> tuple[str, ...]:
     """Return a finite tuple of colours for *name*.
 
+    Parameters
+    ----------
+    name
+        Palette name: ``"journal"``, ``"presentation"`` or ``"monochrome"``.
+
+    Returns
+    -------
+    tuple[str, ...]
+        Finite colour sequence.
+
+    Notes
+    -----
     This is useful when you need direct colour values for annotations, fills,
     or external plotting libraries.
+
+    Examples
+    --------
+    >>> len(palette("monochrome")) > 0
+    True
     """
     if name not in _COLOUR_CYCLES:
         supported = ", ".join(available_palettes())
@@ -305,6 +322,8 @@ def palette(name: str = "journal") -> tuple[str, ...]:
 def colour_cycle(name: str = "journal"):
     """Return an infinite cycle of plotting colours.
 
+    Notes
+    -----
     This keeps the original British-English function name for compatibility.
     """
     return cycle(palette(name))
@@ -384,6 +403,25 @@ def style_rcparams(
 ) -> dict[str, Any]:
     """Return a copy of rcParams for a named plotting style.
 
+    Parameters
+    ----------
+    style
+        Style name: ``"journal"``, ``"journal_double"``, ``"presentation"``
+        or ``"monochrome"``.
+    font_scale, line_scale
+        Multipliers applied to font-related and line/marker-related rcParams.
+    palette_name
+        Optional palette override.
+    rc
+        Optional rcParams override applied last.
+
+    Returns
+    -------
+    dict
+        Independent rcParams mapping.
+
+    Notes
+    -----
     This is the safe public way to inspect or reuse a style dictionary.  The
     returned mapping is independent from ``PLOT_STYLE_PRESETS``.
     """
@@ -406,6 +444,28 @@ def plot_style(
     rc: Mapping[str, Any] | None = None,
 ) -> Iterator[None]:
     """Temporarily apply a named plotting style.
+
+    Parameters
+    ----------
+    style
+        Style name.
+    font_scale, line_scale
+        Local size multipliers.
+    palette_name
+        Optional palette override.
+    rc
+        Optional rcParams override applied last.
+
+    Returns
+    -------
+    contextmanager
+        Context manager that restores previous Matplotlib settings on exit.
+
+    Notes
+    -----
+    The style changes Matplotlib defaults only. Explicit arguments passed to
+    plotting functions, such as ``colors`` or ``linewidth``, still take
+    precedence.
 
     Examples
     --------
@@ -432,7 +492,13 @@ def set_plot_style(
     palette_name: str | None = None,
     rc: Mapping[str, Any] | None = None,
 ) -> None:
-    """Apply a named plotting style to global Matplotlib rcParams."""
+    """Apply a named plotting style to global Matplotlib rcParams.
+
+    Notes
+    -----
+    This permanently mutates the active Matplotlib session. Prefer
+    ``plot_style`` for scripts and examples where local scoping is cleaner.
+    """
     import matplotlib.pyplot as plt
 
     plt.rcParams.update(style_rcparams(style, font_scale=font_scale, line_scale=line_scale, palette_name=palette_name, rc=rc))

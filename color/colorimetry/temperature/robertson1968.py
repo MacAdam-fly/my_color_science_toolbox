@@ -98,7 +98,28 @@ def _uv_to_CCT_Robertson1968_single(uv: np.ndarray) -> np.ndarray:
 
 
 def uv_to_CCT_Robertson1968(uv: Sequence[float] | np.ndarray) -> np.ndarray:
-    """Return CCT and Duv from CIE 1960 UCS uv using Robertson (1968)."""
+    """Return CCT and Duv from CIE 1960 UCS uv using Robertson (1968).
+
+    Parameters
+    ----------
+    uv
+        CIE 1960 UCS coordinates with final-axis shape ``(..., 2)``.
+
+    Returns
+    -------
+    ndarray
+        Values with final-axis ``(CCT, Duv)``.
+
+    Notes
+    -----
+    Robertson 1968 uses a tabulated set of iso-temperature lines. It is fast
+    and stable, but less dense than the Ohno 2013 Planckian-table method.
+
+    Examples
+    --------
+    >>> uv_to_CCT_Robertson1968([0.1978, 0.3122]).shape
+    (2,)
+    """
     uv_arr = as_last_axis_pairs(uv, name="uv")
     result = [_uv_to_CCT_Robertson1968_single(item) for item in uv_arr.reshape(-1, 2)]
     return np.reshape(result, uv_arr.shape)
@@ -147,7 +168,13 @@ def _CCT_to_uv_Robertson1968_single(CCT_Duv: np.ndarray) -> np.ndarray:
 
 
 def CCT_to_uv_Robertson1968(CCT_Duv: Sequence[float] | np.ndarray) -> np.ndarray:
-    """Return CIE 1960 UCS uv from CCT and Duv using Robertson (1968)."""
+    """Return CIE 1960 UCS uv from CCT and Duv using Robertson (1968).
+
+    Notes
+    -----
+    The inverse follows Robertson's iso-temperature-line geometry. The input
+    final axis is ``(CCT, Duv)``.
+    """
     cct_duv = as_last_axis_pairs(CCT_Duv, name="CCT_Duv")
     result = [
         _CCT_to_uv_Robertson1968_single(item) for item in cct_duv.reshape(-1, 2)

@@ -28,7 +28,34 @@ SpectralDict = Dict[str, np.ndarray]
 
 @dataclass(frozen=True)
 class DatasetEntry:
-    """Immutable descriptor for one dataset."""
+    """Immutable descriptor for one registered static dataset.
+
+    Parameters
+    ----------
+    category, name
+        Registry category and category-local dataset name. Both are resolved
+        with resource-name canonicalisation.
+    description, source
+        Human-readable description and provenance.
+    file_path
+        Backing static CSV/XLS/XLSX file path.
+    parser_fn
+        Optional parser for special static file formats. It receives
+        ``file_path`` as its first argument.
+    columns
+        Explicit column names. These take priority over file headers.
+    read_options
+        Generic reader options such as ``header``, ``skiprows``, ``usecols``,
+        ``sheet`` and ``coerce_numeric``.
+    metadata
+        Descriptive metadata. It does not affect loading behavior.
+
+    Notes
+    -----
+    ``DatasetEntry`` describes static data only. Formula-generated data should
+    be implemented in ``color.generators`` instead of being hidden in
+    ``parser_fn`` or ``metadata``.
+    """
 
     category: str
     """Top-level group: ``'illuminants'``, ``'standard_observers'``, etc."""
@@ -110,7 +137,23 @@ def _resolve_category(category: str) -> Optional[str]:
 
 
 def register(entry: DatasetEntry) -> None:
-    """Add a dataset to the global registry.  Overwrites if already present."""
+    """Register a static dataset entry.
+
+    Parameters
+    ----------
+    entry
+        Dataset descriptor to add to the global registry.
+
+    Returns
+    -------
+    None
+
+    Notes
+    -----
+    Registration checks canonical category/name collisions. ``read_options``
+    is validated against the supported generic reader keys; descriptive
+    metadata must stay in ``metadata`` and cannot control file reading.
+    """
     unknown_options = set(entry.read_options) - _READ_OPTION_KEYS
     if unknown_options:
         valid = ", ".join(sorted(_READ_OPTION_KEYS))
@@ -208,11 +251,36 @@ def _readonly_copy(data: SpectralDict) -> SpectralDict:
 # ---------------------------------------------------------------------------
 
 def get(category: str, name: str, **kwargs: Any) -> SpectralDict:
-    """Return dataset contents (lazy-loaded and cached).
+    """Load a registered static dataset as raw read-only arrays.
 
-    Results are cached after first read and returned as read-only copies.
-    Datasets are cached per call-parameter set (e.g. sheet name or custom
-    parser options).
+    Parameters
+    ----------
+    category, name
+        Registered category and dataset name. Resource-name canonicalisation
+        makes minor spelling differences, separators and ``0.1``/``0p1``
+        resource tokens resolvable.
+    **kwargs
+        Extra parameters forwarded to a custom ``parser_fn`` or generic Excel
+        reader, for example ``sheet=...``.
+
+    Returns
+    -------
+    dict[str, ndarray]
+        Raw column mapping. Arrays are read-only copies; copy an array before
+        editing it.
+
+    Notes
+    -----
+    Results are lazy-loaded, cached after first read, and cached per
+    call-parameter set. This function does not wrap data as
+    ``SpectralDistribution`` objects; use ``color.spectra`` for object
+    wrappers, interpolation and arithmetic.
+
+    Examples
+    --------
+    >>> d65 = get("illuminants", "D65")
+    >>> "wavelength" in d65
+    True
     """
     from ._utils import attest
 
@@ -243,7 +311,19 @@ def get(category: str, name: str, **kwargs: Any) -> SpectralDict:
 
 
 def list_datasets(category: Optional[str] = None) -> List[str]:
-    """List registered dataset names, optionally filtered by category."""
+    """List registered dataset names.
+
+    Parameters
+    ----------
+    category
+        Optional category filter. Category aliases are accepted.
+
+    Returns
+    -------
+    list[str]
+        Sorted dataset names. When ``category`` is unknown an empty list is
+        returned.
+    """
     if category is not None:
         resolved_category = _resolve_category(category)
         if resolved_category is None:
@@ -253,7 +333,7 @@ def list_datasets(category: Optional[str] = None) -> List[str]:
 
 
 def list_categories() -> List[str]:
-    """Return all registered category names."""
+    """Return all registered dataset category names."""
     return sorted({c for c, _ in _REGISTRY})
 
 
@@ -262,12 +342,22 @@ def clear_cache(category: Optional[str] = None, name: Optional[str] = None) -> i
 
     Parameters
     ----------
-    category : str, optional
+    category
         If given, clear only cache entries in this category.
-    name : str, optional
+    name
         If given with *category*, clear only cache entries for that dataset
         name.  Passing *name* without *category* is ambiguous and raises
         ``ValueError``.
+
+    Returns
+    -------
+    int
+        Number of cached call-parameter entries removed.
+
+    Notes
+    -----
+    Clearing cache does not unregister datasets. It only forces the next
+    ``get(...)`` call to re-read the backing file or parser output.
     """
     if name is not None and category is None:
         raise ValueError("name can only be used together with category")
@@ -294,7 +384,7 @@ def clear_cache(category: Optional[str] = None, name: Optional[str] = None) -> i
 
 
 def describe(category: str, name: str) -> DatasetEntry:
-    """Return the metadata entry for a dataset without loading it."""
+    """Return a dataset entry without loading the backing data."""
     key = _resolve_key(category, name)
     entry = _REGISTRY.get(key)
     if entry is None:

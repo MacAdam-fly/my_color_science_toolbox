@@ -44,7 +44,33 @@ def _spow(value: np.ndarray, exponent: float) -> np.ndarray:
 
 
 def XYZ_to_IPT(XYZ_D65_referred: Sequence[float] | np.ndarray) -> np.ndarray:
-    """Convert D65-referred CIE XYZ values on the Y=100 scale to IPT values."""
+    """Convert D65-referred CIE XYZ values on the Y=100 scale to IPT values.
+
+    IPT is implemented as a D65-referred space in this package. Adapt non-D65
+    XYZ values explicitly before calling this function or before routing to IPT
+    with ``convert_color``.
+
+    Parameters
+    ----------
+    XYZ_D65_referred
+        D65-referred XYZ values with final axis ``(X, Y, Z)`` on the Y=100
+        scale.
+
+    Returns
+    -------
+    numpy.ndarray
+        IPT values with final axis ``(I, P, T)``.
+
+    Notes
+    -----
+    The IPT nonlinearity uses a sign-preserving power so intermediate
+    out-of-gamut values can remain finite.
+
+    Examples
+    --------
+    >>> XYZ_to_IPT([19.01, 20.0, 21.78]).shape
+    (3,)
+    """
     xyz = to_domain_1(
         as_last_axis_triplets(XYZ_D65_referred, name="XYZ_D65_referred"),
         source_scale="100",
@@ -55,7 +81,31 @@ def XYZ_to_IPT(XYZ_D65_referred: Sequence[float] | np.ndarray) -> np.ndarray:
 
 
 def IPT_to_XYZ(IPT: Sequence[float] | np.ndarray) -> np.ndarray:
-    """Convert IPT values to D65-referred CIE XYZ values on the Y=100 scale."""
+    """Convert IPT values to D65-referred CIE XYZ values on the Y=100 scale.
+
+    The inverse returns XYZ in the project D65 reference domain. It does not
+    adapt the result to any other whitepoint.
+
+    Parameters
+    ----------
+    IPT
+        IPT values with final axis ``(I, P, T)``.
+
+    Returns
+    -------
+    numpy.ndarray
+        D65-referred XYZ values on the Y=100 scale.
+
+    Notes
+    -----
+    Use explicit chromatic adaptation after this function if another reference
+    whitepoint is required.
+
+    Examples
+    --------
+    >>> IPT_to_XYZ([0.5, 0.02, 0.01]).shape
+    (3,)
+    """
     ipt = as_last_axis_triplets(IPT, name="IPT")
     LMS_p = ipt @ MATRIX_IPT_IPT_TO_LMS_P.T
     LMS = _spow(LMS_p, 1.0 / 0.43)
@@ -63,7 +113,13 @@ def IPT_to_XYZ(IPT: Sequence[float] | np.ndarray) -> np.ndarray:
 
 
 def IPT_hue_angle(IPT: Sequence[float] | np.ndarray) -> np.ndarray:
-    """Return the IPT hue angle in degrees in the [0, 360) interval."""
+    """Return the IPT hue angle in degrees in the [0, 360) interval.
+
+    Notes
+    -----
+    The hue is computed from the ``P`` and ``T`` opponent axes. The return shape
+    is the broadcast input shape with the final IPT axis removed.
+    """
     ipt = as_last_axis_triplets(IPT, name="IPT")
     return np.mod(np.degrees(np.arctan2(ipt[..., 2], ipt[..., 1])), 360.0)
 

@@ -107,14 +107,21 @@ def get_color_system(name: str, **kwargs: Any) -> SpectralDict:
 
     Parameters
     ----------
-    name : str
+    name
         ``'munsell_srgb'``.
+    **kwargs
+        Forwarded to the dataset registry.
 
     Returns
     -------
     dict[str, ndarray]
         For Munsell: ``'h'`` is a string array (e.g. ``"10RP"``, ``"2.5R"``),
         all other columns are float arrays.
+
+    Notes
+    -----
+    This reads a static table. It does not implement a general Munsell
+    conversion algorithm.
     """
     from ._registry import get
     return get("color_systems", name, **kwargs)

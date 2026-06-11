@@ -17,7 +17,32 @@ def uv_to_CCT(
     *,
     method: str = "robertson1968",
 ) -> np.ndarray:
-    """Return CCT and Duv from CIE 1960 UCS uv using a named method."""
+    """Return CCT and Duv from CIE 1960 UCS uv using a named method.
+
+    Parameters
+    ----------
+    uv
+        CIE 1960 UCS coordinates with final-axis shape ``(..., 2)``.
+    method
+        CCT algorithm name. Supported values are ``"robertson1968"`` and
+        ``"ohno2013"``.
+
+    Returns
+    -------
+    ndarray
+        Array with final-axis ``(CCT, Duv)``.
+
+    Notes
+    -----
+    ``Duv`` is the signed distance from the Planckian locus in CIE 1960 UCS.
+    Robertson is faster; Ohno uses a denser Planckian table and is usually the
+    more precise path.
+
+    Examples
+    --------
+    >>> uv_to_CCT([0.1978, 0.3122]).shape
+    (2,)
+    """
     method_normalized = normalize_method(method)
     if method_normalized == "robertson1968":
         return uv_to_CCT_Robertson1968(uv)
@@ -31,7 +56,31 @@ def CCT_to_uv(
     *,
     method: str = "robertson1968",
 ) -> np.ndarray:
-    """Return CIE 1960 UCS uv from CCT and Duv using a named method."""
+    """Return CIE 1960 UCS uv from CCT and Duv using a named method.
+
+    Parameters
+    ----------
+    CCT_Duv
+        Values with final-axis ``(CCT, Duv)``.
+    method
+        CCT algorithm name. Supported values are ``"robertson1968"`` and
+        ``"ohno2013"``.
+
+    Returns
+    -------
+    ndarray
+        CIE 1960 UCS ``uv`` coordinates.
+
+    Notes
+    -----
+    The result is built relative to the Planckian locus, not the CIE D-series
+    daylight locus.
+
+    Examples
+    --------
+    >>> CCT_to_uv([6500.0, 0.0]).shape
+    (2,)
+    """
     method_normalized = normalize_method(method)
     if method_normalized == "robertson1968":
         return CCT_to_uv_Robertson1968(CCT_Duv)
@@ -45,7 +94,30 @@ def xy_to_CCT_Duv(
     *,
     method: str = "robertson1968",
 ) -> np.ndarray:
-    """Return CCT and Duv from CIE xy coordinates using a named method."""
+    """Return CCT and Duv from CIE xy coordinates using a named method.
+
+    Parameters
+    ----------
+    xy
+        CIE xy coordinates with final-axis shape ``(..., 2)``.
+    method
+        CCT + Duv method passed to ``uv_to_CCT``.
+
+    Returns
+    -------
+    ndarray
+        Values with final-axis ``(CCT, Duv)``.
+
+    Notes
+    -----
+    This is a convenience wrapper: ``xy`` is first converted to CIE 1960
+    ``uv``, then analysed with ``uv_to_CCT``.
+
+    Examples
+    --------
+    >>> xy_to_CCT_Duv([0.3127, 0.3290]).shape
+    (2,)
+    """
     return uv_to_CCT(xy_to_uv1960(xy), method=method)
 
 
@@ -54,7 +126,30 @@ def CCT_Duv_to_xy(
     *,
     method: str = "robertson1968",
 ) -> np.ndarray:
-    """Return CIE xy coordinates from CCT and Duv using a named method."""
+    """Return CIE xy coordinates from CCT and Duv using a named method.
+
+    Parameters
+    ----------
+    CCT_Duv
+        Values with final-axis ``(CCT, Duv)``.
+    method
+        CCT + Duv method passed to ``CCT_to_uv``.
+
+    Returns
+    -------
+    ndarray
+        CIE xy coordinates with final-axis shape ``(..., 2)``.
+
+    Notes
+    -----
+    This is a convenience wrapper around ``CCT_to_uv`` followed by
+    ``uv1960_to_xy``.
+
+    Examples
+    --------
+    >>> CCT_Duv_to_xy([6500.0, 0.0]).shape
+    (2,)
+    """
     return uv1960_to_xy(CCT_to_uv(CCT_Duv, method=method))
 
 

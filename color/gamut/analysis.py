@@ -20,7 +20,45 @@ from .primaries import DisplayPrimaries
 
 @dataclass(frozen=True)
 class GamutAnalysis:
-    """Summary metrics for one gamut boundary."""
+    """Summary metrics for one analysed gamut boundary.
+
+    Parameters
+    ----------
+    name
+        Human-readable analysis name.
+    boundary
+        Analysed ``GamutBoundary``.
+    xy_area
+        Area of ``boundary.xy_boundary()`` in CIE xy.
+    xy_coverage_rec2020, xy_coverage_pointer, xy_coverage_macadam_d65
+        Directional xy coverage of the fixed reference boundaries.
+    lab_volume
+        Lab/LCHab volume of the analysed boundary.
+    projected_ab_area
+        Area of the Lab ``a*b*`` projected boundary.
+    ring_area
+        Cumulative gamut-ring area at the last stored lightness.
+    volume_coverage_rec2020, volume_coverage_pointer, volume_coverage_macadam_d65
+        Directional Lab volume coverage of fixed reference boundaries.
+    warnings
+        Warning messages emitted while computing volume coverage.
+
+    Returns
+    -------
+    GamutAnalysis
+        Frozen dataclass returned by ``analyze_gamut``.
+
+    Notes
+    -----
+    Coverage fields are one-way metrics: current gamut covers the named
+    reference gamut. They should not be read as symmetric similarity scores.
+
+    Examples
+    --------
+    >>> analysis = analyze_gamut("sRGB", L_values=[0, 50, 100], hue_values=[0, 180, 360])
+    >>> analysis.name
+    'sRGB'
+    """
 
     name: str
     boundary: GamutBoundary
@@ -119,7 +157,41 @@ def analyze_gamut(
     pointer_boundary: GamutBoundary | None = None,
     macadam_d65_boundary: GamutBoundary | None = None,
 ) -> GamutAnalysis:
-    """Return a high-level analysis summary for a gamut."""
+    """Return a high-level gamut analysis summary.
+
+    Parameters
+    ----------
+    gamut
+        RGB colour space name, ``DisplayPrimaries`` object or existing
+        ``GamutBoundary``.
+    name
+        Optional display name for the result.
+    L_values, hue_values, C_upper, iterations
+        Boundary-construction parameters used when ``gamut`` is not already a
+        ``GamutBoundary``.
+    rec2020_boundary, pointer_boundary, macadam_d65_boundary
+        Optional precomputed reference boundaries.
+
+    Returns
+    -------
+    GamutAnalysis
+        Summary containing xy area, Lab volume, projected/ring areas and
+        one-way coverage ratios relative to Rec.2020, Pointer and D65 MacAdam.
+
+    Notes
+    -----
+    Coverage is always directional:
+    ``coverage(current, reference) = current covers reference``. This function
+    does not perform chromatic adaptation. Whitepoint/grid warnings from
+    ``lab_gamut_coverage`` are re-emitted and copied into
+    ``GamutAnalysis.warnings``.
+
+    Examples
+    --------
+    >>> analysis = analyze_gamut("sRGB", L_values=[0, 50, 100], hue_values=[0, 180, 360])
+    >>> analysis.lab_volume >= 0
+    True
+    """
     boundary = _as_boundary(
         gamut,
         L_values=L_values,

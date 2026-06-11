@@ -40,11 +40,36 @@ def _as_whitepoint_XYZ(value: Sequence[float] | np.ndarray) -> np.ndarray:
 
 @dataclass(frozen=True)
 class DisplayPrimaries:
-    """Linear display-primary definition.
+    """Linear display-primary definition in XYZ.
 
-    ``primaries_XYZ`` uses the project-wide ``XYZ`` scale where the reference
-    white commonly has ``Y=100``. Rows are primary stimuli, not chromaticity
-    coordinates.
+    Parameters
+    ----------
+    primaries_XYZ
+        Primary stimuli as an ``(n, 3)`` array in project ``XYZ(Y=100)``
+        scale. Rows are primary XYZ values, not xy chromaticities.
+    names
+        Optional primary names. If omitted, names are generated as
+        ``P0, P1, ...``.
+    whitepoint_XYZ
+        Optional display whitepoint. If omitted, it is the sum of all primary
+        XYZ rows.
+
+    Returns
+    -------
+    DisplayPrimaries
+        Frozen display-primary definition used by gamut solvers.
+
+    Notes
+    -----
+    This object describes the linear primary mixture geometry only. It does
+    not encode RGB transfer functions, display calibration strategy or
+    multi-primary weight preference.
+
+    Examples
+    --------
+    >>> srgb = DisplayPrimaries.from_RGB_colourspace("sRGB")
+    >>> srgb.primaries_XYZ.shape
+    (3, 3)
     """
 
     primaries_XYZ: np.ndarray
@@ -80,7 +105,23 @@ class DisplayPrimaries:
         cls,
         colourspace: str | RGBColorSpace,
     ) -> "DisplayPrimaries":
-        """Build display primaries from a registered RGB colour space."""
+        """Build display primaries from a registered RGB colour space.
+
+        Parameters
+        ----------
+        colourspace
+            RGB colour space name or ``RGBColorSpace`` object.
+
+        Returns
+        -------
+        DisplayPrimaries
+            Primary XYZ rows from the linear ``RGB -> XYZ`` matrix columns.
+
+        Notes
+        -----
+        Transfer functions are ignored here; gamut geometry uses only the
+        linear primary stimuli.
+        """
         rgb_space = get_RGB_colourspace(colourspace)
         return cls(
             primaries_XYZ=rgb_space.matrix_RGB_to_XYZ.T,

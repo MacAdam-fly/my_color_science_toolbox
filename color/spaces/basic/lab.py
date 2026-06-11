@@ -44,7 +44,35 @@ def XYZ_to_Lab(
     *,
     whitepoint_XYZ: Sequence[float] | np.ndarray = DEFAULT_WHITEPOINT_XYZ,
 ) -> np.ndarray:
-    """Convert CIE XYZ values to CIE 1976 Lab values."""
+    """Convert CIE XYZ values to CIE 1976 Lab values.
+
+    ``XYZ`` and ``whitepoint_XYZ`` must use the same numeric scale, normally
+    the project Y=100 scale. The final axis must contain ``X, Y, Z`` and batch
+    dimensions are preserved.
+
+    Parameters
+    ----------
+    XYZ
+        XYZ tristimulus values with final axis ``(X, Y, Z)``.
+    whitepoint_XYZ
+        Reference whitepoint in the same numeric scale as ``XYZ``.
+
+    Returns
+    -------
+    numpy.ndarray
+        Lab values with final axis ``(L*, a*, b*)``.
+
+    Notes
+    -----
+    The default whitepoint is the project D65 XYZ whitepoint on the Y=100
+    scale. Pass an explicit ``whitepoint_XYZ`` for D50 or other reference
+    domains.
+
+    Examples
+    --------
+    >>> XYZ_to_Lab([19.01, 20.0, 21.78]).shape
+    (3,)
+    """
     xyz = as_last_axis_triplets(XYZ, name="XYZ")
     whitepoint = _as_whitepoint(whitepoint_XYZ)
     f_xyz = _f(xyz / whitepoint)
@@ -60,7 +88,34 @@ def Lab_to_XYZ(
     *,
     whitepoint_XYZ: Sequence[float] | np.ndarray = DEFAULT_WHITEPOINT_XYZ,
 ) -> np.ndarray:
-    """Convert CIE 1976 Lab values to CIE XYZ values."""
+    """Convert CIE 1976 Lab values to CIE XYZ values.
+
+    The returned XYZ values use the numeric scale of ``whitepoint_XYZ``. Use the
+    same whitepoint that was used for the forward Lab conversion to preserve a
+    round-trip.
+
+    Parameters
+    ----------
+    Lab
+        Lab values with final axis ``(L*, a*, b*)``.
+    whitepoint_XYZ
+        Reference whitepoint that sets the output XYZ scale.
+
+    Returns
+    -------
+    numpy.ndarray
+        XYZ tristimulus values with final axis ``(X, Y, Z)``.
+
+    Notes
+    -----
+    This inverse does not infer the original whitepoint; callers must pass the
+    same reference whitepoint used by ``XYZ_to_Lab`` when that matters.
+
+    Examples
+    --------
+    >>> Lab_to_XYZ([51.837, 1.320, 1.929]).shape
+    (3,)
+    """
     lab = as_last_axis_triplets(Lab, name="Lab")
     whitepoint = _as_whitepoint(whitepoint_XYZ)
 
@@ -76,7 +131,16 @@ def Lab_to_XYZ(
 
 
 def Lab_to_LCHab(Lab: Sequence[float] | np.ndarray) -> np.ndarray:
-    """Convert CIE 1976 Lab values to cylindrical LCHab values."""
+    """Convert CIE 1976 Lab values to cylindrical LCHab values.
+
+    The output final axis is ``L*, C*ab, h_ab`` with hue in degrees on
+    ``[0, 360)``. Batch dimensions are preserved.
+
+    Notes
+    -----
+    This is a cylindrical coordinate transform inside Lab; no whitepoint or XYZ
+    conversion is involved.
+    """
     lab = as_last_axis_triplets(Lab, name="Lab")
     C = np.hypot(lab[..., 1], lab[..., 2])
     h = np.mod(np.degrees(np.arctan2(lab[..., 2], lab[..., 1])), 360.0)
@@ -84,7 +148,15 @@ def Lab_to_LCHab(Lab: Sequence[float] | np.ndarray) -> np.ndarray:
 
 
 def LCHab_to_Lab(LCHab: Sequence[float] | np.ndarray) -> np.ndarray:
-    """Convert cylindrical LCHab values to CIE 1976 Lab values."""
+    """Convert cylindrical LCHab values to CIE 1976 Lab values.
+
+    The input final axis is ``L*, C*ab, h_ab`` with hue in degrees. Batch
+    dimensions are preserved and the returned final axis is ``L*, a*, b*``.
+
+    Notes
+    -----
+    This is the inverse cylindrical transform for ``Lab_to_LCHab``.
+    """
     lch = as_last_axis_triplets(LCHab, name="LCHab")
     h = np.radians(lch[..., 2])
     a = lch[..., 1] * np.cos(h)

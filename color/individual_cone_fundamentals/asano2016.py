@@ -163,7 +163,50 @@ def asano2016_model_components(
     photopigment_od_deviation: tuple[float, float, float] = (0.0, 0.0, 0.0),
     photopigment_shift_nm: tuple[float, float, float] = (0.0, 0.0, 0.0),
 ) -> GeneratedConeDict:
-    """Return Asano et al. 2016 model components for one observer."""
+    """Return Asano et al. 2016 model components for one observer.
+
+    Parameters
+    ----------
+    wavelength_nm
+        Wavelength samples in nanometres, within the ``390-830 nm`` Asano
+        model range.
+    age
+        Observer age in years. Used by the CIEPO06 ocular media lens model.
+    field_size_degree
+        Observer field size in degrees. It controls average macular density
+        and photopigment optical densities.
+    lens_density_deviation
+        Lens density deviation in percent relative to the Asano average
+        observer.
+    macular_density_deviation
+        Macular density deviation in percent.
+    photopigment_od_deviation
+        L/M/S photopigment optical-density deviations in percent.
+    photopigment_shift_nm
+        L/M/S lambda-max shifts in nanometres.
+
+    Returns
+    -------
+    dict[str, ndarray]
+        Component mapping with ``wavelength``, shifted
+        ``photopigment_absorbance``, ``photopigment_od``,
+        ``retinal_absorptance``, individual ``macular_density`` and
+        ``lens_density``, ``prereceptoral_density``, ``corneal_quantal`` and
+        final ``corneal_energy`` arrays.
+
+    Notes
+    -----
+    Asano 2016 is parameterised as an individual observer model: age, field
+    size and deviation terms derive the component curves from CIE 2006/CIEPO06
+    data. ``corneal_energy`` is the source of the final L/M/S curves returned
+    by ``generate_asano2016_individual_cone_fundamentals``.
+
+    Examples
+    --------
+    >>> components = asano2016_model_components(age=45, field_size_degree=4)
+    >>> components["photopigment_od"].shape
+    (3,)
+    """
     wavelengths = _as_wavelengths(wavelength_nm)
     age = _as_positive_float(age, "age")
     field = _as_positive_float(field_size_degree, "field_size_degree")
@@ -234,7 +277,32 @@ def generate_asano2016_individual_cone_fundamentals(
     photopigment_od_deviation: tuple[float, float, float] = (0.0, 0.0, 0.0),
     photopigment_shift_nm: tuple[float, float, float] = (0.0, 0.0, 0.0),
 ) -> GeneratedConeDict:
-    """Generate Asano et al. 2016 corneal energy LMS cone fundamentals."""
+    """Generate Asano et al. 2016 corneal-energy LMS fundamentals.
+
+    Parameters
+    ----------
+    wavelength_nm
+        Wavelength samples in nanometres, within ``390-830 nm``.
+    age, field_size_degree
+        Observer age and field size controlling the average observer route.
+    lens_density_deviation, macular_density_deviation
+        Prereceptoral density deviations in percent.
+    photopigment_od_deviation
+        L/M/S photopigment optical-density deviations in percent.
+    photopigment_shift_nm
+        L/M/S lambda-max shifts in nanometres.
+
+    Returns
+    -------
+    dict[str, ndarray]
+        Raw mapping with ``"wavelength"``, ``"l"``, ``"m"`` and ``"s"``.
+
+    Notes
+    -----
+    Each LMS channel is peak-normalised to 1. Use
+    ``asano2016_model_components`` when the derived lens, macular,
+    photopigment or retinal/corneal stages need inspection.
+    """
     components = asano2016_model_components(
         wavelength_nm,
         age=age,

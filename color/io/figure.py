@@ -17,7 +17,29 @@ def save_figure(
     close: bool = False,
     **kwargs: Any,
 ) -> Path | Any:
-    """Save a Matplotlib figure with explicit scientific-figure defaults."""
+    """Save a Matplotlib figure with explicit scientific-figure defaults.
+
+    Parameters
+    ----------
+    path
+        Filesystem path or writable file-like object.
+    fig
+        Figure to save. Defaults to the current Matplotlib figure.
+    tight, dpi, transparent, close
+        Common save options. Additional keyword arguments are forwarded to
+        ``Figure.savefig``.
+
+    Returns
+    -------
+    pathlib.Path or file-like object
+        The output path when a path-like target was supplied, otherwise the
+        original file-like target.
+
+    Notes
+    -----
+    Figure export is IO, not a ``color.plot`` primitive. Plot functions create
+    artists; this helper writes the result to disk.
+    """
     import matplotlib.pyplot as plt
 
     if fig is None:

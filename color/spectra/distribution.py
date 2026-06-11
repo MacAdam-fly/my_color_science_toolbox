@@ -23,7 +23,39 @@ SpectralData = Mapping[str, np.ndarray]
 
 
 class SpectralDistribution:
-    """Single-channel spectral distribution."""
+    """Single-channel spectral distribution.
+
+    Parameters
+    ----------
+    wavelengths
+        Strictly increasing wavelength samples.
+    values
+        One value per wavelength.
+    name
+        Optional human-readable name.
+    metadata
+        Optional descriptive metadata.
+    fill_nan
+        Optional replacement value for non-finite samples. If ``None``, NaN
+        values are preserved.
+
+    Returns
+    -------
+    SpectralDistribution
+        Immutable single-channel spectral object.
+
+    Notes
+    -----
+    Inputs are copied and stored as read-only arrays. Interpolation,
+    extrapolation, alignment and arithmetic return new objects; they do not
+    modify the original distribution.
+
+    Examples
+    --------
+    >>> sd = SpectralDistribution([400, 500, 600], [0.1, 0.2, 0.3])
+    >>> sd.keys()
+    ('wavelength', 'value')
+    """
 
     def __init__(
         self,

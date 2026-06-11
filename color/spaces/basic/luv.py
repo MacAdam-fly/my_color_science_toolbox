@@ -40,7 +40,34 @@ def XYZ_to_Luv(
     *,
     whitepoint_XYZ: Sequence[float] | np.ndarray = DEFAULT_WHITEPOINT_XYZ,
 ) -> np.ndarray:
-    """Convert CIE XYZ values to CIE 1976 Luv values."""
+    """Convert CIE XYZ values to CIE 1976 Luv values.
+
+    ``XYZ`` and ``whitepoint_XYZ`` must share the same numeric scale, normally
+    the project Y=100 scale. The final axis must contain ``X, Y, Z`` and batch
+    dimensions are preserved.
+
+    Parameters
+    ----------
+    XYZ
+        XYZ tristimulus values with final axis ``(X, Y, Z)``.
+    whitepoint_XYZ
+        Reference whitepoint in the same numeric scale as ``XYZ``.
+
+    Returns
+    -------
+    numpy.ndarray
+        Luv values with final axis ``(L*, u*, v*)``.
+
+    Notes
+    -----
+    The default whitepoint is the project D65 XYZ whitepoint on the Y=100
+    scale. Luv uses CIE 1976 ``u'v'`` chromaticity relative to that whitepoint.
+
+    Examples
+    --------
+    >>> XYZ_to_Luv([19.01, 20.0, 21.78]).shape
+    (3,)
+    """
     xyz = as_last_axis_triplets(XYZ, name="XYZ")
     whitepoint = _as_whitepoint(whitepoint_XYZ)
 
@@ -59,7 +86,34 @@ def Luv_to_XYZ(
     *,
     whitepoint_XYZ: Sequence[float] | np.ndarray = DEFAULT_WHITEPOINT_XYZ,
 ) -> np.ndarray:
-    """Convert CIE 1976 Luv values to CIE XYZ values."""
+    """Convert CIE 1976 Luv values to CIE XYZ values.
+
+    The returned XYZ values use the numeric scale of ``whitepoint_XYZ``. Use the
+    same whitepoint that was used for the forward Luv conversion to preserve a
+    round-trip.
+
+    Parameters
+    ----------
+    Luv
+        Luv values with final axis ``(L*, u*, v*)``.
+    whitepoint_XYZ
+        Reference whitepoint that sets the output XYZ scale.
+
+    Returns
+    -------
+    numpy.ndarray
+        XYZ tristimulus values with final axis ``(X, Y, Z)``.
+
+    Notes
+    -----
+    This inverse does not infer the original whitepoint; callers must pass the
+    same reference whitepoint used by ``XYZ_to_Luv`` when that matters.
+
+    Examples
+    --------
+    >>> Luv_to_XYZ([51.837, -0.097, 2.782]).shape
+    (3,)
+    """
     luv = as_last_axis_triplets(Luv, name="Luv")
     whitepoint = _as_whitepoint(whitepoint_XYZ)
 
@@ -93,7 +147,16 @@ def Luv_to_XYZ(
 
 
 def Luv_to_LCHuv(Luv: Sequence[float] | np.ndarray) -> np.ndarray:
-    """Convert CIE 1976 Luv values to cylindrical LCHuv values."""
+    """Convert CIE 1976 Luv values to cylindrical LCHuv values.
+
+    The output final axis is ``L*, C*uv, h_uv`` with hue in degrees on
+    ``[0, 360)``. Batch dimensions are preserved.
+
+    Notes
+    -----
+    This is a cylindrical coordinate transform inside Luv; no whitepoint or XYZ
+    conversion is involved.
+    """
     luv = as_last_axis_triplets(Luv, name="Luv")
     C = np.hypot(luv[..., 1], luv[..., 2])
     h = np.mod(np.degrees(np.arctan2(luv[..., 2], luv[..., 1])), 360.0)
@@ -101,7 +164,15 @@ def Luv_to_LCHuv(Luv: Sequence[float] | np.ndarray) -> np.ndarray:
 
 
 def LCHuv_to_Luv(LCHuv: Sequence[float] | np.ndarray) -> np.ndarray:
-    """Convert cylindrical LCHuv values to CIE 1976 Luv values."""
+    """Convert cylindrical LCHuv values to CIE 1976 Luv values.
+
+    The input final axis is ``L*, C*uv, h_uv`` with hue in degrees. Batch
+    dimensions are preserved and the returned final axis is ``L*, u*, v*``.
+
+    Notes
+    -----
+    This is the inverse cylindrical transform for ``Luv_to_LCHuv``.
+    """
     lch = as_last_axis_triplets(LCHuv, name="LCHuv")
     h = np.radians(lch[..., 2])
     u = lch[..., 1] * np.cos(h)
@@ -110,7 +181,15 @@ def LCHuv_to_Luv(LCHuv: Sequence[float] | np.ndarray) -> np.ndarray:
 
 
 def Luv_to_Lshuv(Luv: Sequence[float] | np.ndarray) -> np.ndarray:
-    """Convert CIE 1976 Luv values to Lshuv saturation coordinates."""
+    """Convert CIE 1976 Luv values to Lshuv saturation coordinates.
+
+    The output final axis is ``L*, s_uv, h_uv`` where saturation is computed as
+    ``C*uv / L*`` and hue is in degrees on ``[0, 360)``.
+
+    Notes
+    -----
+    ``L*=0`` maps to zero saturation to avoid division by zero.
+    """
     luv = as_last_axis_triplets(Luv, name="Luv")
     L = luv[..., 0]
     C = np.hypot(luv[..., 1], luv[..., 2])
@@ -120,7 +199,16 @@ def Luv_to_Lshuv(Luv: Sequence[float] | np.ndarray) -> np.ndarray:
 
 
 def Lshuv_to_Luv(Lshuv: Sequence[float] | np.ndarray) -> np.ndarray:
-    """Convert Lshuv saturation coordinates to CIE 1976 Luv values."""
+    """Convert Lshuv saturation coordinates to CIE 1976 Luv values.
+
+    The input final axis is ``L*, s_uv, h_uv`` with hue in degrees. Chroma is
+    reconstructed as ``L* * s_uv`` before converting back to ``u*, v*``.
+
+    Notes
+    -----
+    This transform is a Luv-family coordinate change and does not involve XYZ or
+    a reference whitepoint.
+    """
     lsh = as_last_axis_triplets(Lshuv, name="Lshuv")
     h = np.radians(lsh[..., 2])
     C = lsh[..., 0] * lsh[..., 1]

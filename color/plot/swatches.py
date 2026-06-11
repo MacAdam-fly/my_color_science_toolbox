@@ -16,7 +16,26 @@ def preview_sRGB_from_XYZ(
     *,
     white_Y: float = 100.0,
 ) -> np.ndarray:
-    """Return clipped sRGB values for approximate plotting previews."""
+    """Return clipped sRGB values for approximate plotting previews.
+
+    Parameters
+    ----------
+    XYZ
+        XYZ values on a reference scale whose white ``Y`` is given by
+        ``white_Y``.
+    white_Y
+        White luminance scale for the input XYZ.
+
+    Returns
+    -------
+    ndarray
+        Encoded sRGB preview values clipped to ``[0, 1]``.
+
+    Notes
+    -----
+    This is for visual swatches only. It does not perform gamut mapping or
+    colour-managed display rendering.
+    """
     if white_Y <= 0:
         raise ValueError("white_Y must be positive")
     xyz = np.asarray(XYZ, dtype=np.float64)
@@ -31,7 +50,13 @@ def plot_swatch_strip(
     labels: Sequence[str] | None = None,
     title: str | None = None,
 ):
-    """Plot a horizontal strip of sRGB preview swatches."""
+    """Plot a horizontal strip of sRGB preview swatches.
+
+    Notes
+    -----
+    Input values are interpreted as encoded sRGB rows and clipped to
+    ``[0, 1]`` by the shared RGB row validator.
+    """
     values = as_rgb_rows(rgb)
     fig, ax = get_figure_axes(ax, figsize=(7.0, 1.8))
     ax.imshow(values[np.newaxis, :, :], extent=(0, values.shape[0], 0, 1), aspect="auto")

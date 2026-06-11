@@ -173,7 +173,29 @@ def style_2d_axis(
     grid: bool = True,
     equal_aspect: bool = False,
 ):
-    """Apply common styling to a two-dimensional matplotlib axes."""
+    """Apply common styling to a two-dimensional Matplotlib axes.
+
+    Parameters
+    ----------
+    ax
+        Matplotlib 2D axes.
+    title, xlabel, ylabel
+        Optional axes text.
+    grid
+        Whether to show a light grid.
+    equal_aspect
+        Whether to force equal data aspect.
+
+    Returns
+    -------
+    axes
+        The same axes object.
+
+    Notes
+    -----
+    This helper only mutates the supplied axes. It does not save, show or
+    create figures.
+    """
     if title is not None:
         ax.set_title(title)
     if xlabel is not None:
@@ -204,8 +226,35 @@ def plot_lines(
 ):
     """Plot one or more 2D line series.
 
-    ``series`` may be a single ``(x, y)`` tuple or a sequence of ``(x, y)``
-    tuples. The function never calls ``show`` or saves files.
+    Parameters
+    ----------
+    series
+        Single ``(x, y)`` tuple or a sequence of ``(x, y)`` tuples. Each
+        ``x`` and ``y`` must be a finite one-dimensional array of equal
+        length.
+    ax
+        Optional existing axes. If omitted, a new figure and axes are created.
+    labels, colors, linestyles
+        Optional per-series styling.
+
+    Returns
+    -------
+    fig, ax
+        Matplotlib figure and axes.
+
+    Notes
+    -----
+    The function never calls ``show`` or saves files. Style presets set
+    Matplotlib defaults; explicit ``colors`` or ``linewidth`` arguments here
+    take precedence.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> x = np.linspace(0, 1, 5)
+    >>> fig, ax = plot_lines((x, x**2), xlabel="x")
+    >>> ax.get_xlabel()
+    'x'
     """
     line_series = _normalise_line_series(series)
     labels_list = _normalise_optional_sequence(labels, len(line_series), name="labels")
@@ -252,9 +301,23 @@ def plot_points(
 ):
     """Plot one or more groups of 2D points.
 
-    ``points`` may be one ``(n, 2)`` array or a sequence of ``(n, 2)`` arrays.
-    ``labels`` label point groups by default; with ``annotate=True`` and a
-    single group, labels annotate individual points.
+    Parameters
+    ----------
+    points
+        One ``(n, 2)`` array, one ``(2,)`` point or a sequence of point groups.
+    labels
+        Group labels by default. With ``annotate=True`` and a single group,
+        labels annotate individual points.
+
+    Returns
+    -------
+    fig, ax
+        Matplotlib figure and axes.
+
+    Notes
+    -----
+    Use ``plot_points(...)`` for markers and ``plot_labels(...)`` for separate
+    text placement when you need more control than ``annotate=True``.
     """
     groups = _normalise_point_groups(points)
     labels_list = _normalise_optional_sequence(labels, len(groups), name="labels") if not annotate else labels
@@ -324,7 +387,13 @@ def plot_labels(
     grid: bool = True,
     **kwargs,
 ):
-    """Plot text labels at 2D point coordinates."""
+    """Plot text labels at 2D point coordinates.
+
+    Notes
+    -----
+    This helper only adds text annotations. Plot markers separately with
+    ``plot_points`` when needed.
+    """
     point_arr = _as_point_group(points, name="points")
     labels_list = list(labels)
     if len(labels_list) != point_arr.shape[0]:
@@ -361,7 +430,14 @@ def plot_segments(
     legend: str | bool = "auto",
     **kwargs,
 ):
-    """Plot one or more groups of 2D line segments."""
+    """Plot one or more groups of 2D line segments.
+
+    Notes
+    -----
+    Segment input has shape ``(n, 2, 2)`` where each row is
+    ``[[x0, y0], [x1, y1]]``. This is useful for dominant-wavelength rays,
+    Duv offsets and gamut edges.
+    """
     groups = _normalise_segment_groups(segments)
     labels_list = _normalise_optional_sequence(labels, len(groups), name="labels")
     colors_list = _normalise_optional_sequence(colors, len(groups), name="colors")
@@ -413,7 +489,13 @@ def plot_polygons(
     legend: str | bool = "auto",
     **kwargs,
 ):
-    """Plot one or more 2D polygons."""
+    """Plot one or more 2D polygons.
+
+    Notes
+    -----
+    Polygons are drawing primitives only. The function does not compute
+    convex hulls or perform colour-science geometry.
+    """
     from matplotlib.patches import Polygon
 
     groups = _normalise_polygon_groups(polygons)
@@ -464,7 +546,13 @@ def plot_arrows(
     grid: bool = True,
     **kwargs,
 ):
-    """Plot one or more arrows from start points to end points."""
+    """Plot one or more arrows from start points to end points.
+
+    Notes
+    -----
+    ``starts`` and ``ends`` accept ``(2,)`` or ``(n, 2)`` arrays. A single
+    start or end point is broadcast against multiple counterpart points.
+    """
     from matplotlib.patches import FancyArrowPatch
 
     starts_arr, ends_arr = _as_broadcast_point_pairs(starts, ends)
@@ -524,7 +612,24 @@ def plot_image(
     clip: bool = True,
     **kwargs,
 ):
-    """Plot a scalar image or RGB(A) image array."""
+    """Plot a scalar image or RGB(A) image array.
+
+    Parameters
+    ----------
+    image
+        ``(height, width)`` scalar image or ``(height, width, 3/4)`` RGB(A)
+        image. RGB(A) floats are clipped to ``[0, 1]`` by default.
+
+    Returns
+    -------
+    fig, ax
+        Matplotlib figure and axes.
+
+    Notes
+    -----
+    This is a plotting helper, not image IO. Use ``color.io.read_image`` and
+    ``color.io.write_image`` for file access.
+    """
     image_arr = _as_image_array(image, clip=clip)
     fig, ax = get_figure_axes(ax, figsize=(5.2, 4.2))
     artist = ax.imshow(
@@ -578,7 +683,30 @@ def plot_bars(
     legend: str | bool = "auto",
     **kwargs,
 ):
-    """Plot one or more groups of bars."""
+    """Plot one or more groups of bars.
+
+    Parameters
+    ----------
+    values
+        Bar values with shape ``(n,)`` or ``(groups, n)``.
+    labels
+        Category labels.
+    group_labels
+        Labels for grouped bars.
+    orientation
+        ``"vertical"`` or ``"horizontal"``.
+
+    Returns
+    -------
+    fig, ax
+        Matplotlib figure and axes.
+
+    Notes
+    -----
+    ``values`` may be one-dimensional or ``(groups, categories)``. The helper
+    supports vertical and horizontal bars but does not compute summary
+    statistics.
+    """
     if orientation not in {"vertical", "horizontal"}:
         raise ValueError("orientation must be 'vertical' or 'horizontal'")
     if width <= 0:
@@ -639,7 +767,13 @@ def set_axis_limits_from_data(
     padding: float = 0.05,
     equal_aspect: bool = False,
 ):
-    """Set axis limits from finite 2D data with fractional padding."""
+    """Set axis limits from finite 2D data with fractional padding.
+
+    Notes
+    -----
+    ``data`` may contain any leading dimensions as long as the final dimension
+    is 2.
+    """
     if padding < 0:
         raise ValueError("padding must be non-negative")
     values = np.asarray(data, dtype=np.float64)

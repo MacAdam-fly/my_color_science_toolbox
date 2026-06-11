@@ -87,11 +87,44 @@ def emission_to_LMS(
     k: float | None = None,
     fill_nan: float | None = 0.0,
 ) -> np.ndarray:
-    """Convert self-luminous spectral data to LMS.
+    """Integrate a self-luminous spectrum to LMS cone responses.
 
-    By default, this uses
-    ``standard_observers.cone_fundamentals/cie2006_lms2_linE_1nm`` with
-    ``fill_nan=0.0``.
+    Parameters
+    ----------
+    emission
+        Emission SPD as a ``SpectralDistribution`` or
+        ``MultiSpectralDistribution``.
+    fundamentals
+        LMS cone fundamentals, either as a dataset name or a
+        ``MultiSpectralDistribution``.
+    shape
+        Optional spectral shape used to align the SPD and fundamentals.
+    k
+        Optional scale factor. If omitted, no ``Y=100`` or LMS white
+        normalisation is applied.
+    fill_nan
+        Replacement value used when loading fundamentals from a dataset name.
+        The default treats missing S-cone long-wave tails as zero response.
+
+    Returns
+    -------
+    ndarray
+        LMS values. Single-channel input returns ``(3,)``; multi-channel
+        input returns ``(n, 3)``.
+
+    Notes
+    -----
+    This is a direct spectral response integral, not the matrix
+    ``XYZ_to_LMS`` transform. Defaults use CIE 2006 2-degree energy-based LMS
+    fundamentals.
+
+    Examples
+    --------
+    >>> from color.generators import gaussian_spd
+    >>> from color.spectra import from_columns
+    >>> sd = from_columns(gaussian_spd(peak_wavelength=530), y="spd")
+    >>> emission_to_LMS(sd).shape
+    (3,)
     """
     return emission_to_lms(
         emission,
@@ -111,11 +144,53 @@ def reflectance_to_LMS(
     fill_nan: float | None = 0.0,
     normalisation_channel: str | int | None = None,
 ) -> np.ndarray:
-    """Convert reflectance data to LMS.
+    """Integrate a reflectance spectrum under an illuminant to LMS responses.
 
-    By default, this uses ``illuminants/D65`` and
-    ``standard_observers.cone_fundamentals/cie2006_lms2_linE_1nm`` with
-    ``fill_nan=0.0``.
+    Parameters
+    ----------
+    reflectance
+        Reflectance factor spectrum as a ``SpectralDistribution`` or
+        ``MultiSpectralDistribution``.
+    illuminant
+        Illuminant SPD, either as a dataset name such as ``"D65"`` or a
+        ``SpectralDistribution``.
+    fundamentals
+        LMS cone fundamentals, either as a dataset name or a
+        ``MultiSpectralDistribution``.
+    shape
+        Optional spectral shape used to align reflectance, illuminant and
+        fundamentals.
+    k
+        Optional scale factor. If omitted, a white-normalising factor is
+        computed from the illuminant and chosen response channel.
+    fill_nan
+        Replacement value used when loading fundamentals from a dataset name.
+    normalisation_channel
+        Response label or channel index used for the reflectance white
+        normalisation. If omitted, the integration core uses its default
+        channel choice.
+
+    Returns
+    -------
+    ndarray
+        LMS values. Single-channel input returns ``(3,)``; multi-channel
+        input returns ``(n, 3)``.
+
+    Notes
+    -----
+    Reflectance LMS integrates
+    ``reflectance * illuminant * fundamentals``. It is not equivalent to
+    converting the resulting XYZ through a fixed matrix unless the same
+    observer definitions and normalisation semantics are being used.
+
+    Examples
+    --------
+    >>> from color.datasets import get_color_card
+    >>> from color.spectra import from_columns
+    >>> raw = get_color_card("pmc")
+    >>> patch = from_columns(raw, y="Foliage")
+    >>> reflectance_to_LMS(patch, illuminant="D65").shape
+    (3,)
     """
     return reflectance_to_lms(
         reflectance,

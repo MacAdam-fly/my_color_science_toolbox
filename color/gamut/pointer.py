@@ -71,17 +71,40 @@ def pointer_gamut_LCHab() -> np.ndarray:
 def pointer_gamut_published_xy_boundary() -> np.ndarray:
     """Return Pointer's published CIE 1931 xy-plane boundary.
 
+    Parameters
+    ----------
+    None
+
+    Returns
+    -------
+    ndarray
+        Closed ``(n, 2)`` xy boundary polygon.
+
+    Notes
+    -----
     Pointer data is tabulated as several L* slices. This helper computes the
     xy boundary directly in the xy plane, avoiding Lab/LCHab projection
     artefacts. The boundary follows the 32-point Pointer xy boundary used by
     ``colour``.
+
+    Examples
+    --------
+    >>> pointer_gamut_published_xy_boundary().shape[1]
+    2
     """
     boundary = _POINTER_GAMUT_BOUNDARY_XY_REFERENCE.copy()
     return np.vstack((boundary, boundary[0]))
 
 
 class PointerGamutBoundary(GamutBoundary):
-    """Pointer real-surface gamut boundary."""
+    """Pointer real-surface gamut boundary.
+
+    Notes
+    -----
+    Pointer is an empirical object-colour gamut, not a display-primary gamut.
+    Its ``xy_boundary()`` returns the published xy boundary rather than a
+    primary hull.
+    """
 
     def xy_boundary(self) -> np.ndarray:
         """Return Pointer's published CIE xy-plane boundary."""
@@ -89,7 +112,28 @@ class PointerGamutBoundary(GamutBoundary):
 
 
 def pointer_gamut() -> PointerGamutBoundary:
-    """Return Pointer gamut as a :class:`GamutBoundary`."""
+    """Return Pointer real-surface gamut as a ``GamutBoundary``.
+
+    Parameters
+    ----------
+    None
+
+    Returns
+    -------
+    PointerGamutBoundary
+        Regular ``L* x hue`` boundary built from the registered Pointer data.
+
+    Notes
+    -----
+    The returned boundary can be used with Lab volume, projected boundary and
+    coverage helpers. It has no display primaries.
+
+    Examples
+    --------
+    >>> pointer = pointer_gamut()
+    >>> pointer.primaries is None
+    True
+    """
     data = pointer_gamut_data()
     L_values = np.unique(data["L"])
     hue_values = np.unique(data["hab"])
@@ -121,7 +165,30 @@ def is_within_pointer_gamut(
     *,
     tolerance: float = 1e-9,
 ) -> np.ndarray | np.bool_:
-    """Return whether XYZ values are inside Pointer's real-surface gamut."""
+    """Return whether XYZ values are inside Pointer's real-surface gamut.
+
+    Parameters
+    ----------
+    XYZ
+        XYZ values with final-axis shape ``(..., 3)`` in project ``Y=100``
+        scale.
+    tolerance
+        Non-negative mesh tolerance.
+
+    Returns
+    -------
+    bool or ndarray
+        Inside mask matching the leading shape of ``XYZ``.
+
+    Notes
+    -----
+    The test uses the Pointer boundary mesh, not display primary feasibility.
+
+    Examples
+    --------
+    >>> bool(is_within_pointer_gamut([0.0, 0.0, 0.0])) in {True, False}
+    True
+    """
     return is_within_mesh_volume(XYZ, pointer_gamut_XYZ(), tolerance=tolerance)
 
 

@@ -22,7 +22,11 @@ from ..node import ColorSpaceNode
 
 
 def xyY_to_xy(xyY: Sequence[float] | np.ndarray) -> np.ndarray:
-    """Return only the CIE xy chromaticity coordinates from xyY values."""
+    """Return only the CIE xy chromaticity coordinates from xyY values.
+
+    The input final axis must be ``x, y, Y``. The returned array preserves batch
+    dimensions and drops the luminance component.
+    """
     xyy = np.asarray(xyY, dtype=np.float64)
     if xyy.shape == () or xyy.shape[-1] != 3:
         raise ValueError("xyY must have 3 values on the last axis")

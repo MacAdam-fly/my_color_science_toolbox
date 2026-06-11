@@ -70,7 +70,12 @@ SPACE_REGISTRY: Mapping[str, ColorSpaceNode] = MappingProxyType(_NODES)
 
 
 def get_colourspace_node(name: str | ColorSpaceNode) -> ColorSpaceNode:
-    """Resolve a colour-space node by name or alias."""
+    """Resolve a registered generic colour-space node by name or alias.
+
+    RGB colour spaces are managed by the separate RGB registry and should be
+    resolved with ``get_RGB_colourspace``. Passing an existing ``ColorSpaceNode``
+    returns it unchanged.
+    """
     if isinstance(name, ColorSpaceNode):
         return name
     if not isinstance(name, str):
@@ -82,7 +87,11 @@ def get_colourspace_node(name: str | ColorSpaceNode) -> ColorSpaceNode:
 
 
 def list_colourspace_nodes() -> tuple[str, ...]:
-    """Return registered colour-space node names."""
+    """Return registered generic colour-space node names.
+
+    The result excludes RGB colour-space names; use ``list_RGB_colourspaces`` for
+    the RGB registry.
+    """
     return tuple(SPACE_REGISTRY)
 
 

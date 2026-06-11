@@ -39,7 +39,12 @@ SERIF_STACK = [
 
 
 def available_cjk_fonts() -> tuple[str, ...]:
-    """Return CJK-capable font candidates currently visible to Matplotlib."""
+    """Return CJK-capable font candidates currently visible to Matplotlib.
+
+    Notes
+    -----
+    The result depends on the fonts installed in the current environment.
+    """
     from matplotlib import font_manager
 
     installed = {font.name for font in font_manager.fontManager.ttflist}
@@ -47,7 +52,13 @@ def available_cjk_fonts() -> tuple[str, ...]:
 
 
 def use_cjk_font(preferred: str | Sequence[str] | None = None) -> tuple[str, ...]:
-    """Prioritise installed CJK fonts in the active Matplotlib session."""
+    """Prioritise CJK fonts in the active Matplotlib session.
+
+    Notes
+    -----
+    This mutates ``matplotlib.rcParams`` for the current session. Library
+    plotting functions do not call it implicitly.
+    """
     import matplotlib.pyplot as plt
 
     if preferred is None:

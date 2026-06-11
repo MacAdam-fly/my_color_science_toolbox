@@ -24,7 +24,40 @@ SpectralData = Mapping[str, np.ndarray]
 
 
 class MultiSpectralDistribution:
-    """Multi-channel spectral distribution."""
+    """Multi-channel spectral distribution on a shared wavelength domain.
+
+    Parameters
+    ----------
+    wavelengths
+        Strictly increasing wavelength samples.
+    values
+        ``(n_wavelengths, n_channels)`` value array.
+    labels
+        Unique channel labels.
+    name
+        Optional human-readable name.
+    metadata
+        Optional descriptive metadata.
+    fill_nan
+        Optional replacement value for non-finite samples.
+
+    Returns
+    -------
+    MultiSpectralDistribution
+        Immutable multi-channel spectral object.
+
+    Notes
+    -----
+    ``obj[label]`` or ``obj.channel(label)`` returns a single-channel
+    ``SpectralDistribution`` preserving wavelengths and metadata. Raw arrays
+    can be obtained with ``to_dict()`` when mutation is needed.
+
+    Examples
+    --------
+    >>> msd = MultiSpectralDistribution([400, 500], [[1, 2], [3, 4]], ("a", "b"))
+    >>> msd.keys()
+    ('wavelength', 'a', 'b')
+    """
 
     def __init__(
         self,

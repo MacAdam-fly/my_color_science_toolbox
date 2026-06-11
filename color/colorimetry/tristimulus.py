@@ -77,9 +77,42 @@ def emission_to_XYZ(
     shape: SpectralShape | None = None,
     k: float | None = None,
 ) -> np.ndarray:
-    """Convert self-luminous spectral data to XYZ.
+    """Integrate a self-luminous spectrum to CIE XYZ tristimulus values.
 
-    By default, this uses ``standard_observers.cmfs/cie1931_xyz_1nm``.
+    Parameters
+    ----------
+    emission
+        Emission SPD as a ``SpectralDistribution`` or
+        ``MultiSpectralDistribution``.
+    cmfs
+        XYZ colour matching functions, either as a dataset name or a
+        ``MultiSpectralDistribution`` with ``("X", "Y", "Z")`` labels.
+    shape
+        Optional spectral shape used to align the SPD and CMFs before
+        integration.
+    k
+        Optional scale factor. If omitted, no photometric or ``Y=100``
+        normalisation is applied.
+
+    Returns
+    -------
+    ndarray
+        XYZ values. Single-channel input returns ``(3,)``; multi-channel
+        input returns ``(n, 3)``.
+
+    Notes
+    -----
+    This is the self-luminous route. It integrates ``SPD * CMFs`` and does
+    not automatically normalise the result to ``Y=100``. The output scale is
+    determined by the SPD values, wavelength sampling and optional ``k``.
+
+    Examples
+    --------
+    >>> from color.generators import blackbody_spd
+    >>> from color.spectra import from_columns
+    >>> sd = from_columns(blackbody_spd(temperature=6500), y="radiance")
+    >>> emission_to_XYZ(sd).shape
+    (3,)
     """
     return emission_to_xyz(emission, _load_cmfs(cmfs), shape=shape, k=k)
 
@@ -92,10 +125,48 @@ def reflectance_to_XYZ(
     shape: SpectralShape | None = None,
     k: float | None = None,
 ) -> np.ndarray:
-    """Convert reflectance data to XYZ.
+    """Integrate a reflectance spectrum under an illuminant to CIE XYZ.
 
-    By default, this uses ``illuminants/D65`` and
-    ``standard_observers.cmfs/cie1931_xyz_1nm``.
+    Parameters
+    ----------
+    reflectance
+        Reflectance factor spectrum as a ``SpectralDistribution`` or
+        ``MultiSpectralDistribution``.
+    illuminant
+        Illuminant SPD, either as a dataset name such as ``"D65"`` or a
+        ``SpectralDistribution``.
+    cmfs
+        XYZ colour matching functions, either as a dataset name or a
+        ``MultiSpectralDistribution`` with ``("X", "Y", "Z")`` labels.
+    shape
+        Optional spectral shape used to align reflectance, illuminant and
+        CMFs before integration.
+    k
+        Optional scale factor. If omitted, the normalisation factor is chosen
+        so a perfect reflecting diffuser has ``Y=100``.
+
+    Returns
+    -------
+    ndarray
+        XYZ values on the project's usual ``Y=100`` reflectance reference
+        scale. Single-channel input returns ``(3,)``; multi-channel input
+        returns ``(n, 3)``.
+
+    Notes
+    -----
+    This is the object-colour route. It integrates
+    ``reflectance * illuminant * CMFs`` and normalises the reference white to
+    ``Y=100`` unless ``k`` is explicitly supplied. The input reflectance
+    object is not modified.
+
+    Examples
+    --------
+    >>> from color.datasets import get_color_card
+    >>> from color.spectra import from_columns
+    >>> raw = get_color_card("pmc")
+    >>> patch = from_columns(raw, y="Blue Sky")
+    >>> reflectance_to_XYZ(patch, illuminant="D65").shape
+    (3,)
     """
     return reflectance_to_xyz(
         reflectance,

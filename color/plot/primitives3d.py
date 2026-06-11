@@ -15,7 +15,13 @@ def get_3d_figure_axes(
     *,
     figsize: tuple[float, float] = (5.2, 4.2),
 ):
-    """Return ``(fig, ax)`` using an existing or new 3D axes."""
+    """Return ``(fig, ax)`` using an existing or new 3D axes.
+
+    Notes
+    -----
+    Existing axes must be Matplotlib 3D axes. New axes are created with
+    ``projection="3d"``.
+    """
     import matplotlib.pyplot as plt
 
     if ax is None:
@@ -140,7 +146,12 @@ def style_3d_axis(
     equal_aspect: bool = False,
     view: tuple[float, float] | None = None,
 ):
-    """Apply common styling to a three-dimensional matplotlib axes."""
+    """Apply common styling to a three-dimensional Matplotlib axes.
+
+    Notes
+    -----
+    This helper only styles axes. It does not compute or rescale 3D data.
+    """
     if getattr(ax, "name", None) != "3d":
         raise ValueError("ax must be a 3D matplotlib axes")
     if title is not None:
@@ -178,7 +189,13 @@ def plot_3d_points(
     view: tuple[float, float] | None = None,
     **kwargs,
 ):
-    """Plot one or more groups of 3D points."""
+    """Plot one or more groups of 3D points.
+
+    Notes
+    -----
+    ``points`` accepts one ``(n, 3)`` array or multiple point groups. The
+    function returns ``(fig, ax)`` and never saves or shows the figure.
+    """
     groups = _normalise_3d_point_groups(points)
     labels_list = _normalise_optional_sequence(labels, len(groups), name="labels")
     colors_list = _normalise_optional_sequence(colors, len(groups), name="colors")
@@ -242,7 +259,13 @@ def plot_3d_lines(
     view: tuple[float, float] | None = None,
     **kwargs,
 ):
-    """Plot one or more 3D line series."""
+    """Plot one or more 3D line series.
+
+    Notes
+    -----
+    ``series`` follows the 2D ``plot_lines`` pattern, but each series is an
+    ``(x, y, z)`` tuple of equal-length one-dimensional arrays.
+    """
     line_series = _normalise_3d_line_series(series)
     labels_list = _normalise_optional_sequence(labels, len(line_series), name="labels")
     colors_list = _normalise_optional_sequence(colors, len(line_series), name="colors")
@@ -304,7 +327,13 @@ def plot_3d_surface(
     view: tuple[float, float] | None = None,
     **kwargs,
 ):
-    """Plot a 3D surface from matching ``X``, ``Y`` and ``Z`` grids."""
+    """Plot a 3D surface from matching ``X``, ``Y`` and ``Z`` grids.
+
+    Notes
+    -----
+    Surface grids must be finite matching 2D arrays. This is a plotting
+    primitive; gamut or colour-space surfaces must be computed elsewhere.
+    """
     x, y, z = _as_surface_grid(X, Y, Z)
     fig, ax = get_3d_figure_axes(ax)
     surface = ax.plot_surface(
@@ -386,7 +415,13 @@ def set_3d_axis_limits_from_data(
     padding: float = 0.05,
     equal_aspect: bool = False,
 ):
-    """Set 3D axis limits from finite data with final dimension 3."""
+    """Set 3D axis limits from finite data with final dimension 3.
+
+    Notes
+    -----
+    Use ``equal_aspect=True`` for colour solids when geometric proportions
+    matter more than filling the subplot rectangle.
+    """
     if getattr(ax, "name", None) != "3d":
         raise ValueError("ax must be a 3D matplotlib axes")
     if padding < 0:

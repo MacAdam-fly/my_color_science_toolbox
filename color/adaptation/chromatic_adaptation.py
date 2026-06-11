@@ -54,7 +54,28 @@ def matrix_chromatic_adaptation_von_kries(
     *,
     transform: str | None = "Bradford",
 ) -> np.ndarray:
-    """Return a Von Kries style chromatic adaptation matrix."""
+    """Return a Von Kries-style chromatic adaptation matrix.
+
+    Parameters
+    ----------
+    source_white_XYZ, target_white_XYZ
+        Positive XYZ whitepoints on the same numeric scale.
+    transform
+        Chromatic adaptation transform name: ``"Von Kries"``,
+        ``"Bradford"``, ``"CAT02"``, ``"CAT16"`` or ``None``.
+
+    Returns
+    -------
+    ndarray
+        ``(3, 3)`` matrix mapping source-white XYZ to target-white XYZ using
+        row-vector application ``XYZ @ matrix.T``.
+
+    Notes
+    -----
+    ``transform=None`` returns the identity matrix. This function adapts
+    reference whites; it does not convert numeric scale such as
+    ``[0, 1] <-> Y=100``.
+    """
     canonical = _canonical_transform(transform)
     if canonical is None:
         return np.identity(3, dtype=np.float64)
@@ -77,7 +98,27 @@ def chromatic_adaptation_XYZ(
     *,
     transform: str | None = "Bradford",
 ) -> np.ndarray:
-    """Adapt XYZ values from a source whitepoint to a target whitepoint."""
+    """Adapt XYZ values from a source whitepoint to a target whitepoint.
+
+    Parameters
+    ----------
+    XYZ
+        XYZ values with final axis length 3.
+    source_white_XYZ, target_white_XYZ
+        Positive XYZ whitepoints on the same numeric scale.
+    transform
+        Von Kries-style transform name or ``None``.
+
+    Returns
+    -------
+    ndarray
+        Adapted XYZ values with the same leading shape as ``XYZ``.
+
+    Notes
+    -----
+    This is an explicit adaptation step. It is not RGB transfer, not a colour
+    space conversion formula, and not scale conversion.
+    """
     xyz = as_last_axis_triplets(XYZ, name="XYZ")
     matrix = matrix_chromatic_adaptation_von_kries(
         source_white_XYZ,
@@ -93,7 +134,7 @@ def adapt_to_D65(
     *,
     transform: str | None = "Bradford",
 ) -> np.ndarray:
-    """Adapt XYZ values from *source_white_XYZ* to the D65 whitepoint."""
+    """Adapt XYZ values from ``source_white_XYZ`` to the D65 whitepoint."""
     return chromatic_adaptation_XYZ(
         XYZ,
         source_white_XYZ=source_white_XYZ,
@@ -108,7 +149,7 @@ def adapt_from_D65(
     *,
     transform: str | None = "Bradford",
 ) -> np.ndarray:
-    """Adapt D65-referred XYZ values to *target_white_XYZ*."""
+    """Adapt D65-referred XYZ values to ``target_white_XYZ``."""
     return chromatic_adaptation_XYZ(
         XYZ_D65_referred,
         source_white_XYZ=D65_XYZ,

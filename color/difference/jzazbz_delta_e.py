@@ -13,7 +13,11 @@ def delta_E_Jzazbz(
     Jzazbz_1: Sequence[float] | np.ndarray,
     Jzazbz_2: Sequence[float] | np.ndarray,
 ) -> np.ndarray | np.float64:
-    """Return the Euclidean distance between two Jzazbz coordinate arrays."""
+    """Return Euclidean distance between two Jzazbz coordinate arrays.
+
+    Inputs must already be Jzazbz coordinates. This is a direct coordinate
+    distance, not a CIE standard Delta E formula.
+    """
     jzazbz_1, jzazbz_2 = broadcast_triplets(
         Jzazbz_1,
         Jzazbz_2,

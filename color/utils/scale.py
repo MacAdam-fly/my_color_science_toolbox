@@ -62,7 +62,11 @@ def to_domain_1(
     scale_factor: float | Sequence[float] | np.ndarray = 100.0,
     name: str = "value",
 ) -> np.ndarray | np.float64:
-    """Convert values from *source_scale* to the numeric ``[0, 1]`` domain."""
+    """Convert values from ``source_scale`` to the numeric ``[0, 1]`` domain.
+
+    This is a pure numeric scale helper. It does not perform whitepoint
+    adaptation or colour-space conversion.
+    """
     arr = _copy_float(value, name=name)
     source = _canonical_scale(source_scale)
     if source == "100":
@@ -77,7 +81,11 @@ def to_domain_100(
     scale_factor: float | Sequence[float] | np.ndarray = 100.0,
     name: str = "value",
 ) -> np.ndarray | np.float64:
-    """Convert values from *source_scale* to the numeric ``[0, 100]`` domain."""
+    """Convert values from ``source_scale`` to the numeric ``[0, 100]`` domain.
+
+    This is a pure numeric scale helper. It does not perform whitepoint
+    adaptation or colour-space conversion.
+    """
     arr = _copy_float(value, name=name)
     source = _canonical_scale(source_scale)
     if source == "1":

@@ -63,7 +63,12 @@ VIEWING_CONDITIONS_CIECAM16 = MappingProxyType(
 
 @dataclass(frozen=True)
 class CIECAM16ViewingConditions:
-    """Viewing conditions required by CIECAM16."""
+    """Viewing conditions required by CIECAM16.
+
+    ``XYZ_w``, stimulus ``XYZ`` and ``Y_b`` must be expressed in the same
+    reference-domain scale, normally ``Y=100``. ``L_A`` is an adapting
+    luminance parameter and is not automatically scaled with ``XYZ_w``.
+    """
 
     XYZ_w: Any = field(default_factory=lambda: D65_XYZ.copy())
     L_A: float = 64 / np.pi * 0.2
@@ -74,7 +79,12 @@ class CIECAM16ViewingConditions:
 
 @dataclass(frozen=True)
 class CIECAM16Specification:
-    """CIECAM16 appearance correlates."""
+    """CIECAM16 appearance correlates.
+
+    Forward calculations fill ``J, C, h, s, Q, M, H`` and leave ``HC`` as
+    ``None``. Inverse calculations require ``J`` and ``h`` plus either ``C``
+    or ``M``.
+    """
 
     J: Any = None
     C: Any = None
@@ -143,7 +153,27 @@ def XYZ_to_CIECAM16(
     surround: str | InductionFactors_CIECAM16 | None = None,
     discount_illuminant: bool | None = None,
 ) -> CIECAM16Specification:
-    """Convert XYZ tristimulus values to CIECAM16 appearance correlates."""
+    """Convert XYZ tristimulus values to CIECAM16 appearance correlates.
+
+    Parameters
+    ----------
+    XYZ
+        Stimulus XYZ values with final axis length 3.
+    XYZ_w, L_A, Y_b, surround, discount_illuminant
+        Viewing condition parameters, or pass ``CIECAM16ViewingConditions`` as
+        ``XYZ_w``.
+
+    Returns
+    -------
+    CIECAM16Specification
+        Appearance correlates ``J, C, h, s, Q, M, H``.
+
+    Notes
+    -----
+    ``XYZ``, ``XYZ_w`` and ``Y_b`` must share a reference-domain scale,
+    usually ``Y=100``. CIECAM16 uses its own surround factors; notably the
+    ``Dim`` ``N_c`` value differs from CIECAM02.
+    """
 
     XYZ_array, scalar_input = _as_last_axis_three(XYZ, "XYZ")
     XYZ_w_array, L_A_scalar, Y_b_scalar, factors, discount = _resolve_viewing_conditions(
@@ -197,7 +227,21 @@ def CIECAM16_to_XYZ(
     surround: str | InductionFactors_CIECAM16 | None = None,
     discount_illuminant: bool | None = None,
 ) -> np.ndarray:
-    """Convert CIECAM16 appearance correlates back to XYZ tristimulus values."""
+    """Convert CIECAM16 appearance correlates back to XYZ tristimulus values.
+
+    Parameters
+    ----------
+    specification
+        CIECAM16 specification containing ``J`` and ``h`` plus either ``C`` or
+        ``M``.
+    XYZ_w, L_A, Y_b, surround, discount_illuminant
+        Viewing condition parameters matching the forward calculation.
+
+    Returns
+    -------
+    ndarray
+        XYZ values in the same reference-domain scale as ``XYZ_w``.
+    """
 
     if not isinstance(specification, CIECAM16Specification):
         raise ValueError("specification must be a CIECAM16Specification instance.")

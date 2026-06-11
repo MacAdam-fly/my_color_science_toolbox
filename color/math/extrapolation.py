@@ -23,7 +23,13 @@ def extrapolate_1d(
     left: float | None = None,
     right: float | None = None,
 ) -> np.ndarray:
-    """Evaluate one signal at *target*, extrapolating out-of-domain samples."""
+    """Evaluate one signal at ``target``, extrapolating out-of-domain samples.
+
+    ``method`` controls only samples outside the source domain: ``"constant"``
+    uses edge values, ``"linear"`` extends edge slopes and ``"fill"`` uses
+    ``fill_value``. This is a pure numeric helper; spectral metadata is handled
+    by ``color.spectra``.
+    """
     x_arr, y_arr, target_arr = validate_samples(x, y, target)
     if method not in {"constant", "linear", "fill"}:
         raise ValueError(f"unsupported extrapolator {method!r}")

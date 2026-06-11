@@ -1,5 +1,7 @@
 """Colour appearance models."""
 
+from __future__ import annotations
+
 from .ciecam16 import (
     CIECAM16Specification,
     CIECAM16ViewingConditions,

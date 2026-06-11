@@ -72,7 +72,27 @@ register(DatasetEntry(
 
 
 def get_illuminant(name: str, **kwargs: Any) -> SpectralDict:
-    """Load a static illuminant spectral distribution."""
+    """Load a static illuminant spectral power distribution.
+
+    Parameters
+    ----------
+    name
+        Registered illuminant name such as ``"A"``, ``"D65"`` or
+        ``"fluorescents"``.
+    **kwargs
+        Forwarded to the dataset registry.
+
+    Returns
+    -------
+    dict[str, ndarray]
+        Raw read-only column mapping. Single illuminants use ``"spd"``; the
+        fluorescent workbook uses ``"F1"`` ... ``"F12"`` channels.
+
+    Notes
+    -----
+    These are file-backed static illuminants. Formula-generated blackbody and
+    CIE D-series daylight spectra live in ``color.generators``.
+    """
     from ._registry import get
 
     return get("illuminants", name, **kwargs)

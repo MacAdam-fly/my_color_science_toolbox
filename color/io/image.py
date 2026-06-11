@@ -115,6 +115,12 @@ def read_image(
 
     Integer images are normalised to ``[0, 1]`` when ``as_float=True``.  Set
     ``as_float=False`` to keep the stored integer codes.
+
+    Notes
+    -----
+    ``mode`` uses Pillow's basic channel conversion, e.g. ``"RGB"`` or
+    ``"L"``. This function does not read ICC profiles or perform colour
+    management.
     """
     try:
         from PIL import Image, ImageOps
@@ -148,6 +154,11 @@ def write_image(
     Floating images are interpreted as normalised ``[0, 1]`` values and are
     quantised to 8-bit by default. Integer images keep their dtype when
     ``bit_depth=None``.
+
+    Notes
+    -----
+    This is generic image array IO. It does not attach or transform ICC
+    profiles.
     """
     try:
         import imageio.v3 as iio
@@ -168,7 +179,11 @@ def read_sRGB_image(
     *,
     apply_exif: bool = True,
 ) -> np.ndarray:
-    """Read an image as encoded sRGB float values in ``[0, 1]``."""
+    """Read an image as encoded sRGB float values in ``[0, 1]``.
+
+    The image is converted to RGB channels and EXIF orientation is applied by
+    default. No ICC colour management is performed.
+    """
     return read_image(path, mode="RGB", apply_exif=apply_exif, as_float=True)
 
 
@@ -180,7 +195,11 @@ def write_sRGB_image(
     quality: int = 95,
     **save_kwargs: Any,
 ) -> Path:
-    """Write encoded sRGB float values to an 8-bit image file."""
+    """Write encoded sRGB float values to an 8-bit image file.
+
+    ``image`` must have shape ``(height, width, 3)`` and is interpreted as
+    already encoded sRGB, not linear RGB.
+    """
     array = _as_srgb_image_array(image)
     output = Path(path)
     if output.suffix.lower() in {".jpg", ".jpeg"}:

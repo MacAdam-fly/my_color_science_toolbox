@@ -45,7 +45,11 @@ def delta_E_CIE1976(
     Lab_1: Sequence[float] | np.ndarray,
     Lab_2: Sequence[float] | np.ndarray,
 ) -> np.ndarray | np.float64:
-    """Return the CIE 1976 Delta E colour difference for Lab coordinates."""
+    """Return the CIE 1976 Delta E colour difference for Lab coordinates.
+
+    Inputs must already be Lab coordinates using the same reference white.
+    Single points ``(3,)`` and broadcast arrays ``(..., 3)`` are supported.
+    """
     lab_1, lab_2 = _broadcast_lab(Lab_1, Lab_2)
     return as_float_result(np.linalg.norm(lab_1 - lab_2, axis=-1))
 
@@ -55,7 +59,11 @@ def delta_E_CIE1994(
     Lab_2: Sequence[float] | np.ndarray,
     textiles: bool = False,
 ) -> np.ndarray | np.float64:
-    """Return the CIE 1994 Delta E colour difference for Lab coordinates."""
+    """Return the CIE 1994 Delta E colour difference for Lab coordinates.
+
+    Inputs must share the same Lab reference white. Set ``textiles=True`` to
+    use the textile weighting constants.
+    """
     L_1, a_1, b_1, L_2, a_2, b_2 = _split_lab(Lab_1, Lab_2)
 
     k_1 = 0.048 if textiles else 0.045
@@ -90,7 +98,11 @@ def delta_E_CIE2000(
     Lab_2: Sequence[float] | np.ndarray,
     textiles: bool = False,
 ) -> np.ndarray | np.float64:
-    """Return the CIEDE2000 colour difference for Lab coordinates."""
+    """Return the CIEDE2000 colour difference for Lab coordinates.
+
+    Inputs must share the same Lab reference white. Set ``textiles=True`` to
+    use ``k_L=2``; chroma and hue parametric factors remain at 1.
+    """
     L_1, a_1, b_1, L_2, a_2, b_2 = _split_lab(Lab_1, Lab_2)
 
     k_L = 2.0 if textiles else 1.0
@@ -192,7 +204,11 @@ def delta_E_CMC(
     l: float = 2.0,  # noqa: E741
     c: float = 1.0,
 ) -> np.ndarray | np.float64:
-    """Return the CMC l:c colour difference for Lab coordinates."""
+    """Return the CMC l:c colour difference for Lab coordinates.
+
+    Inputs must share the same Lab reference white. ``l`` and ``c`` are the
+    positive lightness and chroma weighting parameters.
+    """
     if l <= 0 or c <= 0:
         raise ValueError("l and c must be positive")
 

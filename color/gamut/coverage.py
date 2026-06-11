@@ -127,12 +127,54 @@ def _clip_convex_polygon(subject: np.ndarray, clip: np.ndarray) -> np.ndarray:
 def xy_gamut_area(
     primaries: DisplayPrimaries | Sequence[Sequence[float]] | np.ndarray | str,
 ) -> float:
-    """Return CIE xy primary-hull area for display primaries."""
+    """Return CIE xy primary-hull area for display primaries.
+
+    Parameters
+    ----------
+    primaries
+        RGB colour space name, ``DisplayPrimaries`` or primary XYZ rows.
+
+    Returns
+    -------
+    float
+        Convex-hull area in the CIE 1931 xy plane.
+
+    Notes
+    -----
+    This path interprets rows as primary XYZ values and converts them to xy
+    before computing a convex hull.
+
+    Examples
+    --------
+    >>> xy_gamut_area("sRGB") > 0
+    True
+    """
     return _polygon_area(_primary_xy_polygon(primaries))
 
 
 def xy_gamut_area_from_xy(xy: Sequence[Sequence[float]] | np.ndarray) -> float:
-    """Return CIE xy convex-hull area from xy points or polygon vertices."""
+    """Return CIE xy convex-hull area from xy points or polygon vertices.
+
+    Parameters
+    ----------
+    xy
+        xy points or polygon vertices.
+
+    Returns
+    -------
+    float
+        Convex-hull area in the CIE 1931 xy plane.
+
+    Notes
+    -----
+    Input points may be three-primary xy values, four-primary xy values or an
+    already sampled xy boundary. The current API uses convex-hull semantics.
+
+    Examples
+    --------
+    >>> xy_gamut_area_from_xy([[0.64, 0.33], [0.30, 0.60], [0.15, 0.06]]) > 0
+    True
+    """
     return _polygon_area(_xy_polygon(xy))
 
 
@@ -166,7 +208,29 @@ def xy_gamut_coverage(
     test: DisplayPrimaries | Sequence[Sequence[float]] | np.ndarray | str,
     reference: DisplayPrimaries | Sequence[Sequence[float]] | np.ndarray | str,
 ) -> float:
-    """Return directional CIE xy area coverage of *reference* by *test*."""
+    """Return directional CIE xy area coverage of ``reference`` by ``test``.
+
+    Parameters
+    ----------
+    test, reference
+        RGB colour space names, ``DisplayPrimaries`` objects or primary XYZ
+        rows.
+
+    Returns
+    -------
+    float
+        ``intersection_area(test, reference) / area(reference)``.
+
+    Notes
+    -----
+    Coverage is directional. ``xy_gamut_coverage("sRGB", "Rec.2020")`` and
+    ``xy_gamut_coverage("Rec.2020", "sRGB")`` answer different questions.
+
+    Examples
+    --------
+    >>> 0 <= xy_gamut_coverage("sRGB", "Rec.2020") <= 1
+    True
+    """
     reference_area = xy_gamut_area(reference)
     if reference_area <= 0:
         raise ValueError("reference xy gamut area must be positive")
@@ -177,7 +241,31 @@ def xy_gamut_coverage_from_xy(
     test_xy: Sequence[Sequence[float]] | np.ndarray,
     reference_xy: Sequence[Sequence[float]] | np.ndarray,
 ) -> float:
-    """Return directional CIE xy area coverage from xy points or polygons."""
+    """Return directional CIE xy area coverage from xy points or polygons.
+
+    Parameters
+    ----------
+    test_xy, reference_xy
+        xy points or polygon vertices. They do not need to be sorted or
+        closed; a convex hull is computed internally.
+
+    Returns
+    -------
+    float
+        ``intersection_area(test_xy, reference_xy) / area(reference_xy)``.
+
+    Notes
+    -----
+    This is the correct entry when the data is already in the xy plane, such
+    as Pointer or MacAdam published xy boundaries.
+
+    Examples
+    --------
+    >>> a = [[0.64, 0.33], [0.30, 0.60], [0.15, 0.06]]
+    >>> b = [[0.70, 0.29], [0.17, 0.80], [0.13, 0.05]]
+    >>> 0 <= xy_gamut_coverage_from_xy(a, b) <= 1
+    True
+    """
     reference_area = xy_gamut_area_from_xy(reference_xy)
     if reference_area <= 0:
         raise ValueError("reference xy gamut area must be positive")
@@ -228,7 +316,29 @@ def _lch_volume_from_C(
 
 
 def lab_gamut_volume(boundary: GamutBoundary) -> float:
-    """Return deterministic Lab/LCHab gamut volume for a boundary."""
+    """Return deterministic Lab/LCHab gamut volume for a boundary.
+
+    Parameters
+    ----------
+    boundary
+        ``GamutBoundary`` with ``C_max[L, h]`` samples.
+
+    Returns
+    -------
+    float
+        Approximate volume obtained by integrating per-lightness chroma areas.
+
+    Notes
+    -----
+    The value depends on the ``L_values`` and ``hue_values`` sampling density.
+
+    Examples
+    --------
+    >>> from color.gamut import compute_LCH_gamut_boundary
+    >>> boundary = compute_LCH_gamut_boundary("sRGB", L_values=[0, 50, 100], hue_values=[0, 180, 360])
+    >>> lab_gamut_volume(boundary) >= 0
+    True
+    """
     boundary = _validate_boundary(boundary, name="boundary")
     return _lch_volume_from_C(boundary.C_max, boundary.L_values, boundary.hue_values)
 
@@ -306,7 +416,33 @@ def lab_gamut_coverage(
     test_boundary: GamutBoundary,
     reference_boundary: GamutBoundary,
 ) -> float:
-    """Return directional Lab/LCHab volume coverage of reference by test."""
+    """Return directional Lab/LCHab volume coverage of reference by test.
+
+    Parameters
+    ----------
+    test_boundary, reference_boundary
+        ``GamutBoundary`` objects to compare.
+
+    Returns
+    -------
+    float
+        ``overlap_volume(test, reference) / volume(reference)``.
+
+    Notes
+    -----
+    Coverage is directional and compares stored ``C_max`` boundaries directly.
+    If whitepoint chromaticities differ, a ``UserWarning`` is emitted and no
+    chromatic adaptation is applied. If grids differ, the test boundary is
+    interpolated onto the reference grid.
+
+    Examples
+    --------
+    >>> from color.gamut import compute_LCH_gamut_boundary
+    >>> a = compute_LCH_gamut_boundary("sRGB", L_values=[0, 50, 100], hue_values=[0, 180, 360])
+    >>> b = compute_LCH_gamut_boundary("Rec.2020", L_values=[0, 50, 100], hue_values=[0, 180, 360])
+    >>> 0 <= lab_gamut_coverage(a, b)
+    True
+    """
     reference = _validate_boundary(reference_boundary, name="reference_boundary")
     reference_volume = lab_gamut_volume(reference)
     if reference_volume <= 0:

@@ -55,7 +55,43 @@ def _convex_hull_polygon(points: np.ndarray) -> np.ndarray:
 
 @dataclass(frozen=True)
 class GamutBoundary:
-    """Computed LCHab gamut boundary."""
+    """Regular ``L* x hue`` gamut boundary in CIE LCHab.
+
+    Parameters
+    ----------
+    C_max
+        Maximum chroma array with shape ``(len(L_values), len(hue_values))``.
+    L_values
+        Lightness samples used by the boundary grid.
+    hue_values
+        Hue-angle samples in degrees.
+    whitepoint_XYZ
+        Lab reference white in project ``XYZ(Y=100)`` scale.
+    primaries
+        Optional display primaries. Display boundaries use this to provide an
+        exact primary ``xy_boundary()``.
+
+    Returns
+    -------
+    GamutBoundary
+        Frozen boundary object with conversion, area, volume and projection
+        helpers.
+
+    Notes
+    -----
+    ``C_max[L, h]`` is a radial Lab/LCHab boundary. ``xy_boundary()`` is the
+    preferred xy-plane boundary for the gamut object; it is not obtained by
+    converting ``projected_ab_boundary()`` to xy. Lab projection and xy
+    boundary answer different questions.
+
+    Examples
+    --------
+    >>> boundary = compute_LCH_gamut_boundary(
+    ...     "sRGB", L_values=[0, 50, 100], hue_values=[0, 120, 240, 360]
+    ... )
+    >>> boundary.C_max.shape
+    (3, 4)
+    """
 
     C_max: np.ndarray
     L_values: np.ndarray
@@ -246,7 +282,45 @@ def compute_LCH_gamut_boundary(
     iterations: int = 14,
     method: str = "auto",
 ) -> GamutBoundary:
-    """Compute maximum displayable CIE LCHab chroma for each L/h direction."""
+    """Compute a display-primary gamut boundary in CIE LCHab.
+
+    Parameters
+    ----------
+    primaries
+        Display primaries, RGB colour space name, ``DisplayPrimaries`` object
+        or raw ``(n, 3)`` primary XYZ rows.
+    whitepoint_XYZ
+        Optional Lab reference white. Defaults to the display whitepoint.
+    L_values
+        Lightness grid samples.
+    hue_values
+        Hue-angle grid samples in degrees.
+    C_upper
+        Upper chroma bound used by the binary search.
+    iterations
+        Number of binary-search iterations for each ``L*, h`` direction.
+    method
+        Inside-test method passed to ``is_within_primary_gamut``.
+
+    Returns
+    -------
+    GamutBoundary
+        Regular ``C_max[L, h]`` boundary for the display primary gamut.
+
+    Notes
+    -----
+    The computation fixes ``L*`` and hue, then binary-searches the largest
+    reachable ``C*``. It assumes linear primary mixtures in ``XYZ(Y=100)`` and
+    does not apply RGB encoding or chromatic adaptation.
+
+    Examples
+    --------
+    >>> boundary = compute_LCH_gamut_boundary(
+    ...     "Rec.2020", L_values=[0, 50, 100], hue_values=[0, 180, 360]
+    ... )
+    >>> boundary.to_Lab().shape
+    (3, 3, 3)
+    """
     display = as_display_primaries(primaries)
     whitepoint = (
         display.whitepoint_XYZ

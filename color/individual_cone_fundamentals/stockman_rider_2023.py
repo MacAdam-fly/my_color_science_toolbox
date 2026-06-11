@@ -247,7 +247,49 @@ def stockman_rider_2023_model_components(
     s_shift_nm: float = 0.0,
     l_template: str = "mean",
 ) -> GeneratedConeDict:
-    """Return Stockman/Rider model components for one observer."""
+    """Return Stockman/Rider 2023 model components for one observer.
+
+    Parameters
+    ----------
+    wavelength_nm
+        Wavelength samples in nanometres, within the ``360-850 nm`` model
+        range. Defaults to the model sampling grid.
+    observer_degree
+        ``2`` or ``10``. Selects default photopigment optical density and
+        macular density when those parameters are not explicitly supplied.
+    photopigment_od
+        Optional L/M/S peak photopigment optical densities.
+    macular_density_460
+        Macular pigment optical density at 460 nm. If omitted, the model uses
+        the 2-degree or 10-degree default.
+    lens_density_400
+        Lens optical density scale at 400 nm.
+    l_shift_nm, m_shift_nm, s_shift_nm
+        L/M/S photopigment wavelength shifts in nanometres.
+    l_template
+        L-cone template, one of ``"mean"``, ``"ser180"`` or ``"ala180"``.
+
+    Returns
+    -------
+    dict[str, ndarray]
+        Component mapping with ``wavelength``, shifted
+        ``photopigment_absorbance``, ``photopigment_od``,
+        ``retinal_absorptance``, individual ``macular_density`` and
+        ``lens_density``, ``prereceptoral_density``, ``corneal_quantal`` and
+        final ``corneal_energy`` arrays.
+
+    Notes
+    -----
+    The returned components are already evaluated for the current observer
+    parameters. ``corneal_energy`` is the source of the final L/M/S curves
+    returned by ``generate_stockman_rider_2023_individual_cone_fundamentals``.
+
+    Examples
+    --------
+    >>> components = stockman_rider_2023_model_components(l_shift_nm=2.0)
+    >>> components["corneal_energy"].shape[1]
+    3
+    """
     wavelengths = as_wavelengths(wavelength_nm)
     degree = _observer_degree(observer_degree)
 
@@ -309,7 +351,32 @@ def generate_stockman_rider_2023_individual_cone_fundamentals(
     s_shift_nm: float = 0.0,
     l_template: str = "mean",
 ) -> GeneratedConeDict:
-    """Generate Stockman/Rider corneal energy LMS cone fundamentals."""
+    """Generate Stockman/Rider 2023 corneal-energy LMS fundamentals.
+
+    Parameters
+    ----------
+    wavelength_nm
+        Wavelength samples in nanometres, within ``360-850 nm``.
+    observer_degree
+        ``2`` or ``10`` default observer route.
+    photopigment_od, macular_density_460, lens_density_400
+        Individual photopigment and prereceptoral density controls.
+    l_shift_nm, m_shift_nm, s_shift_nm
+        L/M/S photopigment wavelength shifts in nanometres.
+    l_template
+        L-cone template, one of ``"mean"``, ``"ser180"`` or ``"ala180"``.
+
+    Returns
+    -------
+    dict[str, ndarray]
+        Raw mapping with ``"wavelength"``, ``"l"``, ``"m"`` and ``"s"``.
+
+    Notes
+    -----
+    Each LMS channel is peak-normalised to 1. Use
+    ``stockman_rider_2023_model_components`` when intermediate density,
+    absorbance or retinal/corneal stages need inspection.
+    """
     components = stockman_rider_2023_model_components(
         wavelength_nm,
         observer_degree=observer_degree,

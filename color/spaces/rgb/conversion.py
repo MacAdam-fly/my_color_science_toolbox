@@ -28,7 +28,36 @@ def RGB_to_XYZ(
     colourspace: str | RGBColorSpace = "sRGB",
     apply_decoding: bool = True,
 ) -> np.ndarray:
-    """Convert RGB values to CIE XYZ tristimulus values."""
+    """Convert RGB values to CIE XYZ tristimulus values.
+
+    Input values use the selected RGB colour-space encoding unless
+    ``apply_decoding=False`` is passed. The result is XYZ in the numeric scale
+    implied by the RGB matrix, typically the project Y=100 XYZ domain.
+
+    Parameters
+    ----------
+    RGB
+        RGB values with final axis ``(R, G, B)``.
+    colourspace
+        RGB colour-space name or object.
+    apply_decoding
+        Decode encoded RGB values to linear RGB before matrix conversion.
+
+    Returns
+    -------
+    numpy.ndarray
+        XYZ tristimulus values with final axis ``(X, Y, Z)``.
+
+    Notes
+    -----
+    No clipping is applied. Values outside the RGB cube may appear during
+    intermediate calculations.
+
+    Examples
+    --------
+    >>> RGB_to_XYZ([0.4, 0.5, 0.6]).shape
+    (3,)
+    """
     rgb_space = get_RGB_colourspace(colourspace)
     rgb = as_last_axis_triplets(RGB, name="RGB")
     linear = decode_transfer(rgb, rgb_space.transfer) if apply_decoding else rgb
@@ -41,7 +70,36 @@ def XYZ_to_RGB(
     colourspace: str | RGBColorSpace = "sRGB",
     apply_encoding: bool = True,
 ) -> np.ndarray:
-    """Convert CIE XYZ tristimulus values to RGB values."""
+    """Convert CIE XYZ tristimulus values to RGB values.
+
+    ``XYZ`` must use the numeric scale expected by the selected RGB matrix.
+    The returned RGB is encoded by the colour-space transfer function unless
+    ``apply_encoding=False`` is passed, in which case linear RGB is returned.
+
+    Parameters
+    ----------
+    XYZ
+        XYZ tristimulus values with final axis ``(X, Y, Z)``.
+    colourspace
+        RGB colour-space name or object.
+    apply_encoding
+        Encode linear RGB with the colour-space transfer function.
+
+    Returns
+    -------
+    numpy.ndarray
+        RGB values with final axis ``(R, G, B)``.
+
+    Notes
+    -----
+    No clipping is applied; callers should clip explicitly for display or image
+    output.
+
+    Examples
+    --------
+    >>> XYZ_to_RGB([19.01, 20.0, 21.78]).shape
+    (3,)
+    """
     rgb_space = get_RGB_colourspace(colourspace)
     xyz = as_last_axis_triplets(XYZ, name="XYZ")
     linear = xyz @ rgb_space.matrix_XYZ_to_RGB.T
@@ -62,6 +120,33 @@ def RGB_to_RGB(
     By default, this is a stimulus-matching conversion through XYZ. If
     *chromatic_adaptation* is provided, source-white XYZ values are adapted to
     the target RGB colour-space white before encoding into the target space.
+
+    Parameters
+    ----------
+    RGB
+        Source RGB values with final axis ``(R, G, B)``.
+    source
+        Source RGB colour-space name or object.
+    target
+        Target RGB colour-space name or object.
+    chromatic_adaptation
+        Optional chromatic-adaptation transform name.
+
+    Returns
+    -------
+    numpy.ndarray
+        Target RGB values.
+
+    Notes
+    -----
+    This is the RGB-specific route for explicit RGB-to-RGB whitepoint
+    adaptation. The generic ``convert_color`` route intentionally does not
+    perform hidden chromatic adaptation.
+
+    Examples
+    --------
+    >>> RGB_to_RGB([0.4, 0.5, 0.6], "sRGB", "Display P3").shape
+    (3,)
     """
     source_space = get_RGB_colourspace(source)
     target_space = get_RGB_colourspace(target)
@@ -91,7 +176,34 @@ def sRGB_to_XYZ(
     *,
     apply_decoding: bool = True,
 ) -> np.ndarray:
-    """Convert sRGB values to CIE XYZ tristimulus values."""
+    """Convert sRGB values to CIE XYZ tristimulus values.
+
+    This is a convenience wrapper around ``RGB_to_XYZ(..., colourspace="sRGB")``.
+    Encoded sRGB input is decoded by default and the XYZ result is in the
+    project Y=100 domain.
+
+    Parameters
+    ----------
+    RGB
+        Encoded sRGB values with final axis ``(R, G, B)``.
+    apply_decoding
+        Decode sRGB values before matrix conversion.
+
+    Returns
+    -------
+    numpy.ndarray
+        XYZ tristimulus values on the project Y=100 scale.
+
+    Notes
+    -----
+    No clipping is applied. This wrapper always uses the registered sRGB
+    colour-space definition.
+
+    Examples
+    --------
+    >>> sRGB_to_XYZ([0.4, 0.5, 0.6]).shape
+    (3,)
+    """
     return RGB_to_XYZ(RGB, colourspace="sRGB", apply_decoding=apply_decoding)
 
 
@@ -100,7 +212,34 @@ def XYZ_to_sRGB(
     *,
     apply_encoding: bool = True,
 ) -> np.ndarray:
-    """Convert CIE XYZ tristimulus values to sRGB values."""
+    """Convert CIE XYZ tristimulus values to sRGB values.
+
+    This is a convenience wrapper around ``XYZ_to_RGB(..., colourspace="sRGB")``.
+    Input XYZ is expected in the project Y=100 domain and encoded sRGB is
+    returned by default.
+
+    Parameters
+    ----------
+    XYZ
+        XYZ tristimulus values on the project Y=100 scale.
+    apply_encoding
+        Encode linear sRGB with the sRGB transfer function.
+
+    Returns
+    -------
+    numpy.ndarray
+        sRGB values with final axis ``(R, G, B)``.
+
+    Notes
+    -----
+    No clipping is applied. Clip explicitly before image output when displayable
+    encoded sRGB values are required.
+
+    Examples
+    --------
+    >>> XYZ_to_sRGB([19.01, 20.0, 21.78]).shape
+    (3,)
+    """
     return XYZ_to_RGB(XYZ, colourspace="sRGB", apply_encoding=apply_encoding)
 
 

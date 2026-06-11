@@ -34,7 +34,23 @@ def constant_spd(
     value: float = 1.0,
     column: str = "spd",
 ) -> GeneratedDict:
-    """Generate a constant ideal spectral distribution."""
+    """Generate a constant ideal spectral distribution.
+
+    Parameters
+    ----------
+    wavelength_nm
+        Wavelength samples in nanometres. Defaults to ``360-780 nm`` at
+        ``1 nm`` spacing.
+    value
+        Constant value assigned to all wavelengths.
+    column
+        Name of the generated value column.
+
+    Returns
+    -------
+    dict[str, ndarray]
+        Raw mapping with ``"wavelength"`` and ``column``.
+    """
     wavelengths = _as_wavelengths(wavelength_nm)
     return {
         "wavelength": wavelengths,
@@ -46,7 +62,7 @@ def zero_spd(
     wavelength_nm: np.ndarray | None = None,
     column: str = "spd",
 ) -> GeneratedDict:
-    """Generate a zero ideal spectral distribution."""
+    """Generate a zero-valued ideal spectral distribution."""
     return constant_spd(wavelength_nm=wavelength_nm, value=0.0, column=column)
 
 
@@ -54,7 +70,7 @@ def equal_energy_spd(
     wavelength_nm: np.ndarray | None = None,
     column: str = "spd",
 ) -> GeneratedDict:
-    """Generate an equal-energy ideal spectral distribution."""
+    """Generate a unit-valued equal-energy ideal spectral distribution."""
     return constant_spd(wavelength_nm=wavelength_nm, value=1.0, column=column)
 
 
@@ -68,8 +84,31 @@ def gaussian_spd(
 ) -> GeneratedDict:
     """Generate an idealised Gaussian spectral distribution.
 
-    ``method="normal"`` interprets ``width`` as standard deviation.
-    ``method="fwhm"`` interprets ``width`` as full width at half maximum.
+    Parameters
+    ----------
+    wavelength_nm
+        Wavelength samples in nanometres.
+    peak_wavelength
+        Gaussian centre wavelength in nanometres.
+    width
+        Standard deviation when ``method="normal"``; full width at half
+        maximum when ``method="fwhm"``.
+    method
+        Width interpretation, ``"normal"`` or ``"fwhm"``.
+    amplitude
+        Peak amplitude.
+    column
+        Name of the generated value column.
+
+    Returns
+    -------
+    dict[str, ndarray]
+        Raw mapping with ``"wavelength"`` and ``column``.
+
+    Notes
+    -----
+    This is a mathematical Gaussian curve. LED spectra use a separate Ohno
+    2005 LED model in ``color.generators.leds``.
     """
     if width <= 0:
         raise ValueError(f"width must be positive, got {width}")
@@ -121,8 +160,30 @@ def multi_gaussian_spd(
 ) -> GeneratedDict:
     """Generate an idealised multi-Gaussian spectral distribution.
 
-    ``method="normal"`` interprets ``widths`` as standard deviations.
-    ``method="fwhm"`` interprets ``widths`` as full widths at half maximum.
+    Parameters
+    ----------
+    wavelength_nm
+        Wavelength samples in nanometres.
+    peak_wavelengths
+        Component centre wavelengths in nanometres.
+    widths
+        Scalar shared width or one width per component.
+    amplitudes
+        Optional scalar shared amplitude or one amplitude per component.
+    method
+        Width interpretation, ``"normal"`` or ``"fwhm"``.
+    column
+        Name of the generated value column.
+
+    Returns
+    -------
+    dict[str, ndarray]
+        Raw mapping with ``"wavelength"`` and summed ``column``.
+
+    Notes
+    -----
+    Component arrays must either be scalar or match ``peak_wavelengths`` in
+    length. Short arrays are rejected instead of being silently repeated.
     """
     wavelengths = _as_wavelengths(wavelength_nm)
     peaks = np.asarray(peak_wavelengths, dtype=np.float64)
@@ -213,7 +274,7 @@ register(GeneratorEntry(
 
 
 def generate_ideal(name: str, **kwargs) -> GeneratedDict:
-    """Generate an idealised spectral distribution."""
+    """Generate a registered idealised spectral distribution."""
     return generate("ideal", name, **kwargs)
 
 

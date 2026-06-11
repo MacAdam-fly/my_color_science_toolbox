@@ -17,7 +17,40 @@ DEFAULT_REFLECTANCE_LIBRARY_SHAPE = SpectralShape(400.0, 700.0, 5.0)
 
 @dataclass(frozen=True)
 class ReflectanceLibrary:
-    """Aligned reflectance sample matrix for recovery algorithms."""
+    """Aligned reflectance sample matrix for recovery algorithms.
+
+    Parameters
+    ----------
+    wavelengths
+        One-dimensional wavelength grid in nanometres.
+    reflectances
+        Reflectance matrix with shape ``(n_samples, n_wavelengths)``.
+    labels
+        Unique sample labels.
+    sources
+        Source dataset name for each sample.
+    shape
+        Common spectral shape used for alignment.
+    metadata
+        Library provenance and sample-count metadata.
+
+    Returns
+    -------
+    ReflectanceLibrary
+        Immutable reflectance library object.
+
+    Notes
+    -----
+    Libraries are modelling priors for PCA and dictionary recovery. Choosing a
+    library changes the solution family and can increase XYZ closure error when
+    the target is far from the library distribution.
+
+    Examples
+    --------
+    >>> library = load_reflectance_library("munsell_matt")
+    >>> library.reflectances.shape[0] == len(library.labels)
+    True
+    """
 
     wavelengths: np.ndarray
     reflectances: np.ndarray
@@ -137,6 +170,23 @@ def load_reflectance_library(
     shape:
         Common wavelength sampling domain. ``None`` uses
         ``SpectralShape(400, 700, 5)``.
+
+    Returns
+    -------
+    ReflectanceLibrary
+        Read-only reflectance sample matrix and associated labels.
+
+    Notes
+    -----
+    The default dataset is ``"munsell_matt"``. Passing ``"all_uef"`` expands to
+    the currently registered UEF reflectance spectra only; it is not a global
+    future-proof ``all datasets`` selector.
+
+    Examples
+    --------
+    >>> library = load_reflectance_library()
+    >>> library.metadata["datasets"]
+    ('munsell_matt',)
     """
     concrete_shape = _as_shape(shape)
     names = _normalise_datasets(datasets)

@@ -17,7 +17,31 @@ def Y_to_Lstar(
     Y: float | Sequence[float] | np.ndarray,
     Y_n: float | Sequence[float] | np.ndarray = 100.0,
 ) -> float | np.ndarray:
-    """Convert relative luminance component ``Y`` to CIE 1976 ``L*``."""
+    """Convert relative luminance component ``Y`` to CIE 1976 ``L*``.
+
+    Parameters
+    ----------
+    Y
+        Relative luminance values. The project default reference domain uses
+        ``Y_n=100``.
+    Y_n
+        Reference white luminance. Must be positive.
+
+    Returns
+    -------
+    float or ndarray
+        CIE 1976 lightness values.
+
+    Notes
+    -----
+    ``Y`` is a relative luminance component, not an absolute luminance in
+    ``cd/m^2``.
+
+    Examples
+    --------
+    >>> round(Y_to_Lstar(18.0), 3)
+    49.496
+    """
     Y_arr = as_float_array(Y, name="Y")
     Y_n_arr = as_float_array(Y_n, name="Y_n")
     if np.any(Y_arr < 0):
@@ -37,7 +61,29 @@ def Lstar_to_Y(
     Lstar: float | Sequence[float] | np.ndarray,
     Y_n: float | Sequence[float] | np.ndarray = 100.0,
 ) -> float | np.ndarray:
-    """Convert CIE 1976 ``L*`` to relative luminance component ``Y``."""
+    """Convert CIE 1976 ``L*`` to relative luminance component ``Y``.
+
+    Parameters
+    ----------
+    Lstar
+        CIE 1976 lightness values.
+    Y_n
+        Reference white luminance. Must be positive.
+
+    Returns
+    -------
+    float or ndarray
+        Relative luminance values on the same scale as ``Y_n``.
+
+    Notes
+    -----
+    With the default ``Y_n=100``, ``Lstar=100`` maps to ``Y=100``.
+
+    Examples
+    --------
+    >>> Lstar_to_Y(100.0)
+    100.0
+    """
     Lstar_arr = as_float_array(Lstar, name="Lstar")
     Y_n_arr = as_float_array(Y_n, name="Y_n")
     if np.any(Lstar_arr < 0):

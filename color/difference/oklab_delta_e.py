@@ -13,7 +13,11 @@ def delta_E_Oklab(
     Oklab_1: Sequence[float] | np.ndarray,
     Oklab_2: Sequence[float] | np.ndarray,
 ) -> np.ndarray | np.float64:
-    """Return the Euclidean distance between two Oklab coordinate arrays."""
+    """Return Euclidean distance between two Oklab coordinate arrays.
+
+    Inputs must already be Oklab coordinates. This is a direct coordinate
+    distance, not a CIE standard Delta E formula.
+    """
     oklab_1, oklab_2 = broadcast_triplets(
         Oklab_1,
         Oklab_2,

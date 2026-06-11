@@ -87,7 +87,36 @@ def is_within_primary_gamut(
     method: str = "auto",
     tolerance: float = 1e-9,
 ) -> np.ndarray | np.bool_:
-    """Return whether XYZ values are inside a display-primary gamut."""
+    """Return whether XYZ values are inside a display-primary gamut.
+
+    Parameters
+    ----------
+    XYZ
+        XYZ values with final-axis shape ``(..., 3)`` in the same scale as the
+        primary definitions.
+    primaries
+        Display primaries, RGB colour space name or raw primary XYZ rows.
+    method
+        ``"auto"`` uses a matrix solve for three primaries and convex-hull
+        halfspaces for four or more primaries.
+    tolerance
+        Non-negative numerical tolerance for inside tests.
+
+    Returns
+    -------
+    bool or ndarray
+        Inside mask matching the leading shape of ``XYZ``.
+
+    Notes
+    -----
+    This answers feasibility only: whether some bounded linear primary mixture
+    can reproduce the XYZ. It does not choose an optimal drive strategy.
+
+    Examples
+    --------
+    >>> is_within_primary_gamut([0.0, 0.0, 0.0], "sRGB")
+    True
+    """
     if tolerance < 0:
         raise ValueError("tolerance must be non-negative")
     display = as_display_primaries(primaries)
@@ -147,7 +176,37 @@ def solve_primary_weights(
     method: str = "auto",
     objective: str = "min_sum",
 ) -> np.ndarray:
-    """Return primary weights reproducing XYZ values."""
+    """Return bounded primary weights reproducing XYZ values.
+
+    Parameters
+    ----------
+    XYZ
+        XYZ values with final-axis shape ``(..., 3)``.
+    primaries
+        Display primaries, RGB colour space name or raw primary XYZ rows.
+    method
+        ``"auto"`` uses the unique matrix solve for three primaries and
+        ``linprog`` for four or more primaries.
+    objective
+        Linear-programming objective for multi-primary solutions. Currently
+        only ``"min_sum"`` is supported.
+
+    Returns
+    -------
+    ndarray
+        Weight array with final axis equal to the number of primaries.
+
+    Notes
+    -----
+    Three-primary weights are unique if the primary matrix is valid.
+    Multi-primary weights are generally not unique; this function returns one
+    feasible solution, not a perceptual or device-optimal drive recipe.
+
+    Examples
+    --------
+    >>> solve_primary_weights([0.0, 0.0, 0.0], "sRGB").shape
+    (3,)
+    """
     display = as_display_primaries(primaries)
     xyz = as_last_axis_triplets(XYZ, name="XYZ")
     resolved = _resolve_method(method, display.count, for_weights=True)

@@ -26,7 +26,43 @@ class _Intersection(NamedTuple):
 
 @dataclass(frozen=True)
 class ChromaticityAnalysis:
-    """Complete CIE xy chromaticity analysis result."""
+    """Complete dominant-wavelength and purity analysis in CIE xy.
+
+    Parameters
+    ----------
+    wavelength
+        Dominant wavelength. Negative values use the project convention for
+        non-spectral purple directions: the absolute value is the
+        complementary spectral wavelength.
+    dominant_xy
+        Boundary point used for dominant-wavelength and excitation-purity
+        geometry.
+    complementary_wavelength
+        Complementary wavelength using the same signed convention.
+    complementary_xy
+        Opposite-side boundary point.
+    dominant_region, complementary_region
+        Region labels such as ``"spectral"``, ``"purple"`` or
+        ``"undefined"``.
+    excitation_purity, colorimetric_purity
+        Purity values for the analysed chromaticity.
+
+    Returns
+    -------
+    ChromaticityAnalysis
+        Frozen dataclass returned by ``analyze_chromaticity``.
+
+    Notes
+    -----
+    The object is returned by ``analyze_chromaticity`` and is only about
+    two-dimensional CIE xy geometry. It does not contain luminance.
+
+    Examples
+    --------
+    >>> result = analyze_chromaticity([0.45, 0.40])
+    >>> result.dominant_region in {"spectral", "purple", "undefined"}
+    True
+    """
 
     wavelength: float | np.ndarray
     dominant_xy: np.ndarray
@@ -339,7 +375,36 @@ def xy_from_dominant_wavelength_pe(
     xy_n: Sequence[float] | np.ndarray = DEFAULT_WHITEPOINT_XY,
     locus: LocusSource = DEFAULT_LOCUS,
 ) -> np.ndarray:
-    """Return CIE xy coordinates from signed dominant wavelength and excitation purity."""
+    """Return CIE xy from signed dominant wavelength and excitation purity.
+
+    Parameters
+    ----------
+    wavelength
+        Dominant wavelength in nanometres. Negative values indicate a purple
+        direction whose absolute value is the complementary spectral
+        wavelength.
+    excitation_purity
+        Geometric purity in the closed interval ``[0, 1]``.
+    xy_n
+        Reference white chromaticity. Defaults to D65.
+    locus
+        Spectral-locus dataset name or ``MultiSpectralDistribution``.
+
+    Returns
+    -------
+    ndarray
+        xy coordinates with final-axis shape ``(..., 2)``.
+
+    Notes
+    -----
+    This is the inverse of the excitation-purity construction from whitepoint
+    to spectral or purple boundary.
+
+    Examples
+    --------
+    >>> xy_from_dominant_wavelength_pe(580.0, 0.5).shape
+    (2,)
+    """
     purity = np.asarray(excitation_purity, dtype=np.float64)
     _validate_unit_interval(purity, name="excitation_purity")
     boundary_xy, xy_n_arr, input_was_single = _boundary_xy_from_wavelength(
@@ -365,7 +430,14 @@ def xy_from_dominant_wavelength_pc(
     xy_n: Sequence[float] | np.ndarray = DEFAULT_WHITEPOINT_XY,
     locus: LocusSource = DEFAULT_LOCUS,
 ) -> np.ndarray:
-    """Return CIE xy coordinates from signed dominant wavelength and colorimetric purity."""
+    """Return CIE xy from signed dominant wavelength and colorimetric purity.
+
+    Notes
+    -----
+    This uses the project signed-wavelength convention: negative wavelengths
+    represent purple-line directions through their complementary spectral
+    wavelength. ``colorimetric_purity`` must be in ``[0, 1]``.
+    """
     purity = np.asarray(colorimetric_purity, dtype=np.float64)
     _validate_unit_interval(purity, name="colorimetric_purity")
     boundary_xy, xy_n_arr, input_was_single = _boundary_xy_from_wavelength(
@@ -395,7 +467,30 @@ def is_inside_chromaticity_locus(
     xy: Sequence[float] | np.ndarray,
     locus: LocusSource = DEFAULT_LOCUS,
 ) -> bool | np.ndarray:
-    """Return whether CIE xy coordinates are inside the closed chromaticity locus."""
+    """Return whether CIE xy coordinates are inside the closed chromaticity locus.
+
+    Parameters
+    ----------
+    xy
+        xy coordinates with final-axis shape ``(..., 2)``.
+    locus
+        Spectral-locus dataset name or ``MultiSpectralDistribution``.
+
+    Returns
+    -------
+    bool or ndarray
+        Boolean for single input, otherwise an array matching the leading
+        input shape.
+
+    Notes
+    -----
+    The test closes the spectral locus with the purple line.
+
+    Examples
+    --------
+    >>> is_inside_chromaticity_locus([0.3127, 0.3290])
+    True
+    """
     xy_arr = as_last_axis_pairs(xy, name="xy")
     _wavelengths, locus_xy = _load_locus(locus)
     input_was_single = xy_arr.shape == (2,)
@@ -412,7 +507,33 @@ def dominant_wavelength(
     xy_n: Sequence[float] | np.ndarray = DEFAULT_WHITEPOINT_XY,
     locus: LocusSource = DEFAULT_LOCUS,
 ) -> tuple[float | np.ndarray, np.ndarray]:
-    """Return dominant wavelength and dominant-side intersection coordinates."""
+    """Return dominant wavelength and dominant-side boundary coordinates.
+
+    Parameters
+    ----------
+    xy
+        xy coordinates with final-axis shape ``(..., 2)``.
+    xy_n
+        Reference white chromaticity. Defaults to D65.
+    locus
+        Spectral-locus dataset name or ``MultiSpectralDistribution``.
+
+    Returns
+    -------
+    wavelength, xy_boundary
+        Dominant wavelength and the corresponding boundary coordinates.
+
+    Notes
+    -----
+    Negative wavelength values indicate a non-spectral purple direction; the
+    absolute value is the complementary spectral wavelength.
+
+    Examples
+    --------
+    >>> wavelength, boundary = dominant_wavelength([0.45, 0.40])
+    >>> boundary.shape
+    (2,)
+    """
     wavelength, xy_wl, xy_cwl, single = _dominant_array(
         xy,
         xy_n,
@@ -429,7 +550,14 @@ def complementary_wavelength(
     xy_n: Sequence[float] | np.ndarray = DEFAULT_WHITEPOINT_XY,
     locus: LocusSource = DEFAULT_LOCUS,
 ) -> tuple[float | np.ndarray, np.ndarray]:
-    """Return complementary wavelength and complementary-side intersection coordinates."""
+    """Return complementary wavelength and opposite-side boundary coordinates.
+
+    Notes
+    -----
+    The same signed-wavelength convention as ``dominant_wavelength`` is used.
+    This function traces the ray in the opposite direction from the
+    whitepoint.
+    """
     wavelength, xy_wl, xy_cwl, single = _dominant_array(
         xy,
         xy_n,
@@ -446,7 +574,14 @@ def excitation_purity(
     xy_n: Sequence[float] | np.ndarray = DEFAULT_WHITEPOINT_XY,
     locus: LocusSource = DEFAULT_LOCUS,
 ) -> float | np.ndarray:
-    """Return excitation purity for CIE xy coordinates."""
+    """Return excitation purity for CIE xy coordinates.
+
+    Notes
+    -----
+    Excitation purity is the geometric ratio from the whitepoint to ``xy``
+    relative to the distance from the whitepoint to the boundary point on the
+    same ray.
+    """
     xy_arr = as_last_axis_pairs(xy, name="xy")
     xy_n_arr = np.broadcast_to(as_last_axis_pairs(xy_n, name="xy_n"), xy_arr.shape)
     _wavelength, xy_wl = dominant_wavelength(xy_arr, xy_n_arr, locus)
@@ -469,7 +604,13 @@ def colorimetric_purity(
     xy_n: Sequence[float] | np.ndarray = DEFAULT_WHITEPOINT_XY,
     locus: LocusSource = DEFAULT_LOCUS,
 ) -> float | np.ndarray:
-    """Return colorimetric purity for CIE xy coordinates."""
+    """Return colorimetric purity for CIE xy coordinates.
+
+    Notes
+    -----
+    Colorimetric purity adjusts excitation purity by the target and boundary
+    ``y`` chromaticity coordinates.
+    """
     xy_arr = as_last_axis_pairs(xy, name="xy")
     _wavelength, xy_wl = dominant_wavelength(xy_arr, xy_n, locus)
     purity_e = np.asarray(excitation_purity(xy_arr, xy_n, locus), dtype=np.float64)
@@ -491,7 +632,35 @@ def analyze_chromaticity(
     xy_n: Sequence[float] | np.ndarray = DEFAULT_WHITEPOINT_XY,
     locus: LocusSource = DEFAULT_LOCUS,
 ) -> ChromaticityAnalysis:
-    """Return complete CIE xy dominant, complementary and purity information."""
+    """Return dominant, complementary and purity information for CIE xy.
+
+    Parameters
+    ----------
+    xy
+        xy coordinates with final-axis shape ``(..., 2)``.
+    xy_n
+        Reference white chromaticity. Defaults to D65.
+    locus
+        Spectral-locus dataset name or ``MultiSpectralDistribution``.
+
+    Returns
+    -------
+    ChromaticityAnalysis
+        Semantic result containing dominant and complementary wavelengths,
+        boundary points, region labels and purity values.
+
+    Notes
+    -----
+    The analysis is purely chromaticity geometry. It does not consider
+    luminance. Region labels distinguish ordinary spectral intersections,
+    purple-line intersections and undefined whitepoint cases.
+
+    Examples
+    --------
+    >>> result = analyze_chromaticity([0.45, 0.40])
+    >>> result.dominant_xy.shape
+    (2,)
+    """
     wavelength, dominant_xy, complementary_xy, single = _dominant_array(
         xy,
         xy_n,

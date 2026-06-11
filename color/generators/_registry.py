@@ -16,7 +16,26 @@ GeneratedDict = Dict[str, np.ndarray]
 
 @dataclass(frozen=True)
 class GeneratorEntry:
-    """Immutable descriptor for one data generator."""
+    """Immutable descriptor for one registered data generator.
+
+    Parameters
+    ----------
+    category, name
+        Registry category and category-local generator name.
+    description
+        Human-readable description.
+    generate_fn
+        Callable returning a raw ``dict[str, ndarray]``.
+    parameters
+        Public parameter names accepted by the generator.
+    metadata
+        Descriptive metadata for the generated data.
+
+    Notes
+    -----
+    Generator entries represent formula or procedural data. Static file-backed
+    reference data belongs in ``color.datasets``.
+    """
 
     category: str
     name: str
@@ -60,7 +79,19 @@ def _resolve_category(category: str) -> Optional[str]:
 
 
 def register(entry: GeneratorEntry) -> None:
-    """Add a generator to the global registry."""
+    """Register a formula or procedural data generator.
+
+    Parameters
+    ----------
+    entry
+        Generator descriptor to add to the global registry.
+
+    Notes
+    -----
+    Category and name are checked for canonical collisions. The registry stores
+    callables, not generated data; generated outputs are cached by
+    ``generate(...)``.
+    """
     key = (entry.category, entry.name)
     canonical_category = canonicalize_name(entry.category)
     existing_category = _CANONICAL_CATEGORY_INDEX.get(canonical_category)
@@ -129,7 +160,34 @@ def _readonly_copy(data: GeneratedDict) -> GeneratedDict:
 
 
 def generate(category: str, name: str, **kwargs: Any) -> GeneratedDict:
-    """Generate data by category/name and cache the result."""
+    """Generate raw data from a registered generator.
+
+    Parameters
+    ----------
+    category, name
+        Registered generator category and name.
+    **kwargs
+        Method-specific parameters forwarded to the generator callable.
+
+    Returns
+    -------
+    dict[str, ndarray]
+        Raw read-only generated column mapping, usually with ``"wavelength"``
+        and one or more value columns.
+
+    Notes
+    -----
+    Results are cached by category, name and parameter values. Generators do
+    not create ``SpectralDistribution`` objects and do not normalise for
+    colorimetric integration; use ``color.spectra`` and ``color.colorimetry``
+    for those steps.
+
+    Examples
+    --------
+    >>> raw = generate("ideal", "gaussian", peak_wavelength=555)
+    >>> ("wavelength", "spd") == tuple(raw)
+    True
+    """
     if not isinstance(category, str):
         raise AssertionError(f"category must be str, got {type(category)}")
     if not isinstance(name, str):
@@ -153,7 +211,7 @@ def generate(category: str, name: str, **kwargs: Any) -> GeneratedDict:
 
 
 def describe(category: str, name: str) -> GeneratorEntry:
-    """Return the metadata entry for a generator."""
+    """Return a generator entry without running the generator."""
     key = _resolve_key(category, name)
     entry = _REGISTRY.get(key)
     if entry is None:
@@ -177,7 +235,19 @@ def list_categories() -> List[str]:
 
 
 def clear_cache(category: Optional[str] = None, name: Optional[str] = None) -> int:
-    """Clear cached generated data and return the number of entries removed."""
+    """Clear cached generated data and return the number of entries removed.
+
+    Parameters
+    ----------
+    category, name
+        Optional cache filter. ``name`` can only be used together with
+        ``category``.
+
+    Returns
+    -------
+    int
+        Number of cached parameter sets removed.
+    """
     if name is not None and category is None:
         raise ValueError("name can only be used together with category")
 

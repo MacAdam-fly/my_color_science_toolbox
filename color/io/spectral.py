@@ -50,7 +50,7 @@ def _numeric_frame(frame: Any) -> Any:
 
 
 def spectral_to_dataframe(spectral: SpectralObject):
-    """Return a pandas DataFrame representation of a spectral object."""
+    """Return a column-oriented pandas DataFrame for a spectral object."""
     if not isinstance(spectral, (SpectralDistribution, MultiSpectralDistribution)):
         raise TypeError(
             "spectral must be a SpectralDistribution or MultiSpectralDistribution"
@@ -68,7 +68,12 @@ def spectral_from_dataframe(
     metadata: Mapping[str, Any] | None = None,
     fill_nan: float | None = None,
 ) -> SpectralObject:
-    """Build a spectral object from a column-oriented pandas DataFrame."""
+    """Build a spectral object from a column-oriented pandas DataFrame.
+
+    ``x`` selects the wavelength column. Provide ``y`` for a single channel or
+    ``ys`` for explicit multi-channel labels; if neither is supplied, the
+    object type is inferred from the number of non-wavelength columns.
+    """
     frame = _numeric_frame(frame)
     if x not in frame.columns:
         raise ValueError(f"missing wavelength column {x!r}")
@@ -135,7 +140,12 @@ def read_spectral_csv(
     fill_nan: float | None = None,
     **read_csv_kwargs: Any,
 ) -> SpectralObject:
-    """Read a spectral distribution from a column-oriented CSV file."""
+    """Read a spectral distribution from a column-oriented CSV file.
+
+    ``read_csv_kwargs`` are passed directly to ``pandas.read_csv`` so callers
+    can handle real-world headers with options such as ``skiprows``,
+    ``encoding``, ``usecols`` or ``skipfooter``.
+    """
     try:
         import pandas as pd
     except ImportError as exc:  # pragma: no cover - depends on environment.
@@ -160,7 +170,11 @@ def write_spectral_csv(
     index: bool = False,
     **to_csv_kwargs: Any,
 ) -> Path | Any:
-    """Write a spectral distribution to a column-oriented CSV file."""
+    """Write a spectral distribution to a column-oriented CSV file.
+
+    CSV is a table format and does not preserve full object metadata. Use
+    JSON when object-level round trips are required.
+    """
     output, target = _path_or_file(path)
     frame = spectral_to_dataframe(spectral)
     frame.to_csv(target, index=index, **to_csv_kwargs)
@@ -179,7 +193,11 @@ def read_spectral_excel(
     fill_nan: float | None = None,
     **read_excel_kwargs: Any,
 ) -> SpectralObject:
-    """Read a spectral distribution from one Excel worksheet."""
+    """Read a spectral distribution from one Excel worksheet.
+
+    Excel reading follows the same column convention as CSV:
+    ``wavelength, sample_1, sample_2, ...``.
+    """
     try:
         import pandas as pd
     except ImportError as exc:  # pragma: no cover - depends on environment.
@@ -237,7 +255,11 @@ def write_spectral_json(
     indent: int | None = 2,
     ensure_ascii: bool = False,
 ) -> Path | Any:
-    """Write a spectral distribution to a JSON object file."""
+    """Write a spectral distribution to a JSON object file.
+
+    JSON preserves object type, name, metadata, wavelengths and channel labels,
+    so it is the preferred object-level spectral round-trip format.
+    """
     if isinstance(spectral, SpectralDistribution):
         payload: dict[str, Any] = {
             "kind": "SpectralDistribution",

@@ -66,7 +66,34 @@ def from_columns(
     metadata: Mapping[str, Any] | None = None,
     fill_nan: float | None = None,
 ) -> SpectralDistribution | MultiSpectralDistribution:
-    """Build a spectral object from a raw column mapping."""
+    """Build a spectral object from a raw column mapping.
+
+    Parameters
+    ----------
+    raw
+        Mapping from column names to arrays, typically returned by
+        ``color.datasets`` or ``color.generators``.
+    x
+        Wavelength column name.
+    y, ys
+        Single value column or multiple channel columns. Provide exactly one.
+    name, metadata
+        Optional object name and metadata.
+    fill_nan
+        Optional replacement value for non-finite samples.
+
+    Returns
+    -------
+    SpectralDistribution or MultiSpectralDistribution
+        Single-channel object when ``y`` is supplied; multi-channel object when
+        ``ys`` is supplied.
+
+    Notes
+    -----
+    This is the main boundary from raw dictionaries into the spectra object
+    layer. It does not read files and does not perform colorimetric
+    integration.
+    """
     if y is not None and ys is not None:
         raise ValueError("provide either y or ys, not both")
     if y is None and ys is None:
@@ -80,7 +107,8 @@ def from_columns(
             metadata=metadata,
             fill_nan=fill_nan,
         )
-    assert ys is not None
+    if ys is None:
+        raise ValueError("provide y or ys")
     return MultiSpectralDistribution.from_columns(
         raw,
         x=x,
@@ -98,7 +126,27 @@ def from_dataset(
     fill_nan: float | None = None,
     **kwargs: Any,
 ) -> SpectralDistribution | MultiSpectralDistribution:
-    """Build a spectral object from a registered static dataset."""
+    """Build a spectral object from a registered static dataset.
+
+    Parameters
+    ----------
+    category, name
+        Dataset registry category and name.
+    fill_nan
+        Optional replacement value for non-finite samples.
+    **kwargs
+        Passed through to ``color.datasets.get``.
+
+    Returns
+    -------
+    SpectralDistribution or MultiSpectralDistribution
+        Object type inferred from the number of non-wavelength columns.
+
+    Notes
+    -----
+    ``color.datasets.get`` itself still returns a raw ``dict``. This function
+    only loads and wraps that data into immutable spectra objects.
+    """
     from color.datasets import describe, get
 
     raw = get(category, name, **kwargs)
@@ -139,7 +187,26 @@ def from_dataset(
 
 
 def from_D65_illuminant() -> SpectralDistribution:
-    """Return CIE standard illuminant D65 as a spectral distribution."""
+    """Return CIE standard illuminant D65 as a spectral distribution.
+
+    Returns
+    -------
+    SpectralDistribution
+        Single-channel spectral object with wavelength samples and ``spd``
+        values from the registered D65 illuminant dataset.
+
+    Notes
+    -----
+    This is a convenience wrapper around ``color.datasets``. It preserves the
+    dataset values and metadata; it does not normalise the illuminant for
+    tristimulus integration.
+
+    Examples
+    --------
+    >>> d65 = from_D65_illuminant()
+    >>> d65.keys()
+    ('wavelength', 'value')
+    """
     from color.datasets.illuminants import get_D65_illuminant
 
     raw = get_D65_illuminant()
@@ -155,7 +222,24 @@ def from_D65_illuminant() -> SpectralDistribution:
 
 
 def from_cie1931_xyz_cmfs(interval_nm: float = 1) -> MultiSpectralDistribution:
-    """Return CIE 1931 2-degree XYZ CMFs as a multispectral object."""
+    """Return CIE 1931 2-degree XYZ CMFs as a multispectral object.
+
+    Parameters
+    ----------
+    interval_nm
+        Source sampling interval in nanometres.
+
+    Returns
+    -------
+    MultiSpectralDistribution
+        Object with labels ``("X", "Y", "Z")``.
+
+    Notes
+    -----
+    ``interval_nm`` selects an existing source file sampling interval. It does
+    not resample; use ``reshape`` or ``align`` on the returned object for new
+    wavelength grids.
+    """
     from color.datasets.standard_observers import (
         _cie1931_xyz_cmfs_stem,
         get_cie1931_xyz_cmfs,
@@ -180,7 +264,22 @@ def from_cie1931_xyz_cmfs(interval_nm: float = 1) -> MultiSpectralDistribution:
 
 
 def from_cie1964_xyz_cmfs(interval_nm: float = 1) -> MultiSpectralDistribution:
-    """Return CIE 1964 10-degree XYZ CMFs as a multispectral object."""
+    """Return CIE 1964 10-degree XYZ CMFs as a multispectral object.
+
+    Parameters
+    ----------
+    interval_nm
+        Source sampling interval in nanometres.
+
+    Returns
+    -------
+    MultiSpectralDistribution
+        Object with labels ``("X", "Y", "Z")``.
+
+    Notes
+    -----
+    ``interval_nm`` selects an existing source file sampling interval.
+    """
     from color.datasets.standard_observers import (
         _cie1964_xyz_cmfs_stem,
         get_cie1964_xyz_cmfs,
@@ -207,7 +306,22 @@ def from_cie1964_xyz_cmfs(interval_nm: float = 1) -> MultiSpectralDistribution:
 def from_cie2012_xyz_2degree_cmfs(
     interval_nm: float = 1,
 ) -> MultiSpectralDistribution:
-    """Return CIE 2012 2-degree XYZ CMFs as a multispectral object."""
+    """Return CIE 2012 2-degree XYZ CMFs as a multispectral object.
+
+    Parameters
+    ----------
+    interval_nm
+        Source sampling interval in nanometres.
+
+    Returns
+    -------
+    MultiSpectralDistribution
+        Object with labels ``("X", "Y", "Z")``.
+
+    Notes
+    -----
+    ``interval_nm`` selects an existing source file sampling interval.
+    """
     from color.datasets.standard_observers import (
         _cie2012_xyz_cmfs_stem,
         get_cie2012_xyz_2degree_cmfs,
@@ -234,7 +348,22 @@ def from_cie2012_xyz_2degree_cmfs(
 def from_cie2012_xyz_10degree_cmfs(
     interval_nm: float = 1,
 ) -> MultiSpectralDistribution:
-    """Return CIE 2012 10-degree XYZ CMFs as a multispectral object."""
+    """Return CIE 2012 10-degree XYZ CMFs as a multispectral object.
+
+    Parameters
+    ----------
+    interval_nm
+        Source sampling interval in nanometres.
+
+    Returns
+    -------
+    MultiSpectralDistribution
+        Object with labels ``("X", "Y", "Z")``.
+
+    Notes
+    -----
+    ``interval_nm`` selects an existing source file sampling interval.
+    """
     from color.datasets.standard_observers import (
         _cie2012_xyz_cmfs_stem,
         get_cie2012_xyz_10degree_cmfs,
@@ -263,7 +392,27 @@ def from_cie2006_lms_2degree_fundamentals(
     energy: str = "linE",
     fill_nan: float | None = 0.0,
 ) -> MultiSpectralDistribution:
-    """Return CIE 2006 2-degree LMS fundamentals as a multispectral object."""
+    """Return CIE 2006 2-degree LMS fundamentals as a multispectral object.
+
+    Parameters
+    ----------
+    interval_nm
+        Source sampling interval in nanometres.
+    energy
+        Dataset energy form, e.g. ``"linE"``, ``"logE"`` or ``"logQ"``.
+    fill_nan
+        Replacement value for non-finite table entries.
+
+    Returns
+    -------
+    MultiSpectralDistribution
+        Object with labels ``("l", "m", "s")``.
+
+    Notes
+    -----
+    Defaults use ``energy="linE"`` and ``fill_nan=0.0`` so blank long-wave
+    S-cone table values behave as zero response during integration.
+    """
     from color.datasets.standard_observers import (
         _cie2006_lms_fundamentals_stem,
         _energy_token,
@@ -299,7 +448,26 @@ def from_cie2006_lms_10degree_fundamentals(
     energy: str = "linE",
     fill_nan: float | None = 0.0,
 ) -> MultiSpectralDistribution:
-    """Return CIE 2006 10-degree LMS fundamentals as a multispectral object."""
+    """Return CIE 2006 10-degree LMS fundamentals as a multispectral object.
+
+    Parameters
+    ----------
+    interval_nm
+        Source sampling interval in nanometres.
+    energy
+        Dataset energy form, e.g. ``"linE"``, ``"logE"`` or ``"logQ"``.
+    fill_nan
+        Replacement value for non-finite table entries.
+
+    Returns
+    -------
+    MultiSpectralDistribution
+        Object with labels ``("l", "m", "s")``.
+
+    Notes
+    -----
+    Defaults use ``energy="linE"`` and ``fill_nan=0.0``.
+    """
     from color.datasets.standard_observers import (
         _cie2006_lms_fundamentals_stem,
         _energy_token,
@@ -356,7 +524,23 @@ def _from_individual_cone_generator(
 def from_stockman_rider_2023_individual_cone_fundamentals(
     **kwargs: Any,
 ) -> MultiSpectralDistribution:
-    """Return Stockman/Rider 2023 individual LMS fundamentals."""
+    """Return Stockman/Rider 2023 individual LMS fundamentals.
+
+    Parameters
+    ----------
+    **kwargs
+        Passed to the registered Stockman/Rider individual cone generator.
+
+    Returns
+    -------
+    MultiSpectralDistribution
+        Object with labels ``("l", "m", "s")``.
+
+    Notes
+    -----
+    This wraps the registered generator output as a
+    ``MultiSpectralDistribution`` with labels ``("l", "m", "s")``.
+    """
     return _from_individual_cone_generator(
         "stockman_rider_2023",
         "Stockman/Rider 2023 individual LMS fundamentals",
@@ -367,7 +551,23 @@ def from_stockman_rider_2023_individual_cone_fundamentals(
 def from_asano2016_individual_cone_fundamentals(
     **kwargs: Any,
 ) -> MultiSpectralDistribution:
-    """Return Asano et al. 2016 individual LMS fundamentals."""
+    """Return Asano et al. 2016 individual LMS fundamentals.
+
+    Parameters
+    ----------
+    **kwargs
+        Passed to the registered Asano 2016 individual observer generator.
+
+    Returns
+    -------
+    MultiSpectralDistribution
+        Object with labels ``("l", "m", "s")``.
+
+    Notes
+    -----
+    This wraps the registered generator output as a
+    ``MultiSpectralDistribution`` with labels ``("l", "m", "s")``.
+    """
     return _from_individual_cone_generator(
         "asano2016",
         "Asano et al. 2016 individual LMS fundamentals",

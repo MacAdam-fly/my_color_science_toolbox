@@ -52,7 +52,33 @@ for _matrix in (
     _matrix.setflags(write=False)
 
 def XYZ_to_Oklab(XYZ_D65_referred: Sequence[float] | np.ndarray) -> np.ndarray:
-    """Convert D65-referred CIE XYZ values to Oklab values."""
+    """Convert D65-referred CIE XYZ values to Oklab values.
+
+    ``XYZ_D65_referred`` must already be adapted to D65 and use the project
+    Y=100 scale. This function only performs the Oklab transform; it does not
+    chromatically adapt non-D65 XYZ values.
+
+    Parameters
+    ----------
+    XYZ_D65_referred
+        D65-referred XYZ values with final axis ``(X, Y, Z)`` on the Y=100
+        scale.
+
+    Returns
+    -------
+    numpy.ndarray
+        Oklab values with final axis ``(L, a, b)``.
+
+    Notes
+    -----
+    Use ``color.adaptation.adapt_to_D65`` before this function when the input
+    XYZ is referred to another whitepoint.
+
+    Examples
+    --------
+    >>> XYZ_to_Oklab([19.01, 20.0, 21.78]).shape
+    (3,)
+    """
     xyz = to_domain_1(
         as_last_axis_triplets(XYZ_D65_referred, name="XYZ_D65_referred"),
         source_scale="100",
@@ -62,14 +88,48 @@ def XYZ_to_Oklab(XYZ_D65_referred: Sequence[float] | np.ndarray) -> np.ndarray:
 
 
 def Oklab_to_XYZ(Oklab: Sequence[float] | np.ndarray) -> np.ndarray:
-    """Convert Oklab values to D65-referred CIE XYZ values."""
+    """Convert Oklab values to D65-referred CIE XYZ values.
+
+    The returned XYZ values are D65-referred on the project Y=100 scale. Use
+    ``color.adaptation.adapt_from_D65`` before entering workflows that require a
+    different reference whitepoint.
+
+    Parameters
+    ----------
+    Oklab
+        Oklab values with final axis ``(L, a, b)``.
+
+    Returns
+    -------
+    numpy.ndarray
+        D65-referred XYZ values on the Y=100 scale.
+
+    Notes
+    -----
+    This inverse returns the project D65 reference domain, not the whitepoint of
+    any earlier non-D65 source.
+
+    Examples
+    --------
+    >>> Oklab_to_XYZ([0.6, 0.02, 0.01]).shape
+    (3,)
+    """
     oklab = as_last_axis_triplets(Oklab, name="Oklab")
     LMS_cbrt = oklab @ MATRIX_OKLAB_TO_LMS.T
     return to_domain_100((LMS_cbrt**3) @ MATRIX_LMS_TO_XYZ.T, source_scale="1")
 
 
 def Oklab_to_Oklch(Oklab: Sequence[float] | np.ndarray) -> np.ndarray:
-    """Convert Oklab values to cylindrical Oklch values."""
+    """Convert Oklab values to cylindrical Oklch values.
+
+    The output final axis is ``L, C, h`` with hue in degrees on ``[0, 360)``.
+    Batch dimensions are preserved.
+
+    Notes
+    -----
+    This is a cylindrical coordinate transform inside Oklab; no XYZ conversion
+    is involved.
+    """
     oklab = as_last_axis_triplets(Oklab, name="Oklab")
     C = np.hypot(oklab[..., 1], oklab[..., 2])
     h = np.mod(np.degrees(np.arctan2(oklab[..., 2], oklab[..., 1])), 360.0)
@@ -77,7 +137,15 @@ def Oklab_to_Oklch(Oklab: Sequence[float] | np.ndarray) -> np.ndarray:
 
 
 def Oklch_to_Oklab(Oklch: Sequence[float] | np.ndarray) -> np.ndarray:
-    """Convert cylindrical Oklch values to Oklab values."""
+    """Convert cylindrical Oklch values to Oklab values.
+
+    The input final axis is ``L, C, h`` with hue in degrees. Batch dimensions
+    are preserved.
+
+    Notes
+    -----
+    This is the inverse cylindrical transform for ``Oklab_to_Oklch``.
+    """
     oklch = as_last_axis_triplets(Oklch, name="Oklch")
     h = np.radians(oklch[..., 2])
     a = oklch[..., 1] * np.cos(h)

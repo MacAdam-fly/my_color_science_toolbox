@@ -56,7 +56,12 @@ def is_uniform(x: np.ndarray, *, rtol: float = 1e-7, atol: float = 1e-12) -> boo
 
 
 def resolve_interpolator(x: np.ndarray, method: Interpolator = "auto") -> str:
-    """Resolve the interpolation method for the source samples."""
+    """Resolve the interpolation method for the source samples.
+
+    ``"auto"`` selects Sprague for uniform data with at least six samples,
+    cubic for non-uniform data with at least four samples, and linear
+    otherwise.
+    """
     if method != "auto":
         if method not in {"nearest", "linear", "cubic", "pchip", "sprague"}:
             raise ValueError(f"unsupported interpolator {method!r}")
@@ -78,7 +83,13 @@ def interpolate_1d(
     bounds_error: bool = True,
     fill_value: float = np.nan,
 ) -> np.ndarray:
-    """Interpolate one signal at *target* sample positions."""
+    """Interpolate one one-dimensional signal at target sample positions.
+
+    Inputs are strict numeric arrays: ``x`` and ``target`` must be finite,
+    one-dimensional and strictly increasing. This function has no wavelength,
+    label or metadata semantics; spectral object handling lives in
+    ``color.spectra``.
+    """
     x_arr, y_arr, target_arr = validate_samples(x, y, target)
     outside = (target_arr < x_arr[0]) | (target_arr > x_arr[-1])
     if bounds_error and np.any(outside):

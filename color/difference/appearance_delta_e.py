@@ -42,7 +42,11 @@ def delta_E_CAM02UCS(
     Jpapbp_1: Sequence[float] | np.ndarray,
     Jpapbp_2: Sequence[float] | np.ndarray,
 ) -> np.ndarray | np.float64:
-    """Return the CAM02-UCS colour difference for J'a'b' coordinates."""
+    """Return the CAM02-UCS colour difference for J'a'b' coordinates.
+
+    Inputs must already be CAM02-UCS coordinates computed with the same
+    viewing conditions.
+    """
     return delta_E_UCS_Luo2006(
         Jpapbp_1,
         Jpapbp_2,
@@ -78,7 +82,11 @@ def delta_E_CAM16UCS(
     Jpapbp_1: Sequence[float] | np.ndarray,
     Jpapbp_2: Sequence[float] | np.ndarray,
 ) -> np.ndarray | np.float64:
-    """Return the CAM16-UCS colour difference for J'a'b' coordinates."""
+    """Return the CAM16-UCS colour difference for J'a'b' coordinates.
+
+    Inputs must already be CAM16-UCS coordinates computed with the same
+    viewing conditions.
+    """
     return delta_E_UCS_Luo2006(
         Jpapbp_1,
         Jpapbp_2,

@@ -584,43 +584,68 @@ def get_standard_observer(
 
     Parameters
     ----------
-    category : str
+    category
         Sub-category or alias.  Canonical names: ``'cmfs'``,
         ``'cone_fundamentals'``, ``'luminous_efficiency'``,
         ``'prereceptoral_filters'``, ``'chromaticity_coordinates'``,
         ``'photopigments'``.  Aliases such as ``'cone'``, ``'lms'``,
         ``'xyz'``, ``'luminous'``, ``'filter'``, ``'chroma'``,
         ``'pigment'`` are also accepted.
-    name : str
+    name
         File stem, e.g. ``'cie1931_xyz_1nm'``, ``'cie2006_lms2_logE_5nm'``.
+    **kwargs
+        Forwarded to the dataset registry.
 
     Returns
     -------
     dict[str, ndarray]
         ``{'wavelength': ..., 'x_bar': ..., 'y_bar': ..., 'z_bar': ...}``
         (keys depend on the dataset).
+
+    Notes
+    -----
+    This returns raw static CVRL data. ``interval_nm`` convenience functions
+    below select existing files; they do not resample.
+
+    Examples
+    --------
+    >>> cmfs = get_standard_observer("cmf", "cie1931_xyz_1nm")
+    >>> ("X", "Y", "Z") == tuple(k for k in cmfs if k != "wavelength")
+    True
     """
     from ._registry import get
     return get(f"standard_observers.{_resolve_category(category)}", name, **kwargs)
 
 
 def get_cie1931_xyz_cmfs(interval_nm: float = 1) -> SpectralDict:
-    """Return CIE 1931 2-degree XYZ colour matching functions."""
+    """Return CIE 1931 2-degree XYZ colour matching functions.
+
+    ``interval_nm`` selects an existing 1 nm or 5 nm source file.
+    """
     return get_standard_observer("cmfs", _cie1931_xyz_cmfs_stem(interval_nm))
 
 
 def get_cie1964_xyz_cmfs(interval_nm: float = 1) -> SpectralDict:
-    """Return CIE 1964 10-degree XYZ colour matching functions."""
+    """Return CIE 1964 10-degree XYZ colour matching functions.
+
+    ``interval_nm`` selects an existing 1 nm or 5 nm source file.
+    """
     return get_standard_observer("cmfs", _cie1964_xyz_cmfs_stem(interval_nm))
 
 
 def get_cie2012_xyz_2degree_cmfs(interval_nm: float = 1) -> SpectralDict:
-    """Return CIE 2012 2-degree XYZ colour matching functions."""
+    """Return CIE 2012 2-degree XYZ colour matching functions.
+
+    ``interval_nm`` selects an existing 0.1 nm, 1 nm or 5 nm source file.
+    """
     return get_standard_observer("cmfs", _cie2012_xyz_cmfs_stem(2, interval_nm))
 
 
 def get_cie2012_xyz_10degree_cmfs(interval_nm: float = 1) -> SpectralDict:
-    """Return CIE 2012 10-degree XYZ colour matching functions."""
+    """Return CIE 2012 10-degree XYZ colour matching functions.
+
+    ``interval_nm`` selects an existing 0.1 nm, 1 nm or 5 nm source file.
+    """
     return get_standard_observer("cmfs", _cie2012_xyz_cmfs_stem(10, interval_nm))
 
 
@@ -628,7 +653,11 @@ def get_cie2006_lms_2degree_fundamentals(
     interval_nm: float = 1,
     energy: str = "linE",
 ) -> SpectralDict:
-    """Return CIE 2006 2-degree LMS cone fundamentals."""
+    """Return CIE 2006 2-degree LMS cone fundamentals.
+
+    ``energy`` accepts ``"linE"``, ``"logE"`` or ``"logQ"``. The result is a
+    raw dict with ``"l"``, ``"m"`` and ``"s"`` columns.
+    """
     return get_standard_observer(
         "cone_fundamentals",
         _cie2006_lms_fundamentals_stem(2, interval_nm, energy),
@@ -639,7 +668,11 @@ def get_cie2006_lms_10degree_fundamentals(
     interval_nm: float = 1,
     energy: str = "linE",
 ) -> SpectralDict:
-    """Return CIE 2006 10-degree LMS cone fundamentals."""
+    """Return CIE 2006 10-degree LMS cone fundamentals.
+
+    ``energy`` accepts ``"linE"``, ``"logE"`` or ``"logQ"``. The result is a
+    raw dict with ``"l"``, ``"m"`` and ``"s"`` columns.
+    """
     return get_standard_observer(
         "cone_fundamentals",
         _cie2006_lms_fundamentals_stem(10, interval_nm, energy),
@@ -647,7 +680,7 @@ def get_cie2006_lms_10degree_fundamentals(
 
 
 def list_standard_observers(category: str) -> List[str]:
-    """List all registered dataset names in a sub-category."""
+    """List registered standard-observer dataset names in a sub-category."""
     from ._registry import list_datasets
     return list_datasets(f"standard_observers.{_resolve_category(category)}")
 
@@ -658,5 +691,5 @@ def list_standard_observer_categories() -> List[str]:
 
 
 def describe_standard_observer(category: str) -> str:
-    """Return a human-readable description of a sub-category."""
+    """Return a human-readable description of a standard-observer category."""
     return _CATEGORY_NAMES.get(_resolve_category(category), category)

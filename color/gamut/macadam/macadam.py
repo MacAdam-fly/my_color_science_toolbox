@@ -99,7 +99,41 @@ def macadam_limits(
     iterations: int = 14,
     tolerance: float = 1e-9,
 ) -> MacAdamLimitsBoundary | ComputedMacAdamLimitsBoundary:
-    """Return MacAdam limits using published data or computed optimal colours."""
+    """Return MacAdam optimal-colour limits with source dispatch.
+
+    Parameters
+    ----------
+    illuminant
+        Illuminant name or SPD. Published data is available for ``"A"``,
+        ``"C"`` and ``"D65"``.
+    cmfs, shape
+        Computed-route options. Supplying either option forces computed
+        MacAdam limits when ``source="auto"``.
+    source
+        ``"auto"``, ``"published"`` or ``"computed"``.
+    L_values, hue_values, C_upper, iterations
+        Resampling parameters for the returned ``GamutBoundary``.
+    tolerance
+        Inside-test tolerance used by the resampling route.
+
+    Returns
+    -------
+    MacAdamLimitsBoundary or ComputedMacAdamLimitsBoundary
+        Regular LCHab boundary for the selected MacAdam source.
+
+    Notes
+    -----
+    ``source="auto"`` uses cached published A/C/D65 data when possible and
+    falls back to computed optimal colours for custom CMFs, illuminants or
+    spectral shapes. This is a theoretical object-colour limit, not a display
+    gamut and not the visible-spectrum volume.
+
+    Examples
+    --------
+    >>> boundary = macadam_limits("D65", L_values=[0, 50, 100], hue_values=[0, 180, 360])
+    >>> boundary.C_max.shape
+    (3, 3)
+    """
     selected = _select_source(
         illuminant,
         cmfs=cmfs,
@@ -136,7 +170,35 @@ def is_within_macadam_limits(
     source: str = "auto",
     tolerance: float = 1e-9,
 ) -> np.ndarray | np.bool_:
-    """Return whether XYZ values are inside published or computed MacAdam limits."""
+    """Return whether XYZ values are inside MacAdam optimal-colour limits.
+
+    Parameters
+    ----------
+    XYZ
+        XYZ values with final-axis shape ``(..., 3)`` in project ``Y=100``
+        scale.
+    illuminant
+        Illuminant name or SPD.
+    cmfs, shape, source
+        Same source-dispatch options as ``macadam_limits``.
+    tolerance
+        Non-negative inside-test tolerance.
+
+    Returns
+    -------
+    bool or ndarray
+        Inside mask matching the leading shape of ``XYZ``.
+
+    Notes
+    -----
+    For published A/C/D65 data this tests against cached optimal-colour
+    vertices. For computed sources it uses the computed optimal-colour solid.
+
+    Examples
+    --------
+    >>> bool(is_within_macadam_limits([0.0, 0.0, 0.0], "D65")) in {True, False}
+    True
+    """
     selected = _select_source(
         illuminant,
         cmfs=cmfs,

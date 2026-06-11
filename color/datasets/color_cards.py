@@ -163,19 +163,33 @@ def get_color_card(name: str, **kwargs: Any) -> SpectralDict:
 
     Parameters
     ----------
-    name : str
+    name
         ``'macbeth'``, ``'pmc'``, or ``'bcra'``.
+    **kwargs
+        Forwarded to the dataset registry.
 
     Returns
     -------
     dict[str, ndarray]
-        ``{'wavelength': ..., patch_name: reflectance, ...}``
+        Raw read-only mapping ``{"wavelength": ..., patch_name:
+        reflectance, ...}``.
+
+    Notes
+    -----
+    Patch columns are spectral reflectance factors. Use
+    ``color.spectra.from_columns`` before interpolation or integration.
+
+    Examples
+    --------
+    >>> card = get_color_card("macbeth")
+    >>> "Blue Sky" in card
+    True
     """
     from ._registry import get
     return get("color_cards", name, **kwargs)
 
 
 def list_color_cards() -> List[str]:
-    """List all registered color card names."""
+    """List all registered color card dataset names."""
     from ._registry import list_datasets
     return list_datasets("color_cards")

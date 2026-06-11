@@ -1,5 +1,7 @@
 """Shared constants for color calculations."""
 
+from __future__ import annotations
+
 from .illuminants_XYZ import A_XYZ, C_XYZ, D50_XYZ, D55_XYZ, D65_XYZ, E_XYZ
 
 from .adaptation_matrices import (

@@ -69,7 +69,27 @@ register(GeneratorEntry(
 
 
 def generate_stockman_rider_2023_individual_cone_fundamentals(**kwargs) -> GeneratedDict:
-    """Generate Stockman/Rider individual LMS cone fundamentals."""
+    """Generate Stockman/Rider 2023 individual LMS cone fundamentals.
+
+    Parameters
+    ----------
+    **kwargs
+        Passed to ``color.individual_cone_fundamentals``. Common parameters
+        include observer degree, photopigment optical density, macular/lens
+        density and L/M/S wavelength shifts.
+
+    Returns
+    -------
+    dict[str, ndarray]
+        Raw mapping with ``"wavelength"``, ``"l"``, ``"m"`` and ``"s"``.
+
+    Notes
+    -----
+    The generator returns final corneal-energy LMS fundamentals only. Model
+    components are available from the core
+    ``color.individual_cone_fundamentals`` module, not from the generator
+    registry.
+    """
     return generate(
         "individual_cone_fundamentals",
         "stockman_rider_2023",
@@ -78,7 +98,26 @@ def generate_stockman_rider_2023_individual_cone_fundamentals(**kwargs) -> Gener
 
 
 def generate_asano2016_individual_cone_fundamentals(**kwargs) -> GeneratedDict:
-    """Generate Asano et al. 2016 individual LMS cone fundamentals."""
+    """Generate Asano et al. 2016 individual LMS cone fundamentals.
+
+    Parameters
+    ----------
+    **kwargs
+        Passed to ``color.individual_cone_fundamentals``. Common parameters
+        include age, field size, density deviations and L/M/S lambda-max
+        shifts.
+
+    Returns
+    -------
+    dict[str, ndarray]
+        Raw mapping with ``"wavelength"``, ``"l"``, ``"m"`` and ``"s"``.
+
+    Notes
+    -----
+    This entry is intended for generated individual observers. If you only
+    need the static CIE 2006 mean LMS fundamentals, use ``color.spectra`` or
+    ``color.datasets`` standard-observer wrappers.
+    """
     return generate(
         "individual_cone_fundamentals",
         "asano2016",
@@ -90,7 +129,21 @@ def generate_individual_cone_fundamental(
     name: str = "stockman_rider_2023",
     **kwargs,
 ) -> GeneratedDict:
-    """Generate an individual cone fundamental dataset by model name."""
+    """Generate an individual cone fundamental dataset by model name.
+
+    Parameters
+    ----------
+    name
+        Registered model name, e.g. ``"stockman_rider_2023"`` or
+        ``"asano2016"``.
+    **kwargs
+        Forwarded to the selected model.
+
+    Returns
+    -------
+    dict[str, ndarray]
+        Raw corneal-energy LMS fundamentals.
+    """
     return generate("individual_cone_fundamentals", name, **kwargs)
 
 

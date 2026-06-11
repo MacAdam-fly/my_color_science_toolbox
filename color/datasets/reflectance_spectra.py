@@ -141,7 +141,29 @@ for _name, _meta in _UEF_DATASETS.items():
 
 
 def get_reflectance_spectrum(name: str, **kwargs: Any) -> SpectralDict:
-    """Load a UEF spectral reflectance dataset."""
+    """Load a UEF spectral reflectance dataset.
+
+    Parameters
+    ----------
+    name
+        Registered UEF dataset name, for example ``"munsell_matt"`` or
+        ``"agfa_it872"``.
+    **kwargs
+        Forwarded to the dataset registry.
+
+    Returns
+    -------
+    dict[str, ndarray]
+        Raw read-only mapping with ``"wavelength"`` and one column per
+        reflectance sample.
+
+    Notes
+    -----
+    Runtime data is read from audited CSV files in ``uef_csv``. Source
+    workbooks are kept separately for inspection; Natural colors are not
+    registered because the available AOTF values are not calibrated
+    reflectance factors.
+    """
     from ._registry import get
 
     return get("reflectance_spectra.uef", name, **kwargs)

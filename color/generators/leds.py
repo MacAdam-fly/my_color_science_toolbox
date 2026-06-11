@@ -17,7 +17,32 @@ def single_led_spd(
     amplitude: float = 1.0,
     column: str = "spd",
 ) -> GeneratedDict:
-    """Generate a single LED SPD using the Ohno 2005 model."""
+    """Generate a single LED SPD using the Ohno 2005 model.
+
+    Parameters
+    ----------
+    wavelength_nm
+        Wavelength samples in nanometres. Defaults to ``360-780 nm`` at
+        ``1 nm`` spacing.
+    peak_wavelength
+        LED peak wavelength in nanometres.
+    half_spectral_width
+        Ohno-model half spectral width; must be positive.
+    amplitude
+        Peak power multiplier.
+    column
+        Name of the generated value column.
+
+    Returns
+    -------
+    dict[str, ndarray]
+        Raw mapping with ``"wavelength"`` and ``column``.
+
+    Notes
+    -----
+    This is an empirical LED model, not a standard Gaussian. Use
+    ``gaussian_spd`` for a pure mathematical Gaussian curve.
+    """
     if half_spectral_width <= 0:
         raise ValueError(
             f"half_spectral_width must be positive, got {half_spectral_width}"
@@ -36,7 +61,32 @@ def multi_led_spd(
     peak_power_ratios: np.ndarray | List[float] | tuple[float, ...] | None = None,
     column: str = "spd",
 ) -> GeneratedDict:
-    """Generate a multi-LED SPD by summing Ohno 2005 single LED components."""
+    """Generate a multi-LED SPD by summing Ohno 2005 components.
+
+    Parameters
+    ----------
+    wavelength_nm
+        Wavelength samples in nanometres.
+    peak_wavelengths
+        LED peak wavelengths in nanometres.
+    half_spectral_widths
+        Half spectral widths. Values are resized to the peak array shape.
+    peak_power_ratios
+        Optional component power multipliers. Values are resized to the peak
+        array shape.
+    column
+        Name of the generated value column.
+
+    Returns
+    -------
+    dict[str, ndarray]
+        Raw mapping with ``"wavelength"`` and summed ``column``.
+
+    Notes
+    -----
+    This function preserves the existing LED API behavior where width and
+    power arrays are resized to match peak wavelengths.
+    """
     wavelengths = _as_wavelengths(wavelength_nm)
     peaks = np.asarray(peak_wavelengths, dtype=np.float64)
     widths = np.resize(np.asarray(half_spectral_widths, dtype=np.float64), peaks.shape)
@@ -98,7 +148,7 @@ register(GeneratorEntry(
 
 
 def generate_led(name: str, **kwargs) -> GeneratedDict:
-    """Generate LED spectral data."""
+    """Generate registered LED spectral data."""
     return generate("leds", name, **kwargs)
 
 

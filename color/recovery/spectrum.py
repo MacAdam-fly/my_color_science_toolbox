@@ -324,7 +324,43 @@ def recover_spectrum_from_responses(
     labels: Sequence[str] | None = None,
     **method_options,
 ) -> Union[SpectralDistribution, MultiSpectralDistribution]:
-    """Recover an effective spectrum from arbitrary three-channel responses."""
+    """Recover an effective spectrum from arbitrary three-channel responses.
+
+    Parameters
+    ----------
+    target
+        Target response triplet with shape ``(3,)`` or batch shape ``(n, 3)``.
+    responses
+        Three-channel response functions aligned by wavelength.
+    shape
+        Optional recovery wavelength sampling. ``None`` uses the response
+        sampling domain.
+    method
+        Spectrum recovery method name or spectrum recovery options object.
+    labels
+        Optional labels for batch recovery outputs.
+    **method_options
+        Method-specific keyword options for string method calls.
+
+    Returns
+    -------
+    SpectralDistribution or MultiSpectralDistribution
+        Recovered effective spectrum for one target or a multi-channel object
+        for multiple targets.
+
+    Notes
+    -----
+    This is the lowest-level public spectrum recovery entry. The recovered
+    curve is an effective spectrum satisfying ``target = A @ spectrum``; it is
+    not automatically a reflectance and no illuminant semantics are applied.
+
+    Examples
+    --------
+    >>> from color.spectra import from_cie1931_xyz_cmfs
+    >>> responses = from_cie1931_xyz_cmfs()
+    >>> recover_spectrum_from_responses([24.0, 20.0, 18.0], responses).metadata["recovery_kind"]
+    'spectrum'
+    """
     method_name, config = _normalise_spectrum_method(method, method_options)
     return _recover_spectrum_from_responses_resolved(
         target,
@@ -345,7 +381,41 @@ def recover_spectrum_from_XYZ(
     labels: Sequence[str] | None = None,
     **method_options,
 ) -> Union[SpectralDistribution, MultiSpectralDistribution]:
-    """Recover an effective spectrum from XYZ tristimulus values."""
+    """Recover an effective spectrum from XYZ tristimulus values.
+
+    Parameters
+    ----------
+    XYZ
+        Target XYZ tristimulus values on the project Y=100 scale, with shape
+        ``(3,)`` or ``(n, 3)``.
+    cmfs
+        XYZ colour matching functions as a dataset name or spectral object.
+    shape
+        Optional recovery wavelength sampling.
+    method
+        Spectrum recovery method name or spectrum recovery options object.
+    labels
+        Optional labels for batch recovery outputs.
+    **method_options
+        Method-specific keyword options for string method calls.
+
+    Returns
+    -------
+    SpectralDistribution or MultiSpectralDistribution
+        Recovered effective spectrum.
+
+    Notes
+    -----
+    The result can be interpreted as an emission-like SPD when the target came
+    from a self-luminous source. Reflectance recovery should use
+    ``recover_reflectance_from_XYZ`` because reflectance constraints must be
+    applied before multiplying by an illuminant.
+
+    Examples
+    --------
+    >>> recover_spectrum_from_XYZ([24.0, 20.0, 18.0]).metadata["recovery_kind"]
+    'spectrum'
+    """
     resolved_method, config = _normalise_spectrum_method(method, method_options)
     if (
         resolved_method in {"gaussian", "multi_gaussian", "auto_gaussian"}
@@ -397,7 +467,31 @@ def recover_spectrum_from_xyY(
     xyY: Sequence[float] | np.ndarray,
     **kwargs,
 ) -> Union[SpectralDistribution, MultiSpectralDistribution]:
-    """Recover an effective spectrum from xyY tristimulus coordinates."""
+    """Recover an effective spectrum from xyY tristimulus coordinates.
+
+    Parameters
+    ----------
+    xyY
+        Target ``x, y, Y`` values with shape ``(3,)`` or ``(n, 3)``. ``Y`` uses
+        the same project Y=100 convention as XYZ.
+    **kwargs
+        Forwarded to ``recover_spectrum_from_XYZ`` after converting xyY to XYZ.
+
+    Returns
+    -------
+    SpectralDistribution or MultiSpectralDistribution
+        Recovered effective spectrum.
+
+    Notes
+    -----
+    This is a convenience wrapper; all method semantics and limitations are the
+    same as ``recover_spectrum_from_XYZ``.
+
+    Examples
+    --------
+    >>> recover_spectrum_from_xyY([0.32, 0.31, 20.0]).metadata["recovery_kind"]
+    'spectrum'
+    """
     xyy, _ = as_recovery_targets(xyY, name="xyY")
     XYZ = xyY_to_XYZ(xyy)
     if np.asarray(xyY, dtype=np.float64).ndim == 1:
@@ -415,7 +509,41 @@ def recover_spectrum_from_LMS(
     labels: Sequence[str] | None = None,
     **method_options,
 ) -> Union[SpectralDistribution, MultiSpectralDistribution]:
-    """Recover an effective spectrum from LMS cone responses."""
+    """Recover an effective spectrum from LMS cone responses.
+
+    Parameters
+    ----------
+    LMS
+        Target LMS response values with shape ``(3,)`` or ``(n, 3)``.
+    fundamentals
+        LMS fundamentals as a dataset name or spectral object.
+    fill_nan
+        Replacement value for missing fundamental values when loading datasets.
+    shape
+        Optional recovery wavelength sampling.
+    method
+        Spectrum recovery method name or spectrum recovery options object.
+    labels
+        Optional labels for batch recovery outputs.
+    **method_options
+        Method-specific keyword options for string method calls.
+
+    Returns
+    -------
+    SpectralDistribution or MultiSpectralDistribution
+        Recovered effective spectrum.
+
+    Notes
+    -----
+    LMS recovery uses the supplied cone fundamentals directly and does not run
+    XYZ chromaticity or dominant-wavelength analysis unless explicit Gaussian
+    centre starts are provided.
+
+    Examples
+    --------
+    >>> recover_spectrum_from_LMS([12.0, 14.0, 3.0]).metadata["recovery_kind"]
+    'spectrum'
+    """
     return recover_spectrum_from_responses(
         LMS,
         _load_lms_fundamentals(fundamentals, fill_nan=fill_nan),

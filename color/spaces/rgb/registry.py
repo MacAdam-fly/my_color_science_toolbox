@@ -36,7 +36,11 @@ def _alias_keys(space: RGBColorSpace) -> tuple[str, ...]:
 
 
 def get_RGB_colourspace(name: str | RGBColorSpace) -> RGBColorSpace:
-    """Resolve an RGB colour space by name or alias."""
+    """Resolve an RGB colour space by name or alias.
+
+    Passing an existing ``RGBColorSpace`` returns it unchanged. Custom RGB spaces
+    are resolvable here only after explicit ``register_RGB_colourspace``.
+    """
     if isinstance(name, RGBColorSpace):
         return name
     key = canonical_method_name(name)
@@ -47,7 +51,11 @@ def get_RGB_colourspace(name: str | RGBColorSpace) -> RGBColorSpace:
 
 
 def list_RGB_colourspaces() -> tuple[str, ...]:
-    """Return registered RGB colour-space names."""
+    """Return registered RGB colour-space names.
+
+    The result includes built-in standards and any custom spaces registered in
+    the current Python process.
+    """
     return tuple(sorted(RGB_COLORSPACES))
 
 

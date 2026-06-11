@@ -49,7 +49,40 @@ class ConversionPathEdge:
 
 @dataclass(frozen=True)
 class ConversionPath:
-    """A structural description of a colour-space conversion route."""
+    """A structural description of a colour-space conversion route.
+
+    The path records nodes and directed operations that ``convert_color(...)``
+    would use, but it does not evaluate any colour values. It is intended for
+    diagnostics, documentation, and plotting of conversion routes.
+
+    Parameters
+    ----------
+    source
+        Resolved source colour-space name.
+    target
+        Resolved target colour-space name.
+    nodes
+        Ordered route nodes.
+    edges
+        Directed operations between adjacent nodes.
+
+    Returns
+    -------
+    ConversionPath
+        Immutable route description.
+
+    Notes
+    -----
+    ``ConversionPath`` is descriptive only; it does not validate colour value
+    shapes and does not execute conversion math.
+
+    Examples
+    --------
+    >>> from color.spaces import describe_conversion_path
+    >>> path = describe_conversion_path("JzCzhz", "Lab")
+    >>> [node.name for node in path.nodes]
+    ['JzCzhz', 'Jzazbz', 'XYZ', 'Lab']
+    """
 
     source: str
     target: str
@@ -565,7 +598,44 @@ def convert_color(
     target: str | ColorSpaceNode | RGBColorSpace | SpaceSpec,
     **kwargs,
 ) -> np.ndarray:
-    """Convert *value* between registered colour-space nodes."""
+    """Convert *value* between registered colour-space nodes.
+
+    ``source`` and ``target`` can be names, ``SpaceSpec`` objects, registered
+    generic nodes, or RGB colour spaces. Generic spaces are routed through XYZ,
+    derived spaces follow their parent chain, and RGB spaces apply transfer
+    decoding/encoding as requested. The function does not perform implicit
+    chromatic adaptation; use ``color.adaptation`` or ``RGB_to_RGB`` with an
+    explicit adaptation method when a reference whitepoint must change.
+
+    Parameters
+    ----------
+    value
+        Colour values. The final axis must match the source space.
+    source
+        Source colour space, optionally wrapped in ``SpaceSpec``.
+    target
+        Target colour space, optionally wrapped in ``SpaceSpec``.
+    **kwargs
+        Options shared with the source and target endpoint conversion
+        functions, such as RGB transfer flags.
+
+    Returns
+    -------
+    numpy.ndarray
+        Converted colour values with the final axis of the target space.
+
+    Notes
+    -----
+    XYZ is the conversion hub and public XYZ values use the project Y=100
+    scale. Oklab, IPT and Jzazbz require D65-referred XYZ; this function warns
+    on known risky routes but does not adapt automatically.
+
+    Examples
+    --------
+    >>> Lab = convert_color([19.01, 20.0, 21.78], "XYZ", "Lab")
+    >>> Lab.shape
+    (3,)
+    """
     source_spec = as_space_spec(source)
     target_spec = as_space_spec(target)
 
@@ -641,7 +711,39 @@ def describe_conversion_path(
     target: str | ColorSpaceNode | RGBColorSpace | SpaceSpec,
     **kwargs,
 ) -> ConversionPath:
-    """Describe the structural route used for a colour-space conversion."""
+    """Describe the structural route used for a colour-space conversion.
+
+    The returned ``ConversionPath`` mirrors the routing rules of
+    ``convert_color(...)`` without inspecting or transforming numeric input.
+    Unsupported options and hidden chromatic-adaptation requests are rejected
+    in the same style as the real conversion entry point.
+
+    Parameters
+    ----------
+    source
+        Source colour space, optionally wrapped in ``SpaceSpec``.
+    target
+        Target colour space, optionally wrapped in ``SpaceSpec``.
+    **kwargs
+        Conversion options used only to validate route compatibility.
+
+    Returns
+    -------
+    ConversionPath
+        Structural route description.
+
+    Notes
+    -----
+    Use ``color.spaces.plotting.plot_conversion_path`` to draw the returned
+    path. The plotting helper is intentionally not part of the top-level
+    ``color.spaces`` API.
+
+    Examples
+    --------
+    >>> path = describe_conversion_path("Oklch", "Lab")
+    >>> [edge.operation for edge in path.edges]
+    ['to_parent', 'to_XYZ', 'from_XYZ']
+    """
     source_spec = as_space_spec(source)
     target_spec = as_space_spec(target)
 

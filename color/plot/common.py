@@ -12,7 +12,13 @@ def get_figure_axes(
     *,
     figsize: tuple[float, float] = (7.0, 4.0),
 ):
-    """Return ``(fig, ax)`` using *ax* or creating a new figure."""
+    """Return ``(fig, ax)`` using *ax* or creating a new figure.
+
+    Notes
+    -----
+    Plot functions use this helper to support both standalone calls and
+    caller-managed subplot layouts.
+    """
     import matplotlib.pyplot as plt
 
     if ax is None:
@@ -23,7 +29,13 @@ def get_figure_axes(
 
 
 def finish_figure(fig, *, tight_layout: bool = True):
-    """Apply final figure layout settings and return *fig*."""
+    """Apply final figure layout settings and return *fig*.
+
+    Notes
+    -----
+    This does not save or show the figure. Saving belongs to ``color.io`` or
+    the caller.
+    """
     if tight_layout:
         fig.tight_layout()
     return fig

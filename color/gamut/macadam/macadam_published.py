@@ -63,7 +63,28 @@ def macadam_limits_XYZ(illuminant: str = "D65") -> np.ndarray:
 
 
 def macadam_limits_published_xy_boundary(illuminant: str = "D65") -> np.ndarray:
-    """Return the published CIE xy-plane boundary of the MacAdam limits."""
+    """Return the published CIE xy-plane boundary of the MacAdam limits.
+
+    Parameters
+    ----------
+    illuminant
+        Published MacAdam illuminant name: ``"A"``, ``"C"`` or ``"D65"``.
+
+    Returns
+    -------
+    ndarray
+        Closed ``(n, 2)`` xy boundary polygon.
+
+    Notes
+    -----
+    This boundary is computed directly from the cached MacAdam xyY table. It
+    is not derived by projecting a Lab boundary.
+
+    Examples
+    --------
+    >>> macadam_limits_published_xy_boundary("D65").shape[1]
+    2
+    """
     data = macadam_limits_data(illuminant)
     positive = data["Y"] > 1e-12
     xy = np.stack((data["x"][positive], data["y"][positive]), axis=-1)
