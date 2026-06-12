@@ -22,6 +22,7 @@ interpolated, reshaped, aligned, exported, and combined.
 ```python
 from color.spectra import (
     SpectralShape,
+    from_alpha_opic_action_spectra,
     from_D65_illuminant,
     from_asano2016_individual_cone_fundamentals,
     from_cie1931_xyz_cmfs,
@@ -31,6 +32,7 @@ from color.spectra import (
 
 d65 = from_D65_illuminant()
 cmfs = from_cie1931_xyz_cmfs(interval_nm=1)
+alpha_opic = from_alpha_opic_action_spectra()
 stockman = from_stockman_rider_2023_individual_cone_fundamentals(observer_degree=2)
 asano = from_asano2016_individual_cone_fundamentals(age=32, field_size_degree=2)
 
@@ -56,6 +58,8 @@ values_450_550 = y_bar.sample([450, 550])
 | `from_cie2012_xyz_10degree_cmfs` | Wrap CIE 2012 10-degree XYZ CMFs |
 | `from_cie2006_lms_2degree_fundamentals` | Wrap CIE 2006 2-degree LMS fundamentals |
 | `from_cie2006_lms_10degree_fundamentals` | Wrap CIE 2006 10-degree LMS fundamentals |
+| `from_iprgc_melanopic` | Wrap CIE S 026 melanopic / ipRGC action spectrum |
+| `from_alpha_opic_action_spectra` | Compose the five CIE S 026 alpha-opic action spectra |
 | `from_stockman_rider_2023_individual_cone_fundamentals` | Wrap Stockman/Rider individual LMS fundamentals |
 | `from_asano2016_individual_cone_fundamentals` | Wrap Asano 2016 individual LMS fundamentals |
 
@@ -86,6 +90,8 @@ For common standards, prefer the semantic shortcuts:
 | `from_cie2012_xyz_10degree_cmfs(interval_nm=1)` | CIE 2012 10-degree XYZ CMFs |
 | `from_cie2006_lms_2degree_fundamentals(interval_nm=1, energy="linE")` | CIE 2006 2-degree LMS fundamentals |
 | `from_cie2006_lms_10degree_fundamentals(interval_nm=1, energy="linE")` | CIE 2006 10-degree LMS fundamentals |
+| `from_iprgc_melanopic()` | CIE S 026 melanopic / ipRGC action spectrum |
+| `from_alpha_opic_action_spectra()` | Five CIE S 026 alpha-opic action spectra |
 | `from_stockman_rider_2023_individual_cone_fundamentals(...)` | Stockman/Rider 2023 individual LMS fundamentals |
 | `from_asano2016_individual_cone_fundamentals(...)` | Asano 2016 individual LMS fundamentals |
 
@@ -102,6 +108,11 @@ They accept the same parameters as their explicit
 `color.individual_cone_fundamentals` model functions. Stockman/Rider exposes
 `observer_degree`, density and L/M/S shift parameters; Asano 2016 exposes age,
 field size, density deviations, OD deviations and L/M/S lambda-max shifts.
+
+`from_alpha_opic_action_spectra()` is a convenience composition: `sc/mc/lc`
+come from CIE 2006 10-degree LMS linear-energy fundamentals, `rh` comes from
+scotopic `V_prime`, and `mel` comes from the CIE S 026 melanopic / ipRGC action
+spectrum. It is not a separate five-column dataset.
 
 ## Objects And Access
 

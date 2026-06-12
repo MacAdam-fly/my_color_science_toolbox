@@ -19,6 +19,8 @@
 | `from_cie2012_xyz_10degree_cmfs` | CIE 2012 10 度 XYZ CMFs | CIE 2012 10 度响应 |
 | `from_cie2006_lms_2degree_fundamentals` | CIE 2006 2 度 LMS fundamentals | LMS 积分响应 |
 | `from_cie2006_lms_10degree_fundamentals` | CIE 2006 10 度 LMS fundamentals | 10 度 LMS 积分响应 |
+| `from_iprgc_melanopic` | CIE S 026 melanopic / ipRGC 曲线 | melanopic / ipRGC 响应 |
+| `from_alpha_opic_action_spectra` | CIE S 026 五通道 alpha-opic 曲线组合 | alpha-opic 分析 |
 | `from_stockman_rider_2023_individual_cone_fundamentals` | Stockman/Rider 个体化 LMS | 个体参数化 cone fundamentals |
 | `from_asano2016_individual_cone_fundamentals` | Asano 2016 个体化 LMS | Asano individual colorimetric observer |
 
@@ -320,6 +322,40 @@ lms = from_cie2006_lms_2degree_fundamentals(fill_nan=None)
 ```
 
 注意：这些 LMS 入口默认 `fill_nan=0.0`，适合积分中的零响应语义。
+
+### `from_iprgc_melanopic()`
+
+用途：返回 CIE S 026 melanopic / ipRGC radiometric action spectrum。
+
+输入：无。  
+返回：`SpectralDistribution`。
+
+```python
+from color.spectra import from_iprgc_melanopic
+
+mel = from_iprgc_melanopic()
+print(mel.wavelengths[0], mel.wavelengths[-1])
+print(mel.values.max())
+```
+
+注意：该曲线不区分 2 度 / 10 度视角。ipRGC 主要分布在外周，通常按外周 ipRGC 激活语义使用。
+
+### `from_alpha_opic_action_spectra()`
+
+用途：返回 CIE S 026 五通道 alpha-opic action spectra。
+
+输入：无。  
+返回：`MultiSpectralDistribution`，labels 为 `("sc", "mc", "lc", "rh", "mel")`。
+
+```python
+from color.spectra import from_alpha_opic_action_spectra
+
+alpha = from_alpha_opic_action_spectra()
+print(alpha.labels)
+mel = alpha["mel"]
+```
+
+注意：这是组合入口，不是读取一个官方五列表 dataset。`sc/mc/lc` 来自 CIE 2006 10 度 LMS linear-energy fundamentals，`rh` 来自 scotopic `V_prime`，`mel` 来自 CIE S 026 melanopic / ipRGC action spectrum。输出统一为 `380-780 nm / 1 nm`，cone channels 在 `380-389 nm` 补 0。
 
 ### `from_stockman_rider_2023_individual_cone_fundamentals(**kwargs)`
 

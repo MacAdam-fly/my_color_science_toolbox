@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import builtins
+
 import numpy as np
 import pytest
 
@@ -23,9 +25,9 @@ from color.datasets.standard_observers import (
 class TestListCategories:
     """Tests for list_standard_observer_categories()."""
 
-    def test_returns_six_categories(self):
+    def test_returns_seven_categories(self):
         cats = list_standard_observer_categories()
-        assert len(cats) == 6
+        assert len(cats) == 7
 
     def test_expected_names(self):
         cats = list_standard_observer_categories()
@@ -35,6 +37,7 @@ class TestListCategories:
         assert "prereceptoral_filters" in cats
         assert "chromaticity_coordinates" in cats
         assert "photopigments" in cats
+        assert "iprgc" in cats
 
 
 class TestListObservers:
@@ -182,6 +185,32 @@ class TestPhotopigments:
         assert "s" in data
 
 
+class TestIPRGC:
+    """Tests for melanopic / ipRGC action spectra."""
+
+    def test_cie_s026_melanopic(self):
+        data = get_standard_observer("iprgc", "cie_s026_melanopic_1nm")
+        assert tuple(data) == ("wavelength", "mel")
+        assert data["wavelength"][0] == 380
+        assert data["wavelength"][-1] == 780
+        np.testing.assert_allclose(np.diff(data["wavelength"][:3]), [1, 1])
+        assert np.isfinite(data["mel"]).all()
+        assert data["mel"].max() == pytest.approx(1.0, abs=1e-6)
+
+    def test_melanopic_alias(self):
+        data = get_standard_observer("melanopic", "cie_s026_melanopic_1nm")
+        assert "mel" in data
+
+    def test_cie_s026_melanopic_reference_values(self):
+        data = get_standard_observer("iprgc", "cie_s026_melanopic_1nm")
+        peak_index = int(np.argmax(data["mel"]))
+
+        assert data["mel"][0] == pytest.approx(0.000918165)
+        assert data["wavelength"][peak_index] == 490
+        assert data["mel"][peak_index] == pytest.approx(1.0)
+        assert data["mel"][-1] == pytest.approx(2.05258e-08)
+
+
 class TestDescribeObserver:
     """Tests for describe_standard_observer()."""
 
@@ -237,6 +266,14 @@ class TestObserverMetadata:
             "d_ocul_32",
         )
 
+    def test_iprgc_metadata(self):
+        entry = describe("standard_observers.iprgc", "cie_s026_melanopic_1nm")
+        assert entry.metadata["quantity"] == "melanopic_action_spectrum"
+        assert entry.metadata["source_standard"] == "CIE S 026:2018"
+        assert entry.metadata["action_spectra_system"] == "radiometric"
+        assert "no 2/10 degree variant" in entry.metadata["observer_basis"]
+        assert entry.metadata["sampling_interval_nm"] == 1.0
+
 
 class TestCategoryAliases:
     """Tests for category alias resolution."""
@@ -268,6 +305,10 @@ class TestCategoryAliases:
     def test_pigment_alias(self):
         data = get_standard_observer("pigment", "succones")
         assert "l" in data
+
+    def test_melanopic_category_alias(self):
+        data = get_standard_observer("mel", "cie_s026_melanopic_1nm")
+        assert "mel" in data
 
     def test_list_with_alias(self):
         items = list_standard_observers("cone")
@@ -301,6 +342,50 @@ class TestCategoryAliases:
 
     def test_registry_describe_with_subcategory_alias(self):
         entry = describe("standard_observers.cmf", "cie1931 xyz_1nm")
+        assert entry.category == "standard_observers.cmfs"
+        assert entry.name == "cie1931_xyz_1nm"
+
+
+class TestLazyRegistration:
+    """Tests for standard observer registration-time lazy loading."""
+
+    def test_scan_and_register_does_not_open_csv(self, monkeypatch, tmp_path):
+        from color.datasets import standard_observers as standard_observers_module
+
+        category_dir = tmp_path / "cmfs"
+        category_dir.mkdir()
+        csv_path = category_dir / "unknown.csv"
+        csv_path.write_text("wavelength,X,Y,Z\n400,1,2,3\n", encoding="utf-8")
+
+        registered = []
+
+        def fail_open(*args, **kwargs):
+            raise AssertionError("registration should not open CSV files")
+
+        monkeypatch.setattr(standard_observers_module, "_OBSERVER_ROOT", tmp_path)
+        monkeypatch.setattr(standard_observers_module, "register", registered.append)
+        monkeypatch.setattr(builtins, "open", fail_open)
+
+        standard_observers_module._scan_and_register()
+
+        assert len(registered) == 1
+        entry = registered[0]
+        assert entry.category == "standard_observers.cmfs"
+        assert entry.name == "unknown"
+        assert entry.description == "unknown"
+        assert entry.columns is None
+        assert entry.file_path == str(csv_path)
+
+    def test_describe_does_not_read_standard_observer_data(self, monkeypatch):
+        from color.datasets import _registry
+
+        def fail_read_file(*args, **kwargs):
+            raise AssertionError("describe should not read dataset files")
+
+        monkeypatch.setattr(_registry, "_read_file", fail_read_file)
+
+        entry = describe("standard_observers.cmfs", "cie1931_xyz_1nm")
+
         assert entry.category == "standard_observers.cmfs"
         assert entry.name == "cie1931_xyz_1nm"
 

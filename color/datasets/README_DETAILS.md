@@ -70,7 +70,7 @@ _registry.get(category, name, **kwargs)
 返回只读 dict[str, ndarray]
 ```
 
-类别模块在 `color.datasets.__init__` 中导入，以触发注册。顶层 API 只导出稳定的读取、列举、注册和搜索入口；标准观察者的高频语义函数保留在 `color.datasets.standard_observers` 子模块中，避免顶层变重。
+类别模块在 `color.datasets.__init__` 中导入，以触发注册。注册阶段只创建 `DatasetEntry`，记录路径、读取参数和 metadata；不会读取完整数据文件。顶层 API 只导出稳定的读取、列举、注册和搜索入口；标准观察者的高频语义函数保留在 `color.datasets.standard_observers` 子模块中，避免顶层变重。
 
 ## 公共 API
 
@@ -124,7 +124,7 @@ _registry.get(category, name, **kwargs)
 
 ### Standard Observers
 
-标准观察者数据来自 `color/data/standard_observer_data/`，按子目录自动发现并注册。
+标准观察者数据来自 `color/data/standard_observer_data/`，按子目录自动发现并注册。注册时只扫描目录和 CSV 文件名，不打开 CSV 首行；列名推断发生在第一次 `get(...)` 真正读取对应文件之后。
 
 | 子类别 | 常用别名 | 内容 |
 | --- | --- | --- |
@@ -134,6 +134,7 @@ _registry.get(category, name, **kwargs)
 | `prereceptoral_filters` | `filter`, `macular`, `lens` | Macular pigment and lens density |
 | `chromaticity_coordinates` | `chromaticity`, `chroma`, `xy` | CIE and MacLeod-Boynton chromaticity coordinates |
 | `photopigments` | `pigment`, `pigments` | Photopigment absorption spectra |
+| `iprgc` | `melanopic`, `melanopsin`, `mel` | CIE S 026 melanopic / ipRGC action spectrum |
 
 常用文件也提供语义入口，例如 `get_cie1931_xyz_cmfs(...)` 和 `get_cie2006_lms_2degree_fundamentals(...)`。这些入口位于 `color.datasets.standard_observers`，不从 `color.datasets` 顶层导出。
 
@@ -147,9 +148,12 @@ from color.datasets.standard_observers import (
 
 cmfs = get_cie1931_xyz_cmfs(interval_nm=1)
 lms = get_cie2006_lms_2degree_fundamentals(interval_nm=1, energy="linE")
+mel = get_standard_observer("iprgc", "cie_s026_melanopic_1nm")
 ```
 
 `interval_nm` 选择已有源文件采样间隔，不做插值；需要重采样时应进入 `color.spectra`。
+
+`iprgc` 当前只注册 CIE S 026 melanopic 单曲线，不重复注册 `sc/mc/lc/rh`。完整五通道 alpha-opic action spectra 可在 `color.spectra.from_alpha_opic_action_spectra()` 中由已有标准数据组合得到。ipRGC 主要分布在外周，因此该数据按外周 ipRGC 激活语义使用，不提供 2° / 10° 两套视角区分。
 
 ### Reflectance Spectra
 
@@ -352,6 +356,7 @@ register(DatasetEntry(
 
 - `get()` 返回只读数组；需要修改时请先 `.copy()`。
 - 静态文件和 `parser_fn` 结果都会按调用参数缓存，包括 Excel 的 `sheet`。
+- `describe()`、`list_datasets()` 和注册阶段只访问注册表；第一次 `get(...)` 才会打开对应数据文件。
 - 需要重读时可调用 `clear_cache()`。
 - 测试和示例中的自定义文件应使用临时目录创建，不应把测试专用 CSV 常驻在 `color/data/` 中。
 

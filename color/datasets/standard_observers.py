@@ -1,6 +1,6 @@
-"""CVRL standard observer data — auto-discovered from 106 CSV files.
+"""Standard observer data — auto-discovered from 107 CSV files.
 
-Covers six categories of human visual system fundamentals:
+Covers seven categories of human visual system fundamentals:
 
 * **cmfs** — CIE 1931/1964/2012 XYZ colour matching functions
 * **cone_fundamentals** — Stockman & Sharpe, CIE 2006 LMS, Smith-Pokorny, …
@@ -8,6 +8,7 @@ Covers six categories of human visual system fundamentals:
 * **prereceptoral_filters** — macular pigment & lens density
 * **chromaticity_coordinates** — CIE & MacLeod-Boynton chromaticity coords
 * **photopigments** — photopigment absorption spectra
+* **iprgc** — melanopic / ipRGC action spectrum
 
 All CSV files are auto-scanned and registered at import time.
 
@@ -115,6 +116,8 @@ _COLUMN_PATTERNS: list[tuple[str, tuple[str, ...]]] = [
     # Photopigments — single pigment (2 cols)
     ("sucrodsh", ("wavelength", "absorption")),
     ("sucrodsm", ("wavelength", "absorption")),
+    # Melanopic / ipRGC action spectra
+    ("melanopic", ("wavelength", "mel")),
 ]
 
 
@@ -256,6 +259,10 @@ _DESCRIPTION_OVERRIDES: dict[str, str] = {
     "msprhes": "Bowmaker et al. (1978) rhesus monkey MSP",
     "msphum": "Dartnall, Bowmaker & Mollon (1983) human MSP",
     "merbnath": "Merbs & Nathans (1992) human cone pigments",
+    # --- ipRGC / melanopic ---
+    "cie_s026_melanopic_1nm": (
+        "CIE S 026 melanopic / ipRGC radiometric action spectrum (1 nm)"
+    ),
 }
 
 # Friendly category names
@@ -266,6 +273,7 @@ _CATEGORY_NAMES: dict[str, str] = {
     "prereceptoral_filters": "Prereceptoral Filters",
     "chromaticity_coordinates": "Chromaticity Coordinates",
     "photopigments": "Photopigment Absorption Spectra",
+    "iprgc": "Melanopic / ipRGC Action Spectra",
 }
 
 # Category aliases are grouped by canonical standard_observers subcategory.
@@ -276,6 +284,7 @@ _CATEGORY_ALIAS_GROUPS: dict[str, tuple[str, ...]] = {
     "prereceptoral_filters": ("filter", "filters", "prereceptoral", "macular", "lens"),
     "chromaticity_coordinates": ("chromaticity", "chroma", "chro", "xy"),
     "photopigments": ("photopigment", "pigment", "pigments"),
+    "iprgc": ("melanopic", "melanopsin", "mel"),
 }
 
 _CATEGORY_ALIASES: dict[str, str] = {
@@ -412,19 +421,6 @@ def _process_custom_entries() -> None:
 _process_custom_entries()
 
 
-def _count_csv_cols(path: Path) -> int:
-    """Read the first data line to determine column count."""
-    with open(path) as f:
-        for line in f:
-            line = line.strip()
-            if line:
-                if "," in line:
-                    return line.count(",") + 1
-                # Space-separated fallback
-                return len(line.split())
-    return 0
-
-
 def _infer_sampling_interval_nm(stem: str) -> Optional[float]:
     """Infer spectral sampling interval from common filename suffixes."""
     lower = stem.lower()
@@ -505,6 +501,15 @@ def _metadata_for_standard_observer(category: str, stem: str) -> dict[str, Any]:
     elif category == "photopigments":
         meta["quantity"] = "photopigment_absorption"
         meta["value_unit"] = "relative"
+    elif category == "iprgc":
+        meta["quantity"] = "melanopic_action_spectrum"
+        meta["value_unit"] = "relative"
+        meta["source_collection"] = "CIE S 026 alpha-opic Toolbox"
+        meta["source_standard"] = "CIE S 026:2018"
+        meta["action_spectra_system"] = "radiometric"
+        meta["observer_basis"] = (
+            "ipRGC peripheral activation; no 2/10 degree variant"
+        )
 
     return meta
 
@@ -520,13 +525,12 @@ def _scan_and_register() -> None:
         category = subdir.name
         for csv_file in sorted(subdir.glob("*.csv")):
             stem = csv_file.stem
-            ncols = _count_csv_cols(csv_file)
 
             # Custom column override takes priority
             col_override = _CUSTOM_COL_OVERRIDES.get((category, stem))
             desc = _DESCRIPTION_OVERRIDES.get(
                 f"{category}/{stem}",
-                _DESCRIPTION_OVERRIDES.get(stem, f"{stem} ({ncols - 1} channels)"),
+                _DESCRIPTION_OVERRIDES.get(stem, stem),
             )
 
             # Read options: auto-detect header, merge custom overrides
@@ -686,7 +690,7 @@ def list_standard_observers(category: str) -> List[str]:
 
 
 def list_standard_observer_categories() -> List[str]:
-    """Return the six standard observer sub-category keys."""
+    """Return the standard observer sub-category keys."""
     return list(_CATEGORY_NAMES.keys())
 
 

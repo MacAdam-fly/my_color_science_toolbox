@@ -10,6 +10,7 @@ from color.spectra import (
     SpectralDistribution,
     SpectralShape,
     from_D65_illuminant,
+    from_alpha_opic_action_spectra,
     from_asano2016_individual_cone_fundamentals,
     from_cie1931_xyz_cmfs,
     from_cie1964_xyz_cmfs,
@@ -19,6 +20,7 @@ from color.spectra import (
     from_cie2012_xyz_10degree_cmfs,
     from_columns,
     from_dataset,
+    from_iprgc_melanopic,
     from_stockman_rider_2023_individual_cone_fundamentals,
 )
 
@@ -561,6 +563,48 @@ class TestCommonStandardObserverEntrypoints:
         assert result_2.metadata["energy"] == "linE"
         assert result_10.metadata["dataset_name"] == "cie2006_lms10_logE_5nm"
         assert result_10.metadata["observer_degree"] == 10
+
+    def test_iprgc_melanopic_wrapper(self):
+        result = from_iprgc_melanopic()
+
+        assert isinstance(result, SpectralDistribution)
+        assert result.name == "CIE S 026 melanopic action spectrum"
+        assert result.keys() == ("wavelength", "value")
+        assert result.wavelengths[0] == 380
+        assert result.wavelengths[-1] == 780
+        assert np.isfinite(result.values).all()
+        assert result.values.max() == pytest.approx(1.0, abs=1e-6)
+        assert result.metadata["dataset_category"] == "standard_observers.iprgc"
+        assert result.metadata["dataset_name"] == "cie_s026_melanopic_1nm"
+
+    def test_alpha_opic_action_spectra_wrapper(self):
+        result = from_alpha_opic_action_spectra()
+        mel = from_iprgc_melanopic()
+        lms10 = from_cie2006_lms_10degree_fundamentals(
+            interval_nm=1,
+            energy="linE",
+            fill_nan=0.0,
+        )
+        rh = from_dataset("standard_observers.luminous_efficiency", "scotopic_v_1nm")
+
+        assert isinstance(result, MultiSpectralDistribution)
+        assert result.labels == ("sc", "mc", "lc", "rh", "mel")
+        assert result.wavelengths[0] == 380
+        assert result.wavelengths[-1] == 780
+
+        np.testing.assert_allclose(result["mel"].values, mel.values)
+        np.testing.assert_allclose(result["sc"].values[:10], 0.0)
+        np.testing.assert_allclose(result["mc"].values[:10], 0.0)
+        np.testing.assert_allclose(result["lc"].values[:10], 0.0)
+
+        mask = (result.wavelengths >= 390) & (result.wavelengths <= 780)
+        lms_mask = (lms10.wavelengths >= 390) & (lms10.wavelengths <= 780)
+        np.testing.assert_allclose(result["sc"].values[mask], lms10["s"].values[lms_mask])
+        np.testing.assert_allclose(result["mc"].values[mask], lms10["m"].values[lms_mask])
+        np.testing.assert_allclose(result["lc"].values[mask], lms10["l"].values[lms_mask])
+
+        rh_aligned = rh.align(mel.shape, extrapolator="constant")
+        np.testing.assert_allclose(result["rh"].values, rh_aligned.values)
 
     def test_individual_cone_fundamentals_wrappers(self):
         stockman = from_stockman_rider_2023_individual_cone_fundamentals(

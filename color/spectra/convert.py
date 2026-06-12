@@ -498,6 +498,118 @@ def from_cie2006_lms_10degree_fundamentals(
     )
 
 
+def from_iprgc_melanopic() -> SpectralDistribution:
+    """Return the CIE S 026 melanopic / ipRGC action spectrum.
+
+    Returns
+    -------
+    SpectralDistribution
+        Single-channel object with the ``mel`` radiometric action spectrum.
+
+    Notes
+    -----
+    The CIE S 026 melanopic action spectrum is treated here as a single
+    standard ipRGC-related response curve. It is not split into 2-degree and
+    10-degree variants; ipRGC responses are generally considered in terms of
+    peripheral activation.
+    """
+    from color.datasets.standard_observers import get_standard_observer
+
+    stem = "cie_s026_melanopic_1nm"
+    raw = get_standard_observer("iprgc", stem)
+    metadata = _dataset_metadata("standard_observers.iprgc", stem)
+    metadata["standard"] = "CIE S 026 melanopic action spectrum"
+    metadata["interval_nm"] = 1.0
+    return SpectralDistribution.from_columns(
+        raw,
+        x="wavelength",
+        y="mel",
+        name="CIE S 026 melanopic action spectrum",
+        metadata=metadata,
+    )
+
+
+def from_alpha_opic_action_spectra() -> MultiSpectralDistribution:
+    """Return the standard five alpha-opic action spectra.
+
+    Returns
+    -------
+    MultiSpectralDistribution
+        Object with labels ``("sc", "mc", "lc", "rh", "mel")`` on a
+        ``380-780 nm / 1 nm`` grid.
+
+    Notes
+    -----
+    This is a convenience composition, not a direct wrapper around one
+    five-column dataset. The channels are assembled as follows:
+
+    * ``sc``, ``mc`` and ``lc`` from CIE 2006 10-degree LMS linear-energy
+      fundamentals.
+    * ``rh`` from the scotopic ``V_prime`` luminous-efficiency function.
+    * ``mel`` from the CIE S 026 melanopic / ipRGC action spectrum.
+
+    The CIE S 026 Toolbox action-spectra sheet aligns the cone channels with
+    the 10-degree CIE 2006 LMS fundamentals. Cone channels are filled with zero
+    for ``380-389 nm`` to match the Toolbox semantics instead of extrapolating.
+    """
+    from color.datasets.standard_observers import get_standard_observer
+
+    wavelengths = np.arange(380.0, 781.0, 1.0)
+
+    lms = from_cie2006_lms_10degree_fundamentals(
+        interval_nm=1,
+        energy="linE",
+        fill_nan=0.0,
+    )
+    lms_values = np.zeros((wavelengths.size, 3), dtype=float)
+    lms_mask = (lms.wavelengths >= wavelengths[0]) & (
+        lms.wavelengths <= wavelengths[-1]
+    )
+    lms_indices = (lms.wavelengths[lms_mask] - wavelengths[0]).astype(int)
+    lms_values[lms_indices, :] = lms.values[lms_mask, :]
+
+    rh_raw = get_standard_observer("luminous_efficiency", "scotopic_v_1nm")
+    mel = from_iprgc_melanopic()
+
+    rh = SpectralDistribution.from_columns(
+        rh_raw,
+        x="wavelength",
+        y="V_prime",
+        name="CIE scotopic luminous efficiency V'",
+        fill_nan=0.0,
+    )
+    rh_values = rh.align(mel.shape, extrapolator="constant").values
+
+    values = np.column_stack((
+        lms_values[:, 2],
+        lms_values[:, 1],
+        lms_values[:, 0],
+        rh_values,
+        mel.values,
+    ))
+    metadata = {
+        "standard": "CIE S 026 alpha-opic action spectra",
+        "interval_nm": 1.0,
+        "wavelength_range_nm": (380.0, 780.0),
+        "composition": {
+            "sc_mc_lc": "CIE 2006 10-degree LMS linear-energy fundamentals",
+            "rh": "CIE scotopic V_prime luminous-efficiency function",
+            "mel": "CIE S 026 melanopic / ipRGC action spectrum",
+        },
+        "observer_basis": (
+            "CIE S 026 alpha-opic action spectra; ipRGC peripheral activation; "
+            "no separate 2/10 degree melanopic variant"
+        ),
+    }
+    return MultiSpectralDistribution(
+        wavelengths,
+        values,
+        labels=("sc", "mc", "lc", "rh", "mel"),
+        name="CIE S 026 alpha-opic action spectra",
+        metadata=metadata,
+    )
+
+
 def _from_individual_cone_generator(
     generator_name: str,
     display_name: str,

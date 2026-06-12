@@ -65,7 +65,7 @@ from color.datasets import get
 pointer_l50 = get("gamut_data", "pointer", L=50)
 ```
 
-注意：`get(...)` 返回的是原始数据，不做光谱包装、不插值、不转换单位。
+注意：`get(...)` 返回的是原始数据，不做光谱包装、不插值、不转换单位。数据文件采用懒加载；第一次 `get(...)` 才打开对应文件，之后按调用参数缓存。
 
 ### `describe(category, name)`
 
@@ -82,7 +82,7 @@ print(entry.description)
 print(entry.metadata)
 ```
 
-注意：适合检查数据来源、列名、读取参数和 metadata。
+注意：适合检查数据来源、列名、读取参数和 metadata。`describe(...)` 只访问注册表，不触发数据文件读取。
 
 ### `clear_cache(category=None, name=None)`
 

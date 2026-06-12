@@ -138,6 +138,8 @@ from color.spectra import (
     from_cie2012_xyz_10degree_cmfs,
     from_cie2006_lms_2degree_fundamentals,
     from_cie2006_lms_10degree_fundamentals,
+    from_iprgc_melanopic,
+    from_alpha_opic_action_spectra,
 )
 ```
 
@@ -152,6 +154,8 @@ from color.spectra import (
 | `from_cie2012_xyz_10degree_cmfs(interval_nm=1)` | CIE 2012 10 度 XYZ CMFs |
 | `from_cie2006_lms_2degree_fundamentals(interval_nm=1, energy="linE")` | CIE 2006 2 度 LMS fundamentals |
 | `from_cie2006_lms_10degree_fundamentals(interval_nm=1, energy="linE")` | CIE 2006 10 度 LMS fundamentals |
+| `from_iprgc_melanopic()` | CIE S 026 melanopic / ipRGC action spectrum |
+| `from_alpha_opic_action_spectra()` | CIE S 026 五通道 alpha-opic action spectra |
 | `from_stockman_rider_2023_individual_cone_fundamentals(...)` | Stockman/Rider 2023 个体化 LMS fundamentals |
 | `from_asano2016_individual_cone_fundamentals(...)` | Asano 2016 个体化 LMS fundamentals |
 
@@ -185,7 +189,40 @@ logE
 logQ
 ```
 
-### 4. 直接构造
+### 4. CIE S 026 alpha-opic 入口
+
+`from_iprgc_melanopic()` 包装的是 CIE S 026 Toolbox 中的 melanopic / ipRGC
+radiometric action spectrum：
+
+```python
+from color.spectra import from_iprgc_melanopic
+
+mel = from_iprgc_melanopic()
+```
+
+该曲线不提供 2 度 / 10 度区分。ipRGC 主要分布在外周，因此本项目按外周
+ipRGC 激活语义记录该数据。
+
+`from_alpha_opic_action_spectra()` 返回五通道组合对象：
+
+```python
+from color.spectra import from_alpha_opic_action_spectra
+
+alpha = from_alpha_opic_action_spectra()
+print(alpha.labels)  # ("sc", "mc", "lc", "rh", "mel")
+```
+
+这个函数不是读取一个独立五列表 dataset，而是组合已有标准数据：
+
+- `sc/mc/lc` 来自 CIE 2006 10 度 LMS linear-energy fundamentals；
+- `rh` 来自 scotopic `V_prime`；
+- `mel` 来自 CIE S 026 melanopic / ipRGC action spectrum。
+
+输出统一到 `380-780 nm / 1 nm`。由于 CIE 2006 LMS 表从 390 nm 开始，组合入口
+在 `380-389 nm` 对 cone channels 补 0，匹配 CIE S 026 Toolbox 的 action spectra
+表格语义，不做外推。
+
+### 5. 直接构造
 
 当你已经有数组时，也可以直接使用构造函数：
 

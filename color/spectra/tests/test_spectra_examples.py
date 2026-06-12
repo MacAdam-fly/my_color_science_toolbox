@@ -17,6 +17,7 @@ _EXAMPLE_PATHS = (
     _EXAMPLES / "example_03_multi_channel_workflow.py",
     _EXAMPLES / "example_04_export_and_arithmetic.py",
     _EXAMPLES / "example_05_visualization_cases.py",
+    _EXAMPLES / "example_06_alpha_opic_action_spectra.py",
 )
 
 

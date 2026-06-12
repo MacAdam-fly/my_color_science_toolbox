@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+import subprocess
+import sys
+
 import numpy as np
 import pytest
 
@@ -18,6 +22,28 @@ from color.datasets._registry import (
     register,
     search,
 )
+
+
+class TestImportCost:
+    """Tests for import-time dependency loading."""
+
+    def test_import_color_datasets_does_not_import_pandas(self):
+        root = Path(__file__).resolve().parents[3]
+        code = (
+            "import sys; "
+            "import color.datasets; "
+            "raise SystemExit(1 if 'pandas' in sys.modules else 0)"
+        )
+
+        result = subprocess.run(
+            [sys.executable, "-c", code],
+            cwd=root,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+
+        assert result.returncode == 0, result.stderr
 
 
 class TestDatasetEntry:

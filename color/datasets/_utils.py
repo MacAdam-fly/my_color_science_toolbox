@@ -10,7 +10,6 @@ from pathlib import Path
 from typing import Any, Dict, Optional, Sequence, Union
 
 import numpy as np
-import pandas as pd
 
 
 # ---------------------------------------------------------------------------
@@ -40,6 +39,13 @@ def data_dir(*parts: str) -> Path:
 # Internal helpers
 # ---------------------------------------------------------------------------
 
+def _import_pandas() -> Any:
+    """Import pandas only when a dataset reader actually needs it."""
+    import pandas as pd
+
+    return pd
+
+
 def _default_names(ncols: int) -> tuple[str, ...]:
     """Generate default column names for a given column count."""
     if ncols == 1:
@@ -49,7 +55,7 @@ def _default_names(ncols: int) -> tuple[str, ...]:
     return ("wavelength",) + tuple(f"col{i}" for i in range(1, ncols))
 
 
-def _auto_detect_header(df: pd.DataFrame) -> tuple[pd.DataFrame, bool]:
+def _auto_detect_header(df: Any) -> tuple[Any, bool]:
     """If the first row is all-numeric, treat it as data (assign default header).
 
     If the first row has text, use it as the column names and drop it from data.
@@ -76,7 +82,7 @@ def _auto_detect_header(df: pd.DataFrame) -> tuple[pd.DataFrame, bool]:
 
 
 def _df_to_dict(
-    df: pd.DataFrame,
+    df: Any,
     names: Optional[Sequence[str]] = None,
     usecols: Optional[Sequence[int]] = None,
     coerce_numeric: bool = False,
@@ -105,6 +111,7 @@ def _df_to_dict(
 
     # Convert to dict of numpy arrays
     result: Dict[str, np.ndarray] = {}
+    pd = _import_pandas() if coerce_numeric else None
     for col in df.columns:
         series = df[col]
         if coerce_numeric:
@@ -184,6 +191,8 @@ def read_csv(
     coerce_numeric : bool
         If ``True``, convert non-numeric cells to NaN instead of raising.
     """
+    pd = _import_pandas()
+
     if header is True or header == "auto":
         # Read without header to inspect first row
         df = pd.read_csv(str(path), header=None, skiprows=skiprows,
@@ -237,6 +246,8 @@ def read_xlsx(
     coerce_numeric : bool
         If ``True``, convert non-numeric cells to NaN instead of raising.
     """
+    pd = _import_pandas()
+
     kwargs = _header_params(header, skiprows=skiprows)
     df = pd.read_excel(str(path), sheet_name=sheet, engine="openpyxl", **kwargs)
     return _df_to_dict(df, names=names, usecols=usecols, coerce_numeric=coerce_numeric)
@@ -277,6 +288,8 @@ def read_xls(
     coerce_numeric : bool
         If ``True``, convert non-numeric cells to NaN instead of raising.
     """
+    pd = _import_pandas()
+
     kwargs = _header_params(header, skiprows=skiprows)
     df = pd.read_excel(str(path), sheet_name=sheet, engine="xlrd", **kwargs)
     return _df_to_dict(df, names=names, usecols=usecols, coerce_numeric=coerce_numeric)

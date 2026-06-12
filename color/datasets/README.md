@@ -63,7 +63,7 @@ views of cached data; call `.copy()` before modifying values.
 | Category | Examples |
 | --- | --- |
 | `illuminants` | `A`, `D65`, `fluorescents` |
-| `standard_observers.*` | CMFs, chromaticity coordinates, LMS fundamentals, luminous efficiency |
+| `standard_observers.*` | CMFs, chromaticity coordinates, LMS fundamentals, luminous efficiency, melanopic / ipRGC |
 | `color_cards` | `macbeth`, `pmc`, `bcra` |
 | `reflectance_spectra.uef` | `munsell_matt`, `agfa_it872`, `forest_birch` |
 | `gamut_data` | `pointer`, `macadam_limits_A`, `macadam_limits_C`, `macadam_limits_D65` |
@@ -73,6 +73,10 @@ High-use standard observer semantic shortcuts, such as
 `get_cie1931_xyz_cmfs(...)`, live in `color.datasets.standard_observers`.
 They are intentionally not re-exported from `color.datasets` to keep this
 top-level API compact.
+
+The `standard_observers.iprgc` category currently registers the CIE S 026
+melanopic action spectrum only. Full five-channel alpha-opic spectra are
+assembled in `color.spectra`.
 
 ## Design Notes
 

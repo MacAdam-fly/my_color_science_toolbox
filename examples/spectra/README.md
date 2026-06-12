@@ -22,6 +22,7 @@ Run individual examples from the project root:
 .\.venv\Scripts\python.exe examples\spectra\example_03_multi_channel_workflow.py
 .\.venv\Scripts\python.exe examples\spectra\example_04_export_and_arithmetic.py
 .\.venv\Scripts\python.exe examples\spectra\example_05_visualization_cases.py
+.\.venv\Scripts\python.exe examples\spectra\example_06_alpha_opic_action_spectra.py
 ```
 
 Plot outputs are written to `examples/spectra/output/`.
@@ -60,3 +61,7 @@ align explicitly before multiplying two spectral objects.
 The examples only demonstrate the spectral object layer. They do not compute
 XYZ, LMS or photometric responses; those integrations live in
 `color.colorimetry` and `examples/colorimetry/`.
+
+`example_06_alpha_opic_action_spectra.py` loads the CIE S 026 melanopic /
+ipRGC action spectrum and the composed five-channel alpha-opic action spectra,
+then plots `sc/mc/lc/rh/mel` together.
