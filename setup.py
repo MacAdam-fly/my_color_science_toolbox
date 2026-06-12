@@ -39,6 +39,19 @@ def package_data_files() -> list[str]:
     return files
 
 
+def package_documentation_files() -> list[str]:
+    """Return installed documentation files relative to the ``color`` package."""
+
+    docs_root = COLOR_PACKAGE / "docs"
+    if not docs_root.exists():
+        return []
+    return [
+        path.relative_to(COLOR_PACKAGE).as_posix()
+        for path in sorted(docs_root.rglob("*.md"))
+        if path.is_file()
+    ]
+
+
 setup(
     name="color-science-toolbox",
     version=VERSION,
@@ -51,7 +64,7 @@ setup(
         include=("color", "color.*"),
         exclude=("color.tests", "color.tests.*"),
     ),
-    package_data={"color": package_data_files()},
+    package_data={"color": package_data_files() + package_documentation_files()},
     include_package_data=False,
     install_requires=[
         "numpy>=1.26",

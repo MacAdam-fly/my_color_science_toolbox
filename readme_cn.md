@@ -64,7 +64,7 @@ py -3.9 -m venv .venv
 from color import from_cie1931_xyz_cmfs, reflectance_to_XYZ, convert_color
 ```
 
-这不是完整 API 聚合，也不会替代模块级入口。完整能力仍应从 `color.recovery`、`color.gamut`、`color.device`、`color.plot` 等模块读取；具体用法见各模块的 `README.md`、`README_DETAILS.md` 和 `API_GUIDE.md`。
+这不是完整 API 聚合，也不会替代模块级入口。完整能力仍应从 `color.recovery`、`color.gamut`、`color.device`、`color.plot` 等模块读取；具体用法见 `color/docs/<module>/README.md`、`README_DETAILS.md` 和 `API_GUIDE.md`。这些文件会进入 wheel，因此 pip 安装环境中也可以读取。
 
 ## 模块速览与最小用法
 
@@ -303,11 +303,21 @@ examples/integration/output/01_long_colour_pipeline_reflectance_recovery.png
 
 ## 文档入口
 
-每个主要模块通常有三层文档：
+安装后的模块文档集中在 `color/docs/`。每个主要模块通常有三层文档：
 
 - `README.md`：英文快速入口。
 - `README_DETAILS.md`：中文设计说明、边界和注意事项。
 - `API_GUIDE.md`：中文顶层 API 使用手册。
+
+在 Python 环境中可以这样定位安装后的文档：
+
+```python
+from pathlib import Path
+import color
+
+docs = Path(color.__file__).parent / "docs"
+print(docs)
+```
 
 ## 测试
 

@@ -84,8 +84,9 @@ from color import from_cie1931_xyz_cmfs, reflectance_to_XYZ, convert_color
 This facade is intentionally selective. It is useful for quick scripts and for
 verifying that the toolbox is installed, but it does not replace module-level
 APIs such as `color.recovery`, `color.gamut`, `color.device`, or `color.plot`.
-Use the module `README.md`, `README_DETAILS.md`, and `API_GUIDE.md` files for
-complete API coverage.
+Use `color/docs/<module>/README.md`, `README_DETAILS.md`, and `API_GUIDE.md` for
+complete API coverage. These files are included in the wheel so they are
+available in pip-installed environments.
 
 ## Module Overview
 
@@ -327,14 +328,25 @@ Currently out of scope or not a focus:
 
 ## Documentation
 
-Most mature modules have three documentation layers:
+Installed module documentation lives under `color/docs/`. Most mature modules
+have three documentation layers:
 
 - `README.md`: English quick entrypoint.
 - `README_DETAILS.md`: Chinese design notes, boundaries, and caveats.
 - `API_GUIDE.md`: Chinese guide for top-level public APIs.
 
-The `examples/` directory contains runnable workflows. The integration example is
-the best starting point for seeing how modules connect.
+In a Python environment, locate the installed docs with:
+
+```python
+from pathlib import Path
+import color
+
+docs = Path(color.__file__).parent / "docs"
+print(docs)
+```
+
+The source repository also provides `examples/` with runnable workflows. The
+integration example is the best starting point for seeing how modules connect.
 
 ## Testing
 

@@ -23,12 +23,18 @@ Main modules:
 - `spaces`: colour-space definitions and conversion routing.
 - `difference`: colour-difference metrics.
 - `gamut`: display-primary gamuts, Pointer gamut and MacAdam limits.
-- `quality`: spectral quality metrics such as SSI.
-- `individual_cone_fundamentals`: Stockman/Rider individual LMS fundamentals.
+- `recovery`: inverse recovery of spectra and reflectances.
+- `device`: device-primary response optimisation such as melanopic silent substitution.
+- `individual_cone_fundamentals`: Stockman/Rider and Asano individual LMS fundamentals.
 - `plot`: low-level plotting components for colour-science visualisation.
+- `io`: spectral, image and figure IO.
 - `math`: interpolation and extrapolation helpers.
 - `constants`: shared scientific constants and matrices.
 - `utils`: low-level shared utility functions.
+
+Installed module documentation lives under `color/docs/`. Start with
+`color/docs/README.md`, then read the relevant module folder, for example
+`color/docs/gamut/API_GUIDE.md`.
 
 `color.core` has been removed because it only contained unused type aliases and
 an unused context object. Shared behaviour now lives in the concrete modules

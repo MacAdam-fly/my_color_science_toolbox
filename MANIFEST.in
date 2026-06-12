@@ -2,6 +2,8 @@ include readme.md
 include readme_cn.md
 include requirements.txt
 
+recursive-include color/docs *.md
+
 recursive-include color/data/color_cards *.csv *.xls *.xlsx
 recursive-include color/data/color_difference *.xls
 recursive-include color/data/color_systems *.xls
