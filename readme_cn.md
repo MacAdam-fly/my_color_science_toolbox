@@ -2,13 +2,13 @@
 
 English documentation: [`readme.md`](readme.md)
 
-`color_science_toolbox` 是一个底层颜色科学工具框架。它把标准数据、光谱对象、色度学计算、颜色空间转换、色貌模型、色差、色域、光谱恢复、绘图和 IO 组织成一条清晰的计算链路。
+`color_science_toolbox` 是一个底层颜色科学工具框架。它把标准数据、光谱对象、色度学计算、颜色空间转换、色貌模型、色差、色域、光谱恢复、设备响应优化、绘图和 IO 组织成一条清晰的计算链路。
 
 ## 架构总览
 
 项目有一条清晰的表示链路：数据来源进入光谱对象，光谱对象进入色度学计算，
 得到 `XYZ / LMS / xyY / uv / CCT / Duv` 等核心颜色量。其它模块不是这条链路的
-简单上下级，而是围绕这些表示执行转换、比较、色域分析、反问题恢复、绘图和读写。
+简单上下级，而是围绕这些表示执行转换、比较、色域分析、反问题恢复、设备权重优化、绘图和读写。
 
 ![color_science_toolbox architecture](docs/architecture.svg)
 
@@ -17,7 +17,7 @@ English documentation: [`readme.md`](readme.md)
 - `datasets`、`generators` 和 `individual_cone_fundamentals` 是主要数据来源。
 - `spectra -> colorimetry` 是最基础的正向表示链路。
 - `adaptation` 是 `XYZ -> XYZ` 操作；`appearance` 是 `XYZ <-> 色貌 correlates`；`spaces` 是以 `XYZ` 为中枢的坐标转换。
-- `difference` 消费已经处于同一空间的坐标；`gamut` 综合使用 `XYZ / xy / Lab / LCH / primaries / 标准色域数据`；`recovery` 从 `XYZ / xyY / LMS` 反向恢复光谱或反射谱，结果通常回到 `spectra` 再验证。
+- `difference` 消费已经处于同一空间的坐标；`gamut` 综合使用 `XYZ / xy / Lab / LCH / primaries / 标准色域数据`；`recovery` 从 `XYZ / xyY / LMS` 反向恢复光谱或反射谱，结果通常回到 `spectra` 再验证；`device` 从基色响应矩阵求解沉默替代等设备权重优化问题。
 - `io` 归入基础边界模块，负责文件读写；`plot` 是展示层模块，只负责绘图，不改变科学计算语义。
 
 ## 环境配置
@@ -158,6 +158,19 @@ analysis = analyze_gamut("Display P3")
 print(analysis.xy_area, analysis.lab_volume)
 ```
 
+设备响应优化：
+
+```python
+from color.device import PrimaryResponseDisplay, melanopic_silent_range
+
+display = PrimaryResponseDisplay(
+    primary_responses,
+    response_names=("l", "m", "s", "mel"),
+)
+target_LMS = display.LMS_from_weights([0.35, 0.45, 0.30, 0.20])
+low, high = melanopic_silent_range(display, target_LMS, held="LMS")
+```
+
 光谱或反射谱恢复：
 
 ```python
@@ -254,7 +267,8 @@ examples/integration/output/01_long_colour_pipeline_reflectance_recovery.png
 
 - ICC/profile 管理。
 - GUI 或交互式应用。
-- 多基色设备颜色空间的唯一权重求解。
+- 通用多基色设备颜色空间转换，或唯一 RGB/RGBC 权重求解。
+- 显示器校准、LUT、时间调制和完整设备管理流程。
 - CRI / TM-30 / CQS 等完整显色质量体系。
 
 ## 文档入口

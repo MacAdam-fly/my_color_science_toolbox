@@ -3,7 +3,8 @@
 `color_science_toolbox` is a low-level color-science toolkit. It organizes
 standard datasets, spectral objects, colorimetric calculations, color-space
 conversion, appearance models, color differences, gamut analysis, spectral
-recovery, plotting, and IO into a coherent computation framework.
+recovery, display-device response optimisation, plotting, and IO into a
+coherent computation framework.
 
 Chinese documentation: [`readme_cn.md`](readme_cn.md)
 
@@ -13,7 +14,8 @@ The project has one primary representation pipeline: data sources become
 spectral objects, spectral objects become colorimetric quantities, and those
 quantities become `XYZ / LMS / xyY / uv / CCT / Duv` values. The other modules
 operate around these representations: converting, adapting, comparing,
-recovering, plotting, and reading/writing data.
+recovering, optimising device primary weights, plotting, and reading/writing
+data.
 
 ![color_science_toolbox architecture](docs/architecture.svg)
 
@@ -27,6 +29,8 @@ Core principles:
 - `difference` compares coordinates already in the same space. `gamut` combines
   `XYZ / xy / Lab / LCH / primaries / standard gamut data`. `recovery` solves
   inverse problems from `XYZ / xyY / LMS` back to spectra or reflectances.
+  `device` solves primary-weight optimisation problems such as melanopic silent
+  substitution from response matrices.
 - `io` is a foundation module for file IO. `plot` is a presentation layer and
   does not change scientific computation semantics.
 
@@ -169,6 +173,19 @@ analysis = analyze_gamut("Display P3")
 print(analysis.xy_area, analysis.lab_volume)
 ```
 
+Device response optimisation:
+
+```python
+from color.device import PrimaryResponseDisplay, melanopic_silent_range
+
+display = PrimaryResponseDisplay(
+    primary_responses,
+    response_names=("l", "m", "s", "mel"),
+)
+target_LMS = display.LMS_from_weights([0.35, 0.45, 0.30, 0.20])
+low, high = melanopic_silent_range(display, target_LMS, held="LMS")
+```
+
 Spectral or reflectance recovery:
 
 ```python
@@ -268,7 +285,10 @@ Currently out of scope or not a focus:
 
 - ICC/profile management.
 - GUI or interactive applications.
-- Unique multi-primary device color-space weight solving.
+- General multi-primary device color-space conversion or unique RGB/RGBC weight
+  solving.
+- Display calibration, LUT, temporal modulation, and full device-management
+  workflows.
 - Full CRI / TM-30 / CQS color-quality systems.
 
 ## Documentation

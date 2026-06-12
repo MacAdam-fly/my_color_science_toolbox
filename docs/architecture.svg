@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1500" height="980" viewBox="0 0 1500 980" role="img" aria-labelledby="title desc">
   <title id="title">color_science_toolbox architecture</title>
-  <desc id="desc">A structured architecture diagram for color_science_toolbox. Every stable module has its own box, with foundation, sources, main pipeline, operations, analysis, inverse, plotting, and IO separated.</desc>
+  <desc id="desc">A structured architecture diagram for color_science_toolbox. Every stable module has its own box, with foundation, sources, main pipeline, operations, analysis, inverse, device, plotting, and IO separated.</desc>
   <defs>
     <style>
       .title { font: 700 34px Arial, Helvetica, sans-serif; fill: #1f2933; }
@@ -20,7 +20,7 @@
 
   <rect width="1500" height="980" fill="#ffffff" />
   <text x="750" y="44" text-anchor="middle" class="title">color_science_toolbox Architecture</text>
-  <text x="750" y="70" text-anchor="middle" class="subtitle">Stable low-level colour science modules: shared foundation, data sources, main representation pipeline, operations, analysis, inverse problems, and plotting.</text>
+  <text x="750" y="70" text-anchor="middle" class="subtitle">Stable low-level colour science modules: shared foundation, data sources, main representation pipeline, operations, analysis, inverse problems, device optimisation, and plotting.</text>
 
   <!-- Shared Foundation -->
   <rect x="70" y="98" width="1360" height="118" class="frame" fill="#f8fafc" />
@@ -95,17 +95,21 @@
   <text x="750" y="641" text-anchor="middle" class="section">Analysis And Inverse Problems</text>
   <text x="750" y="664" text-anchor="middle" class="note">These modules consume one or more representations above. They are not children of adaptation, appearance, or spaces.</text>
 
-  <rect x="150" y="700" width="320" height="62" class="box" fill="#f3e8ff" />
-  <text x="310" y="724" text-anchor="middle" class="module">difference</text>
-  <text x="310" y="744" text-anchor="middle" class="small">same-space coordinates to distance</text>
+  <rect x="105" y="700" width="285" height="62" class="box" fill="#f3e8ff" />
+  <text x="247.5" y="724" text-anchor="middle" class="module">difference</text>
+  <text x="247.5" y="744" text-anchor="middle" class="small">same-space coordinates to distance</text>
 
-  <rect x="590" y="700" width="320" height="62" class="box" fill="#f3e8ff" />
-  <text x="750" y="724" text-anchor="middle" class="module">gamut</text>
-  <text x="750" y="744" text-anchor="middle" class="small">XYZ, xy, Lab, LCH, primaries to boundaries</text>
+  <rect x="440" y="700" width="285" height="62" class="box" fill="#f3e8ff" />
+  <text x="582.5" y="724" text-anchor="middle" class="module">gamut</text>
+  <text x="582.5" y="744" text-anchor="middle" class="small">XYZ, xy, Lab, LCH, primaries to boundaries</text>
 
-  <rect x="1030" y="700" width="320" height="62" class="box" fill="#f3e8ff" />
-  <text x="1190" y="724" text-anchor="middle" class="module">recovery</text>
-  <text x="1190" y="744" text-anchor="middle" class="small">XYZ, xyY, LMS to spectrum or reflectance</text>
+  <rect x="775" y="700" width="285" height="62" class="box" fill="#f3e8ff" />
+  <text x="917.5" y="724" text-anchor="middle" class="module">device</text>
+  <text x="917.5" y="744" text-anchor="middle" class="small">primary responses to melanopic range</text>
+
+  <rect x="1110" y="700" width="285" height="62" class="box" fill="#f3e8ff" />
+  <text x="1252.5" y="724" text-anchor="middle" class="module">recovery</text>
+  <text x="1252.5" y="744" text-anchor="middle" class="small">XYZ, xyY, LMS to spectrum or reflectance</text>
 
   <!-- Boundary / presentation -->
   <rect x="70" y="840" width="1360" height="104" class="frame" fill="#f8fafc" />
