@@ -47,9 +47,39 @@ py -3.9 -m venv .venv
 .\.venv\Scripts\python.exe -m pytest -m "not examples" --import-mode=importlib -q --basetemp .pytest_tmp
 ```
 
-`requirements.txt` is the pinned dependency entrypoint. For day-to-day work,
-run the tests for the modules you changed first. See
+`requirements.txt` is the pinned development dependency entrypoint. The
+installable package declares its runtime dependencies in `setup.py`; it does
+not depend on `colour-science`.
+
+Install the toolbox from a local checkout:
+
+```powershell
+.\.venv\Scripts\python.exe -m pip install -e .
+.\.venv\Scripts\python.exe -c "import color; print(color.__version__)"
+```
+
+Install directly from Git:
+
+```powershell
+.\.venv\Scripts\python.exe -m pip install "git+ssh://git@github.com/MacAdam-fly/my_color_science_toolbox.git@v1.0.0"
+```
+
+For day-to-day work, run the tests for the modules you changed first. See
 [`TESTING_GUIDE.md`](TESTING_GUIDE.md) for the shorter testing workflow.
+
+## Root Convenience API
+
+The package root provides a small lazy facade for common workflows:
+
+```python
+from color import from_cie1931_xyz_cmfs, reflectance_to_XYZ, convert_color
+```
+
+This facade is intentionally selective. It is useful for quick scripts and for
+verifying that the toolbox is installed, but it does not replace module-level
+APIs such as `color.recovery`, `color.gamut`, `color.device`, or `color.plot`.
+Use the module `README.md`, `README_DETAILS.md`, and `API_GUIDE.md` files for
+complete API coverage.
 
 ## Module Overview
 
@@ -278,8 +308,6 @@ Main dependencies:
 - `pandas`, `openpyxl`, `xlrd`: CSV / Excel data reading.
 - `matplotlib`: plotting.
 - `Pillow`, `imageio`: image IO.
-- `colour-science`: retained as an optional reference/development dependency;
-  core runtime paths and regular tests do not directly depend on it.
 
 Currently out of scope or not a focus:
 

@@ -1,0 +1,16 @@
+include readme.md
+include readme_cn.md
+include requirements.txt
+
+recursive-include color/data/color_cards *.csv *.xls *.xlsx
+recursive-include color/data/color_difference *.xls
+recursive-include color/data/color_systems *.xls
+recursive-include color/data/gamut_data *.csv *.xls
+recursive-include color/data/illuminants *.csv *.xls
+recursive-include color/data/illuminants/reference *.xlsx
+recursive-include color/data/reflectance_spectra/uef_csv *.csv
+recursive-include color/data/standard_observer_data *.csv
+
+recursive-exclude color/data/reflectance_spectra/uef_sources_data *
+global-exclude *.py[cod]
+global-exclude __pycache__

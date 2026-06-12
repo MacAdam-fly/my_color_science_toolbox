@@ -36,6 +36,16 @@ py -3.9 -m venv .venv
 `requirements.txt` 是当前固定依赖入口。日常开发建议优先跑相关模块测试，
 完整测试策略见 [`TESTING_GUIDE.md`](TESTING_GUIDE.md)。
 
+## 根包便捷 API
+
+根包 `color` 提供一组精选的 lazy facade，为常用API：
+
+```python
+from color import from_cie1931_xyz_cmfs, reflectance_to_XYZ, convert_color
+```
+
+这不是完整 API 聚合，也不会替代模块级入口。完整能力仍应从 `color.recovery`、`color.gamut`、`color.device`、`color.plot` 等模块读取；具体用法见各模块的 `README.md`、`README_DETAILS.md` 和 `API_GUIDE.md`。
+
 ## 模块速览与最小用法
 
 ### Foundation
