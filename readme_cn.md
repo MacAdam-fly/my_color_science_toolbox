@@ -4,6 +4,42 @@ English documentation: [`readme.md`](readme.md)
 
 `color_science_toolbox` 是一个底层颜色科学工具框架。它把标准数据、光谱对象、色度学计算、颜色空间转换、色貌模型、色差、色域、光谱恢复、设备响应优化、绘图和 IO 组织成一条清晰的计算链路。
 
+## 安装使用
+
+这是一个纯 Python 工具库。当前项目依赖在本仓库 `.venv` 中以 `Python 3.9.0`
+验证可用，建议使用 `Python >= 3.9`。
+
+如果只是在其它项目中使用，推荐直接安装 GitHub Release wheel：
+
+```powershell
+py -3.9 -m venv .venv
+.\.venv\Scripts\python.exe -m pip install "https://github.com/MacAdam-fly/my_color_science_toolbox/releases/download/v1.0.0/color_science_toolbox-1.0.0-py3-none-any.whl"
+.\.venv\Scripts\python.exe -c "import color; print(color.__version__)"
+```
+
+可安装包的运行时依赖写在 `setup.py` 中。
+
+## 开发环境配置
+
+只有在你需要修改源码、运行测试或重新构建 wheel 时，才需要按开发方式配置：
+
+```powershell
+git clone git@github.com:MacAdam-fly/my_color_science_toolbox.git
+cd my_color_science_toolbox
+py -3.9 -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv\Scripts\python.exe -m pip install -e .
+.\.venv\Scripts\python.exe -m pytest -m "not examples" --import-mode=importlib -q --basetemp .pytest_tmp
+```
+
+`requirements.txt` 是开发环境的固定依赖入口；`pip install -e .` 会让导入指向本地源码树：
+
+```powershell
+.\.venv\Scripts\python.exe -c "import color; print(color.__version__)"
+```
+
+日常开发建议优先跑相关模块测试，完整测试策略见 [`TESTING_GUIDE.md`](TESTING_GUIDE.md)。
+
 ## 架构总览
 
 项目有一条清晰的表示链路：数据来源进入光谱对象，光谱对象进入色度学计算，
@@ -19,22 +55,6 @@ English documentation: [`readme.md`](readme.md)
 - `adaptation` 是 `XYZ -> XYZ` 操作；`appearance` 是 `XYZ <-> 色貌 correlates`；`spaces` 是以 `XYZ` 为中枢的坐标转换。
 - `difference` 消费已经处于同一空间的坐标；`gamut` 综合使用 `XYZ / xy / Lab / LCH / primaries / 标准色域数据`；`recovery` 从 `XYZ / xyY / LMS` 反向恢复光谱或反射谱，结果通常回到 `spectra` 再验证；`device` 从基色响应矩阵求解沉默替代等设备权重优化问题。
 - `io` 归入基础边界模块，负责文件读写；`plot` 是展示层模块，只负责绘图，不改变科学计算语义。
-
-## 环境配置
-
-这是一个纯 Python 工具库。当前项目依赖在本仓库 `.venv` 中以 `Python 3.9.0`
-验证可用，建议使用 `Python >= 3.9`。
-
-PowerShell 下的最小配置流程：
-
-```powershell
-py -3.9 -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -r requirements.txt
-.\.venv\Scripts\python.exe -m pytest -m "not examples" --import-mode=importlib -q --basetemp .pytest_tmp
-```
-
-`requirements.txt` 是当前固定依赖入口。日常开发建议优先跑相关模块测试，
-完整测试策略见 [`TESTING_GUIDE.md`](TESTING_GUIDE.md)。
 
 ## 根包便捷 API
 

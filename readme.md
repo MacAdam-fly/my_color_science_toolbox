@@ -8,6 +8,45 @@ coherent computation framework.
 
 Chinese documentation: [`readme_cn.md`](readme_cn.md)
 
+## Installation
+
+This is a pure Python toolkit. The current dependency set has been validated in
+the project `.venv` with `Python 3.9.0`; use `Python >= 3.9`.
+
+For normal use in another project, install the release wheel:
+
+```powershell
+py -3.9 -m venv .venv
+.\.venv\Scripts\python.exe -m pip install "https://github.com/MacAdam-fly/my_color_science_toolbox/releases/download/v1.0.0/color_science_toolbox-1.0.0-py3-none-any.whl"
+.\.venv\Scripts\python.exe -c "import color; print(color.__version__)"
+```
+
+The installable package declares its runtime dependencies in `setup.py`;
+
+## Development Setup
+
+Use this path only when you want to modify the toolbox source, run tests, or
+build a new wheel.
+
+```powershell
+git clone git@github.com:MacAdam-fly/my_color_science_toolbox.git
+cd my_color_science_toolbox
+py -3.9 -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv\Scripts\python.exe -m pip install -e .
+.\.venv\Scripts\python.exe -m pytest -m "not examples" --import-mode=importlib -q --basetemp .pytest_tmp
+```
+
+`requirements.txt` is the pinned development dependency entrypoint. The
+editable install keeps imports linked to the local source tree:
+
+```powershell
+.\.venv\Scripts\python.exe -c "import color; print(color.__version__)"
+```
+
+For day-to-day development, run the tests for the modules you changed first.
+See [`TESTING_GUIDE.md`](TESTING_GUIDE.md) for the shorter testing workflow.
+
 ## Architecture
 
 The project has one primary representation pipeline: data sources become
@@ -33,39 +72,6 @@ Core principles:
   substitution from response matrices.
 - `io` is a foundation module for file IO. `plot` is a presentation layer and
   does not change scientific computation semantics.
-
-## Environment Setup
-
-This is a pure Python toolkit. The current dependency set has been validated in
-the project `.venv` with `Python 3.9.0`; use `Python >= 3.9`.
-
-Minimal PowerShell setup:
-
-```powershell
-py -3.9 -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -r requirements.txt
-.\.venv\Scripts\python.exe -m pytest -m "not examples" --import-mode=importlib -q --basetemp .pytest_tmp
-```
-
-`requirements.txt` is the pinned development dependency entrypoint. The
-installable package declares its runtime dependencies in `setup.py`; it does
-not depend on `colour-science`.
-
-Install the toolbox from a local checkout:
-
-```powershell
-.\.venv\Scripts\python.exe -m pip install -e .
-.\.venv\Scripts\python.exe -c "import color; print(color.__version__)"
-```
-
-Install directly from Git:
-
-```powershell
-.\.venv\Scripts\python.exe -m pip install "git+ssh://git@github.com/MacAdam-fly/my_color_science_toolbox.git@v1.0.0"
-```
-
-For day-to-day work, run the tests for the modules you changed first. See
-[`TESTING_GUIDE.md`](TESTING_GUIDE.md) for the shorter testing workflow.
 
 ## Root Convenience API
 
