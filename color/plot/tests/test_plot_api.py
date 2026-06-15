@@ -135,6 +135,10 @@ def test_plot_lines_single_and_multiple_series() -> None:
     assert len(ax.lines) == 1
     _close(fig)
 
+    fig, ax = plot_lines((x, x), label="linear")
+    assert ax.get_legend() is not None
+    _close(fig)
+
     fig, ax = plot_lines(
         [(x, x), (x, x**2)],
         labels=("linear", "square"),
@@ -158,6 +162,14 @@ def test_plot_points_single_and_multiple_groups() -> None:
     assert fig is ax.figure
     assert len(ax.collections) == 1
     assert len(ax.texts) == 2
+    _close(fig)
+
+    fig, ax = plot_points([[0.1, 0.2]], s=80)
+    assert np.allclose(ax.collections[0].get_sizes(), [80])
+    _close(fig)
+
+    fig, ax = plot_points([[0.1, 0.2]], marker="x", label="sample")
+    assert ax.get_legend() is not None
     _close(fig)
 
     groups = (
@@ -187,6 +199,11 @@ def test_plot_3d_points_single_and_multiple_groups() -> None:
     assert ax.get_legend() is not None
     _close(fig)
 
+    fig, ax = plot_3d_points([[0.1, 0.2, 0.3]], s=80, marker="x", label="sample")
+    assert np.allclose(ax.collections[0].get_sizes(), [80])
+    assert ax.get_legend() is not None
+    _close(fig)
+
     groups = (
         [[0.1, 0.2, 0.3], [0.2, 0.3, 0.4]],
         [[0.4, 0.5, 0.6], [0.5, 0.6, 0.7]],
@@ -208,6 +225,10 @@ def test_plot_3d_lines_single_and_multiple_series() -> None:
     fig, ax = plot_3d_lines((t, t**2, t**3), xlabel="x", ylabel="y", zlabel="z")
     assert fig is ax.figure
     assert len(ax.lines) == 1
+    _close(fig)
+
+    fig, ax = plot_3d_lines((t, t, t), label="diag")
+    assert ax.get_legend() is not None
     _close(fig)
 
     fig, ax = plot_3d_lines(
@@ -233,6 +254,8 @@ def test_plot_labels_adds_text_and_rejects_label_mismatch() -> None:
 
     with pytest.raises(ValueError):
         plot_labels([[0.1, 0.2], [0.3, 0.4]], ("A",))
+    with pytest.raises(ValueError):
+        plot_labels([[0.1, 0.2]], ("A",), xytext=(0, 0))
 
 
 def test_plot_segments_single_and_multiple_groups() -> None:
@@ -246,6 +269,10 @@ def test_plot_segments_single_and_multiple_groups() -> None:
     )
     assert fig is ax.figure
     assert len(ax.lines) == 2
+    assert ax.get_legend() is not None
+    _close(fig)
+
+    fig, ax = plot_segments([[[0.0, 0.0], [1.0, 1.0]]], label="diag")
     assert ax.get_legend() is not None
     _close(fig)
 
@@ -269,14 +296,21 @@ def test_plot_polygons_single_and_multiple_groups() -> None:
     assert ax.get_legend() is not None
     _close(fig)
 
+    fig, ax = plot_polygons(triangle, label="triangle", edgecolor="tab:blue", facecolor="none")
+    assert len(ax.patches) == 1
+    assert ax.get_legend() is not None
+    _close(fig)
+
 
 def test_plot_polygons_rejects_invalid_shape() -> None:
     with pytest.raises(ValueError):
         plot_polygons([[0.0, 0.0], [1.0, 1.0]])
+    with pytest.raises(ValueError):
+        plot_polygons([[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]], closed=False)
 
 
 def test_plot_arrows_and_shape_validation() -> None:
-    fig, ax = plot_arrows([[0.0, 0.0], [1.0, 0.0]], [[0.5, 0.5], [1.5, 0.5]])
+    fig, ax = plot_arrows([[0.0, 0.0], [1.0, 0.0]], [[0.5, 0.5], [1.5, 0.5]], arrowstyle="-|>")
     assert fig is ax.figure
     assert len(ax.patches) == 2
     _close(fig)
@@ -346,10 +380,18 @@ def test_plot_bars_single_and_grouped() -> None:
     assert len(ax.patches) == 2
     _close(fig)
 
+    fig, ax = plot_bars([1.0, 2.0], label="sample")
+    assert ax.get_legend() is not None
+    _close(fig)
+
     with pytest.raises(ValueError):
         plot_bars([[1.0, 2.0]], labels=("A",))
     with pytest.raises(ValueError):
         plot_bars([1.0], orientation="diagonal")
+    with pytest.raises(ValueError):
+        plot_bars([1.0], height=0.5)
+    with pytest.raises(ValueError):
+        plot_bars([1.0], x=[0.0])
 
 
 def test_set_axis_limits_from_data() -> None:
@@ -500,11 +542,24 @@ def test_plot_xy_chromaticity_background() -> None:
 
 def test_plot_cie1931_diagram_and_points() -> None:
     fig, ax = plot_cie1931_diagram()
-    plot_chromaticity_points([[0.3127, 0.3290], [0.4, 0.3]], ax=ax, labels=("D65", "P"))
+    plot_chromaticity_points(
+        [[0.3127, 0.3290], [0.4, 0.3]],
+        ax=ax,
+        labels=("D65", "P"),
+        s=80,
+        zorder=5,
+    )
     assert fig is ax.figure
     assert len(ax.lines) >= 1
     assert len(ax.collections) >= 2
     assert len(ax.texts) == 2
+    assert np.allclose(ax.collections[-1].get_sizes(), [80])
+    assert ax.collections[-1].get_zorder() == 5
+    _close(fig)
+
+    fig, ax = plot_cie1931_diagram()
+    plot_chromaticity_points([[0.3127, 0.3290]], ax=ax, colors="tab:green", markers="x")
+    assert len(ax.collections) >= 2
     _close(fig)
 
 

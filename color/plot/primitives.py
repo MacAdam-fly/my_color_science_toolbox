@@ -151,6 +151,15 @@ def _normalise_optional_sequence(value, count: int, *, name: str):
     return values
 
 
+def _pop_marker_size_alias(kwargs: dict, sizes):
+    """Return marker sizes after consuming Matplotlib's ``s`` alias."""
+    if "s" not in kwargs:
+        return sizes
+    if not (np.isscalar(sizes) and sizes == 36):
+        raise ValueError("use either sizes or s, not both")
+    return kwargs.pop("s")
+
+
 def _as_broadcast_point_pairs(starts, ends) -> tuple[np.ndarray, np.ndarray]:
     """Return matching ``(n, 2)`` start and end point arrays."""
     starts_arr = _as_point_group(starts, name="starts")
@@ -256,6 +265,11 @@ def plot_lines(
     >>> ax.get_xlabel()
     'x'
     """
+    if "label" in kwargs:
+        if labels is not None:
+            raise ValueError("use either labels or label, not both")
+        labels = kwargs.pop("label")
+
     line_series = _normalise_line_series(series)
     labels_list = _normalise_optional_sequence(labels, len(line_series), name="labels")
     colors_list = _normalise_optional_sequence(colors, len(line_series), name="colors")
@@ -319,6 +333,16 @@ def plot_points(
     Use ``plot_points(...)`` for markers and ``plot_labels(...)`` for separate
     text placement when you need more control than ``annotate=True``.
     """
+    if "label" in kwargs:
+        if labels is not None:
+            raise ValueError("use either labels or label, not both")
+        labels = kwargs.pop("label")
+    if "marker" in kwargs:
+        if markers is not None:
+            raise ValueError("use either markers or marker, not both")
+        markers = kwargs.pop("marker")
+    sizes = _pop_marker_size_alias(kwargs, sizes)
+
     groups = _normalise_point_groups(points)
     labels_list = _normalise_optional_sequence(labels, len(groups), name="labels") if not annotate else labels
     colors_list = _normalise_optional_sequence(colors, len(groups), name="colors")
@@ -398,6 +422,9 @@ def plot_labels(
     labels_list = list(labels)
     if len(labels_list) != point_arr.shape[0]:
         raise ValueError("labels length must match number of points")
+    for reserved in ("xy", "xytext", "textcoords"):
+        if reserved in kwargs:
+            raise ValueError(f"use points/offset parameters instead of {reserved}")
 
     fig, ax = get_figure_axes(ax, figsize=(5.2, 5.0))
     for point, label in zip(point_arr, labels_list):
@@ -438,6 +465,11 @@ def plot_segments(
     ``[[x0, y0], [x1, y1]]``. This is useful for dominant-wavelength rays,
     Duv offsets and gamut edges.
     """
+    if "label" in kwargs:
+        if labels is not None:
+            raise ValueError("use either labels or label, not both")
+        labels = kwargs.pop("label")
+
     groups = _normalise_segment_groups(segments)
     labels_list = _normalise_optional_sequence(labels, len(groups), name="labels")
     colors_list = _normalise_optional_sequence(colors, len(groups), name="colors")
@@ -498,6 +530,21 @@ def plot_polygons(
     """
     from matplotlib.patches import Polygon
 
+    if "label" in kwargs:
+        if labels is not None:
+            raise ValueError("use either labels or label, not both")
+        labels = kwargs.pop("label")
+    if "edgecolor" in kwargs:
+        if edgecolors is not None:
+            raise ValueError("use either edgecolors or edgecolor, not both")
+        edgecolors = kwargs.pop("edgecolor")
+    if "facecolor" in kwargs:
+        if facecolors is not None:
+            raise ValueError("use either facecolors or facecolor, not both")
+        facecolors = kwargs.pop("facecolor")
+    if "closed" in kwargs:
+        raise ValueError("plot_polygons always draws closed polygons; do not pass closed")
+
     groups = _normalise_polygon_groups(polygons)
     labels_list = _normalise_optional_sequence(labels, len(groups), name="labels")
     edgecolors_list = _normalise_optional_sequence(edgecolors, len(groups), name="edgecolors")
@@ -555,6 +602,7 @@ def plot_arrows(
     """
     from matplotlib.patches import FancyArrowPatch
 
+    arrowstyle = kwargs.pop("arrowstyle", "->")
     starts_arr, ends_arr = _as_broadcast_point_pairs(starts, ends)
     fig, ax = get_figure_axes(ax, figsize=(5.2, 5.0))
     for start, end in zip(starts_arr, ends_arr):
@@ -564,7 +612,7 @@ def plot_arrows(
         patch = FancyArrowPatch(
             start,
             end,
-            arrowstyle="->",
+            arrowstyle=arrowstyle,
             linewidth=linewidth,
             mutation_scale=mutation_scale,
             **arrow_kwargs,
@@ -711,6 +759,15 @@ def plot_bars(
         raise ValueError("orientation must be 'vertical' or 'horizontal'")
     if width <= 0:
         raise ValueError("width must be positive")
+    if "label" in kwargs:
+        if group_labels is not None:
+            raise ValueError("use either group_labels or label, not both")
+        group_labels = kwargs.pop("label")
+    if "height" in kwargs:
+        raise ValueError("bar height is determined by values; use values and width instead")
+    for reserved in ("x", "y"):
+        if reserved in kwargs:
+            raise ValueError(f"bar positions are generated automatically; do not pass {reserved}")
 
     bar_values = _as_bar_values(values)
     n_groups, n_categories = bar_values.shape

@@ -119,6 +119,15 @@ def _normalise_optional_sequence(value, count: int, *, name: str):
     return values
 
 
+def _pop_marker_size_alias(kwargs: dict, sizes):
+    """Return marker sizes after consuming Matplotlib's ``s`` alias."""
+    if "s" not in kwargs:
+        return sizes
+    if not (np.isscalar(sizes) and sizes == 36):
+        raise ValueError("use either sizes or s, not both")
+    return kwargs.pop("s")
+
+
 def _as_surface_grid(X, Y, Z) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Return finite matching 2D surface grids."""
     x = np.asarray(X, dtype=np.float64)
@@ -196,6 +205,16 @@ def plot_3d_points(
     ``points`` accepts one ``(n, 3)`` array or multiple point groups. The
     function returns ``(fig, ax)`` and never saves or shows the figure.
     """
+    if "label" in kwargs:
+        if labels is not None:
+            raise ValueError("use either labels or label, not both")
+        labels = kwargs.pop("label")
+    if "marker" in kwargs:
+        if markers is not None:
+            raise ValueError("use either markers or marker, not both")
+        markers = kwargs.pop("marker")
+    sizes = _pop_marker_size_alias(kwargs, sizes)
+
     groups = _normalise_3d_point_groups(points)
     labels_list = _normalise_optional_sequence(labels, len(groups), name="labels")
     colors_list = _normalise_optional_sequence(colors, len(groups), name="colors")
@@ -266,6 +285,11 @@ def plot_3d_lines(
     ``series`` follows the 2D ``plot_lines`` pattern, but each series is an
     ``(x, y, z)`` tuple of equal-length one-dimensional arrays.
     """
+    if "label" in kwargs:
+        if labels is not None:
+            raise ValueError("use either labels or label, not both")
+        labels = kwargs.pop("label")
+
     line_series = _normalise_3d_line_series(series)
     labels_list = _normalise_optional_sequence(labels, len(line_series), name="labels")
     colors_list = _normalise_optional_sequence(colors, len(line_series), name="colors")

@@ -418,7 +418,7 @@ fig, ax = plot_chromaticity_background(method="CIE 1931", samples=128)
 
 用途：在色品图或普通二维图上添加色度点和标签。
 
-输入：`(n, 2)` 点数组、可选 labels。  
+输入：`(n, 2)` 点数组、可选 labels。点尺寸可用 `size`、`sizes` 或 Matplotlib 习惯的 `s`；绘制层级可用 `zorder`。
 返回：`(fig, ax)`。
 
 ```python

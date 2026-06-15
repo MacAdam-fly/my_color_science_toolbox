@@ -727,6 +727,8 @@ def plot_chromaticity_points(
     labels: Iterable[str] | None = None,
     color: str = "tab:red",
     marker: str = "o",
+    size: Sequence[float] | float | None = None,
+    zorder: float = 3,
     title: str | None = None,
     **kwargs,
 ):
@@ -737,15 +739,35 @@ def plot_chromaticity_points(
     This helper only draws points and optional text labels. Use a diagram
     function first when you need the spectral locus background.
     """
+    if "s" in kwargs:
+        if size is not None or "sizes" in kwargs:
+            raise ValueError("use only one of size, sizes or s")
+        size = kwargs.pop("s")
+    if "sizes" in kwargs:
+        if size is not None:
+            raise ValueError("use only one of size, sizes or s")
+        size = kwargs.pop("sizes")
+    if "colors" in kwargs:
+        if color != "tab:red":
+            raise ValueError("use either color or colors, not both")
+        color = kwargs.pop("colors")
+    if "markers" in kwargs:
+        if marker != "o":
+            raise ValueError("use either marker or markers, not both")
+        marker = kwargs.pop("markers")
+    if "annotate" in kwargs:
+        raise ValueError("plot_chromaticity_points uses labels for annotation; do not pass annotate")
+
     fig, ax = plot_points(
         xy,
         ax=ax,
         labels=None,
         colors=color,
         markers=marker,
+        sizes=36 if size is None else size,
         title=title,
         annotate=False,
-        zorder=3,
+        zorder=zorder,
         **kwargs,
     )
     if labels is not None:
