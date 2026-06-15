@@ -1,5 +1,13 @@
 # color.io 详细说明
 
+## AI Usage Notes
+
+- Use this module when reading/writing spectral CSV/Excel/JSON, reading/writing images, or saving Matplotlib figures.
+- Do not use this module for dataset registration, color-space conversion, ICC/LUT management, or scientific calculations.
+- Key assumptions: CSV/Excel are table-oriented formats; JSON preserves object-level metadata better; real instrument CSV files may require explicit encoding, header, skip rows, or column names.
+- Common mistakes: treating CSV round-trip as metadata-preserving; assuming automatic header detection for all instruments; saving figures through `plot` instead of `io.save_figure`.
+- Related modules: use `spectra` for spectral objects, `plot` for drawing, and `datasets` for registered static resources.
+
 `color.io` 是项目的文件读写层。它负责把已经定义好的对象写出到文件，或把文件读回为项目对象；它不负责数据注册、颜色空间转换、色适应、ICC 色彩管理或科学计算。
 
 更完整的逐项 API 示例见 `API_GUIDE.md`。

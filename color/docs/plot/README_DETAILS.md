@@ -1,5 +1,13 @@
 # color.plot 详细说明
 
+## AI Usage Notes
+
+- Use this module when drawing already-computed curves, points, chromaticity diagrams, gamut surfaces, swatches, images, bars, and publication-style figures.
+- Do not use this module to compute colorimetric values, save files directly, load data, or mutate scientific meaning; route those to `colorimetry`, `io`, or the relevant computation module.
+- Key assumptions: plot functions return Matplotlib figure/axes objects; they do not call `show()` or save by default; `plot_style(...)` sets defaults but explicit arguments still win.
+- Common mistakes: using raw Matplotlib kwargs that conflict with semantic parameters; relying on titles in journal figures instead of panel labels; treating chromaticity background plotting as data computation.
+- Related modules: use `io.save_figure` for export, `gamut`/`colorimetry` for computed data, and `spaces` for coordinate conversion.
+
 `color.plot` 是项目的基础绘图组件层。它只负责把已经计算好的数据画出来，不负责生成数据，也不负责改变数据的科学语义。
 
 逐项 API 用法见 [`API_GUIDE.md`](API_GUIDE.md)。本文件只记录设计边界、风格约定和使用注意。

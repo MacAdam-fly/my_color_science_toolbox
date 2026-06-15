@@ -1,5 +1,13 @@
 # spectra - 详细指南
 
+## AI Usage Notes
+
+- Use this module when wrapping wavelength/value columns as spectral objects, resampling spectra, aligning shapes, or loading common spectral wrappers.
+- Do not use this module for arbitrary file parsing, static dataset registration, or final colorimetric integration; route those to `io`, `datasets`, or `colorimetry`.
+- Key assumptions: spectra are discrete wavelength samples with explicit shape/interpolation behavior; wrappers may compose registered datasets but do not change their scientific semantics.
+- Common mistakes: treating `spectra` as a file reader; mixing shapes without resampling/alignment; expecting wrappers to replace `colorimetry` integration APIs.
+- Related modules: use `datasets` for raw registered data, `io` for files, `colorimetry` for `XYZ`/`LMS`, and `plot` for curves.
+
 `color.spectra` 是离散光谱信号的对象封装层。它不读取文件，也不直接做
 XYZ/LMS 积分，而是把已经得到的波长列和值列包装成可采样、可插值、可对齐的对象。
 

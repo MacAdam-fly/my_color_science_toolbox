@@ -1,5 +1,13 @@
 # color.constants 详细说明
 
+## AI Usage Notes
+
+- Use this module when a workflow needs shared standard constants such as whitepoints, matrices, display standards, or named reference values.
+- Do not use this module for computed data loading, generated spectra, or algorithm execution.
+- Key assumptions: constants are shared reference values; changing them affects many modules conceptually, so prefer explicit local parameters for experiments.
+- Common mistakes: treating constants as mutable configuration; assuming all standard datasets live here instead of `datasets`; using constants without checking scale conventions.
+- Related modules: use `datasets` for static tabular data, `spaces` for RGB/color-space definitions, and `adaptation` for transform application.
+
 `color.constants` 是项目中重要标准常量的公共索引。它不执行算法，只保存被多个模块共享的标准数据，例如参考白点、RGB 标准矩阵、LMS/XYZ 转换矩阵和色适应矩阵。
 
 逐项顶层 API 的最小使用案例见 [`API_GUIDE.md`](API_GUIDE.md)。本文档保留设计边界、文件结构和常量语义说明。

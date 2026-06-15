@@ -1,5 +1,13 @@
 # spaces - 详细指南
 
+## AI Usage Notes
+
+- Use this module when converting already-defined color values between `XYZ`, Lab/Luv/Oklab/IPT/Jzazbz, RGB spaces, and appearance-uniform spaces.
+- Do not use this module to integrate spectra, solve multi-primary device weights, or perform implicit chromatic adaptation; route those to `colorimetry`, `device`, or `adaptation`.
+- Key assumptions: `XYZ` is the routing hub; project-scale `XYZ` generally uses `Y=100`; RGB APIs distinguish encoded and linear values through transfer functions.
+- Common mistakes: assuming `convert_color(...)` adapts whitepoints automatically; treating multi-primary RGBC/RGBW displays as ordinary RGB color spaces; using RGB input without declaring the RGB colourspace.
+- Related modules: use `adaptation` for explicit whitepoint changes, `gamut` for gamut analysis, `device` for primary-weight optimization, and `colorimetry` for spectra-to-XYZ.
+
 `color.spaces` 是项目中的颜色空间层，负责把已经得到的颜色数值在不同表示之间转换。
 
 逐项顶层 API 的最小用法见 [`API_GUIDE.md`](API_GUIDE.md)。本文件保留空间架构、

@@ -1,5 +1,13 @@
 # datasets - 静态数据集加载模块详细说明
 
+## AI Usage Notes
+
+- Use this module when reading registered static data such as standard observers, color cards, reflectance spectra, gamut tables, or illuminants.
+- Do not use this module for generated spectra, object wrappers, file IO outside registered data, or numerical colorimetry; route those to `generators`, `spectra`, `io`, or `colorimetry`.
+- Key assumptions: registration is lightweight; data files are read lazily on first `get(...)`; returned arrays are intended to be treated as read-only.
+- Common mistakes: expecting arbitrary user CSV files to appear in `datasets`; confusing raw dataset dictionaries with `SpectralDistribution` objects; assuming all aliases are top-level APIs.
+- Related modules: use `spectra` wrappers for object-oriented spectral data, `io` for arbitrary files, and `generators` for formula-based sources.
+
 `color.datasets` 是 `color/data/` 的公共读取层，负责静态数据注册、懒加载、缓存、通用 CSV/XLS/XLSX 解析，以及少量特殊静态文件的自定义解析。
 
 逐项 API 的最小用法见 [`API_GUIDE.md`](API_GUIDE.md)。本文件保留更完整的模块说明、数据清单、设计边界和使用注意。

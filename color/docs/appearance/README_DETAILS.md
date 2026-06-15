@@ -1,5 +1,13 @@
 # color.appearance 详细说明：CIECAM02 与 CIECAM16 计算公式
 
+## AI Usage Notes
+
+- Use this module when computing CIECAM02 or CIECAM16 appearance correlates under explicit viewing conditions.
+- Do not use this module for ordinary coordinate conversion, simple Delta E, or chromatic adaptation alone; route those to `spaces`, `difference`, or `adaptation`.
+- Key assumptions: appearance results depend on viewing-condition parameters; input `XYZ` must already be defined in the intended reference scale and illuminant context.
+- Common mistakes: treating appearance correlates as simple color-space coordinates; omitting viewing-condition assumptions; comparing outputs from different model/settings as if they were interchangeable.
+- Related modules: use `spaces` for CAM02-UCS/CAM16-UCS conversions, `adaptation` for explicit whitepoint changes, and `colorimetry` for `XYZ` inputs.
+
 本文档用于记录当前 `color.appearance` 中 CIECAM02 与 CIECAM16 色貌模型的主要计算公式。  
 这两个模型都属于颜色外貌模型，用来描述同一个 `XYZ` 刺激在指定观察条件下产生的明度、彩度、色相、鲜艳度等外貌相关量。
 

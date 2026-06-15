@@ -1,5 +1,13 @@
 # color.difference 详细说明
 
+## AI Usage Notes
+
+- Use this module when computing color differences between two colors already expressed in the correct comparison space.
+- Do not use this module to convert spaces, adapt whitepoints, compute spectral differences, or judge gamut coverage; route those to `spaces`, `adaptation`, `colorimetry`, or `gamut`.
+- Key assumptions: both input colors must share the same space, scale, illuminant/whitepoint interpretation, and observer assumptions before Delta E is computed.
+- Common mistakes: passing raw `XYZ` to a Lab Delta E formula without conversion; comparing Lab values under different whitepoints; treating Delta E as a universal perceptual metric for all conditions.
+- Related modules: use `spaces` for conversion to Lab-like spaces, `adaptation` for whitepoint changes, and `plot` for visual comparison.
+
 `color.difference` 是色差计算层。它的职责很窄：计算两个已经位于同一颜色空间中的三维坐标差异。
 
 逐项顶层 API 的最小用法见 [`API_GUIDE.md`](API_GUIDE.md)。本文件保留模块边界、

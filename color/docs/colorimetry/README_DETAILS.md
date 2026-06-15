@@ -1,5 +1,13 @@
 # colorimetry - 色度学计算模块详细说明
 
+## AI Usage Notes
+
+- Use this module when converting spectra to `XYZ`/`LMS`, deriving `xy`/`xyY`, estimating CCT/Duv, dominant wavelength, purity, or photometric quantities.
+- Do not use this module for color-space appearance conversions, chromatic adaptation, gamut coverage, or spectral recovery; route those to `spaces`, `adaptation`, `gamut`, or `recovery`.
+- Key assumptions: project `XYZ` values normally use `Y=100`; reflectance integration normalizes relative to the illuminant, while emission integration does not represent reflectance normalization.
+- Common mistakes: interpreting object-color CCT as physical source temperature; mixing observer/illuminant assumptions; passing RGB values directly without converting to `XYZ`.
+- Related modules: use `spectra` for spectral objects, `spaces` for Lab/Oklab/etc., `plot` for chromaticity diagrams, and `io` for file export.
+
 `color.colorimetry` 是项目中负责颜色科学计算的核心层。它位于
 `datasets`、`generators` 和 `spectra` 之上，主要完成：
 

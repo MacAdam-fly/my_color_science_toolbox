@@ -1,5 +1,13 @@
 # color.utils - 详细说明
 
+## AI Usage Notes
+
+- Use this module only for shared mechanical helpers such as array coercion, shape validation, scale checks, and canonical resource naming.
+- Do not use this module for public color-science workflows, scientific algorithms, file IO, or plotting.
+- Key assumptions: utilities are low-level support functions; they do not define domain semantics.
+- Common mistakes: exposing utility helpers as user-facing workflow APIs; bypassing higher-level module validation by calling utility functions directly.
+- Related modules: use the domain module first (`colorimetry`, `spaces`, `gamut`, `recovery`, etc.) and inspect `utils` only when implementing or debugging internals.
+
 `color.utils` 是全库共享的底层工具层。它不实现颜色科学公式，也不表达具体科学对象，只处理多个模块反复遇到的基础机械问题：
 
 - NumPy 输入如何统一转成 `float64`。

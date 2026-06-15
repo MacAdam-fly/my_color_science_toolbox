@@ -1,5 +1,13 @@
 # color.recovery 详细说明
 
+## AI Usage Notes
+
+- Use this module when recovering an effective spectrum or bounded reflectance from `XYZ`, `xyY`, `LMS`, or generic response values.
+- Do not use this module as RGB spectral upsampling, as proof of a unique real-world spectrum, or as a replacement for explicit RGB-to-XYZ assumptions.
+- Key assumptions: spectrum recovery estimates an effective SPD-like signal; reflectance recovery constrains reflectance under an illuminant/CMFs; PCA and dictionary methods require an explicit reflectance library.
+- Common mistakes: comparing recovered spectra as if the inverse problem were unique; expecting PCA/dictionary methods to minimize only XYZ error; mixing reflectance and emission semantics.
+- Related modules: use `colorimetry` to verify closure, `spectra` for object wrappers, `datasets` for libraries, and `plot`/`io` for reports.
+
 `color.recovery` 负责从低维颜色刺激反推出一条可行光谱。它解决的是反问题：
 
 ```text

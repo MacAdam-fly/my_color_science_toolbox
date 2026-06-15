@@ -1,5 +1,13 @@
 # color.quality 详细说明
 
+## AI Usage Notes
+
+- Use this module only for the currently documented spectral similarity functionality.
+- Do not claim stable support for CRI/Ra/R9, TM-30, CQS, or mature light-quality workflows unless they are explicitly implemented and documented later.
+- Key assumptions: this module is not part of the current mature mainline API; treat it as limited and narrower than general lighting-quality evaluation.
+- Common mistakes: mapping any light-quality request to `quality`; inventing CRI/TM-30 calculations from memory; treating SSI as a substitute for all rendering-quality metrics.
+- Related modules: use `colorimetry` for spectral integration and `plot`/`io` for reporting; propose a scoped implementation plan for unsupported quality metrics.
+
 `color.quality` 用来放置光源质量、显色质量和光谱相似度相关的指标。当前第一版只实现
 Academy **Spectral Similarity Index (SSI)**。
 

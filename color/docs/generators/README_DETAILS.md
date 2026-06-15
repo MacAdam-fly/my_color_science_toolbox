@@ -1,5 +1,13 @@
 # generators - 详细指南
 
+## AI Usage Notes
+
+- Use this module when creating formula- or model-generated data such as illuminants, ideal spectra, Gaussian/multi-Gaussian SPDs, LEDs, or registered generator outputs.
+- Do not use this module to read static standard files, recover spectra from color values, or wrap spectra as long-lived objects; route those to `datasets`, `recovery`, or `spectra`.
+- Key assumptions: generator outputs are lightweight dictionaries/arrays by design; generated data is not automatically registered as static data.
+- Common mistakes: confusing generated SPDs with measured datasets; using generators for inverse recovery; expecting generator names to be identical to dataset names.
+- Related modules: use `spectra` to wrap generated columns, `colorimetry` to integrate them, and `plot` for visualization.
+
 `color.generators` 是“基于公式或过程模型生成数据”的模块。它和 `color.datasets` 的边界很重要：
 
 ```text

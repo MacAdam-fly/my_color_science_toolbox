@@ -1,5 +1,13 @@
 # color.adaptation - 色适应模块详细说明
 
+## AI Usage Notes
+
+- Use this module when explicitly adapting `XYZ` values between source and target whitepoints.
+- Do not use this module for color appearance modeling, RGB transfer functions, or implicit conversion inside `convert_color(...)`; route those to `appearance` or `spaces`.
+- Key assumptions: adaptation operates on `XYZ` values and explicit whitepoints; it does not infer viewing conditions or source illuminants automatically.
+- Common mistakes: expecting `spaces.convert_color(...)` to adapt whitepoints; adapting RGB values directly; using adaptation to compare spectra before computing `XYZ`.
+- Related modules: use `spaces` after adaptation for Lab/Oklab/etc., `colorimetry` to obtain `XYZ`, and `appearance` for viewing-condition-dependent correlates.
+
 `color.adaptation` 是显式色适应模块。它处理的是同一个颜色刺激在不同参考白点
 之间的 `XYZ` 表达变化：
 

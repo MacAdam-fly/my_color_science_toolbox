@@ -1,5 +1,13 @@
 # color.math 详细说明
 
+## AI Usage Notes
+
+- Use this module for pure numerical helpers such as interpolation, extrapolation, and Gaussian curve values.
+- Do not use this module as a color-science semantic layer, dataset loader, spectrum wrapper, or plotting layer.
+- Key assumptions: functions operate on arrays and numeric values; they do not encode observer, illuminant, whitepoint, or color-space meaning.
+- Common mistakes: calling math helpers when a higher-level `spectra`, `generators`, or `recovery` API should own the semantics; assuming interpolation choices imply a colorimetric standard.
+- Related modules: use `spectra` for spectral resampling semantics, `generators` for generated SPDs, and `recovery` for inverse problems.
+
 `color.math` 是项目里的底层数值方法层，目前主要服务于光谱插值、外推和少量可被多个模块复用的纯数值曲线。它只处理数组上的数值运算，不表达颜色科学对象本身。
 
 逐项顶层 API 的最小使用案例见 [`API_GUIDE.md`](API_GUIDE.md)。本文档保留模块边界、插值/外推策略和与上层模块的关系说明。

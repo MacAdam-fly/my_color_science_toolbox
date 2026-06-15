@@ -1,5 +1,13 @@
 # color.device 详细说明
 
+## AI Usage Notes
+
+- Use this module when solving melanopic/ipRGC silent substitution from primary response matrices or primary SPDs.
+- Do not use this module as a general multi-primary RGB color-space converter, ICC/LUT system, display calibration suite, or gamut coverage tool.
+- Key assumptions: response columns must be explicitly named; `mel` is required; held responses are currently `LMS` or `XYZ`; optimization changes melanopic response while holding the selected triplet fixed.
+- Common mistakes: passing an `XYZ+mel` matrix without declaring response names; using `gamut` for silent substitution; expecting unique multi-primary drive weights.
+- Related modules: use `spectra`/`colorimetry` to derive primary responses, `gamut` for reachable color boundaries, and `plot`/`io` for result visualization.
+
 `color.device` 用来处理显示设备 primary weights、响应矩阵和设备驱动优化。
 当前版本只实现多基色显示器的 melanopic / ipRGC 沉默替代：
 

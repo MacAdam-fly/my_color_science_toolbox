@@ -1,5 +1,13 @@
 # gamut 详细说明
 
+## AI Usage Notes
+
+- Use this module when analyzing reachable color volumes, display primary gamuts, `xy` area coverage, Lab volume coverage, Pointer gamut, MacAdam limits, or gamut summaries.
+- Do not use this module for device silent substitution, RGB encoding/decoding, ICC/LUT workflows, or spectral recovery; route those to `device`, `spaces`, or `recovery`.
+- Key assumptions: display gamut calculations operate on linear primary mixtures in `XYZ(Y=100)`; object gamuts such as Pointer and MacAdam have different physical meanings from display gamuts.
+- Common mistakes: projecting an LCH/Lab boundary to `xy` and treating it as the true `xy` boundary; comparing volume coverage without noting whitepoint/grid warnings; expecting unique multi-primary weights.
+- Related modules: use `spaces` for RGB/XYZ conversion, `device` for melanopic silent substitution, `plot` for visualization, and `io` for exporting figures/data.
+
 `color.gamut` 用来处理色域可达性、色域边界、覆盖率和常见参考物体色域。它关注的是已经处于线性 `XYZ(Y=100)` 体系中的颜色刺激，不负责 RGB 编码/解码、色适应、色貌观察条件或普通光谱积分。
 
 逐项顶层 API 的最小用法见 [`API_GUIDE.md`](API_GUIDE.md)。本文件保留色域语义、

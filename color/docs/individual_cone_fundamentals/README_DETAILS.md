@@ -1,5 +1,13 @@
 # individual_cone_fundamentals 详细说明
 
+## AI Usage Notes
+
+- Use this module when generating individualized LMS cone fundamentals from Stockman/Rider 2023 or Asano 2016 models.
+- Do not use this module as a generic standard-observer loader, RGB conversion layer, or device primary-response optimizer; route those to `datasets`, `spaces`, or `device`.
+- Key assumptions: final LMS fundamentals and model components are separate APIs; components expose current-parameter intermediate curves, not unscaled generic templates.
+- Common mistakes: mixing Stockman/Rider and Asano parameters as if they were identical; interpreting components as official static datasets; forgetting that generators/spectra wrappers expose only final LMS curves.
+- Related modules: use `generators` for registry dispatch, `spectra` for `MultiSpectralDistribution` wrappers, and `colorimetry` for LMS integration workflows.
+
 这个模块用于生成个体化 LMS cone fundamentals。它不是静态数据读取模块，
 而是公式模型模块。逐项 API 使用案例见 [`API_GUIDE.md`](API_GUIDE.md)。
 
