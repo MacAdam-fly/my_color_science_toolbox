@@ -9,6 +9,7 @@ import numpy as np
 from scipy.spatial import ConvexHull
 
 from color.colorimetry import XYZ_to_xy, XYZ_to_xyY
+from color.math import integrate_samples
 from color.spaces.basic.lab import Lab_to_LCHab, LCHab_to_Lab, Lab_to_XYZ
 
 from .primaries import DisplayPrimaries, as_display_primaries
@@ -216,7 +217,13 @@ class GamutBoundary:
         """Return an approximate Lab gamut volume by integrating slice areas."""
         if self.L_values.size == 1:
             return 0.0
-        return float(np.trapz(self.areas(), self.L_values))
+        return float(
+            integrate_samples(
+                self.areas(),
+                self.L_values,
+                quadrature="trapezoid",
+            )
+        )
 
     def xy_area(self) -> float:
         """Return the CIE xy convex-hull area of this gamut boundary."""

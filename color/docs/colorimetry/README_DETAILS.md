@@ -206,30 +206,21 @@ k = 100 / ∫ Illuminant(λ) * y_bar(λ) dλ
 对于 `reflectance_to_LMS(...)`，同样会默认归一化到响应函数的默认中间
 通道，除非显式指定 `normalisation_channel` 或 `k`。
 
-### 光谱内积策略
+### 光谱积分规则
 
-为了兼容已有结果，`integration_policy=None` 时保留历史默认：
+XYZ、LMS、photometry、device response 和 reflectance recovery 共享同一套
+默认光谱内积语义：
 
-- XYZ / LMS 光谱积分：使用响应函数完整网格、常数外推和矩形积分。
-- photometry：使用输入光谱自身波长、光视效率函数范围外填 `0` 和梯形积分。
+- 如果显式传入 `shape`，则 `shape` 是唯一积分网格。
+- 如果未传入 `shape`，使用响应函数网格，并裁剪到所有输入光谱的重叠波长域。
+- 对齐时范围外填 `0`。
+- 光谱乘积使用梯形积分。
 
-新代码如果需要让 XYZ、LMS 和 photometry 使用同一套光谱内积语义，可以显式传入
-`STANDARD_INTEGRATION_POLICY`：
+这意味着不同模块不再各自选择完整响应网格、输入光谱网格、矩形积分或梯形积分。
+需要固定重采样网格时，显式传入 `shape` 即可。
 
-```python
-from color.colorimetry import STANDARD_INTEGRATION_POLICY, reflectance_to_XYZ
-
-XYZ = reflectance_to_XYZ(
-    patch,
-    illuminant=d65,
-    cmfs=cmfs,
-    integration_policy=STANDARD_INTEGRATION_POLICY,
-)
-```
-
-标准策略在未显式传入 `shape` 时使用响应函数网格，并裁剪到所有输入光谱的重叠
-波长域；范围外填 `0`，积分规则为矩形求和。如果显式传入 `shape`，则 `shape`
-优先于 policy 的默认网格选择。
+SSI 是例外：它是标准化指标，继续使用 Academy SSI 专用的 `375-675 nm`、
+`10 nm` 矩阵流程，而不是通用光谱内积规则。
 
 ### NaN 策略
 

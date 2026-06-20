@@ -5,7 +5,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from color.colorimetry import STANDARD_INTEGRATION_POLICY, XYZ_to_xyY, reflectance_to_XYZ
+from color.colorimetry import XYZ_to_xyY, reflectance_to_XYZ
 from color.recovery import (
     recover_reflectance_from_XYZ,
     recover_reflectance_from_xyY,
@@ -134,10 +134,8 @@ def test_recover_reflectance_burns2019_rejects_non_unit_bounds() -> None:
         )
 
 
-def test_standard_policy_recovery_matrix_matches_reflectance_to_XYZ() -> None:
-    matrix, wavelengths, shape = reflectance_recovery_matrix(
-        integration_policy=STANDARD_INTEGRATION_POLICY,
-    )
+def test_recovery_matrix_matches_reflectance_to_XYZ() -> None:
+    matrix, wavelengths, shape = reflectance_recovery_matrix()
     reflectance = SpectralDistribution(
         wavelengths,
         np.linspace(0.2, 0.8, wavelengths.size),
@@ -149,7 +147,6 @@ def test_standard_policy_recovery_matrix_matches_reflectance_to_XYZ() -> None:
         reflectance,
         illuminant="D65",
         shape=shape,
-        integration_policy=STANDARD_INTEGRATION_POLICY,
     )
 
     np.testing.assert_allclose(matrix_XYZ, direct_XYZ)

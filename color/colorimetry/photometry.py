@@ -13,11 +13,7 @@ from color.spectra import (
     from_dataset,
 )
 
-from .integration import (
-    LEGACY_PHOTOMETRY_POLICY,
-    SpectralIntegrationPolicy,
-    integrate_response_products,
-)
+from .integration import integrate_response_products
 
 
 SpectralInput = Union[SpectralDistribution, MultiSpectralDistribution]
@@ -36,31 +32,11 @@ def _load_lef(lef: LuminousEfficiencySource) -> SpectralDistribution:
     return from_dataset("standard_observers.luminous_efficiency", lef)
 
 
-def _sample_lef_on(
-    wavelengths: np.ndarray,
-    lef: SpectralDistribution,
-) -> np.ndarray:
-    """Sample a LEF on arbitrary wavelengths with zero response out of range."""
-    return lef.sample(
-        wavelengths,
-        bounds_error=False,
-        fill_value=0.0,
-    )
-
-
-def _source_values(spectrum: SpectralInput) -> np.ndarray:
-    """Return source values as ``(n_sources, n_wavelengths)``."""
-    if isinstance(spectrum, SpectralDistribution):
-        return spectrum.values.reshape(1, -1)
-    return spectrum.values.T
-
-
 def _integrate_product(
     spectrum: SpectralInput,
     lef: SpectralDistribution,
     *,
     shape: SpectralShape | None = None,
-    integration_policy: SpectralIntegrationPolicy | None = None,
 ) -> np.ndarray:
     """Integrate ``spectrum * lef`` for one or more spectral sources."""
     return np.atleast_1d(
@@ -68,7 +44,6 @@ def _integrate_product(
             spectrum,
             lef,
             shape=shape,
-            policy=integration_policy or LEGACY_PHOTOMETRY_POLICY,
         )
     )
 
@@ -78,25 +53,17 @@ def _integrate_spectrum(
     *,
     reference: SpectralDistribution,
     shape: SpectralShape | None = None,
-    integration_policy: SpectralIntegrationPolicy | None = None,
 ) -> np.ndarray:
     """Integrate spectral power over wavelength."""
-    if shape is None and integration_policy is None:
-        unit_response = SpectralDistribution(
-            spectrum.wavelengths,
-            np.ones_like(spectrum.wavelengths, dtype=np.float64),
-        )
-    else:
-        unit_response = SpectralDistribution(
-            reference.wavelengths,
-            np.ones_like(reference.wavelengths, dtype=np.float64),
-        )
+    unit_response = SpectralDistribution(
+        reference.wavelengths,
+        np.ones_like(reference.wavelengths, dtype=np.float64),
+    )
     return np.atleast_1d(
         integrate_response_products(
             spectrum,
             unit_response,
             shape=shape,
-            policy=integration_policy or LEGACY_PHOTOMETRY_POLICY,
         )
     )
 
@@ -164,7 +131,6 @@ def luminous_flux(
     *,
     K_m: float = DEFAULT_PHOTOPIC_K_M,
     shape: SpectralShape | None = None,
-    integration_policy: SpectralIntegrationPolicy | None = None,
 ) -> float | np.ndarray:
     """Return luminous flux using the given luminous efficiency function.
 
@@ -203,7 +169,6 @@ def luminous_flux(
         spectrum,
         lef_sd,
         shape=shape,
-        integration_policy=integration_policy,
     )
     return _as_scalar_or_array(flux, spectrum)
 
@@ -213,7 +178,6 @@ def luminous_efficiency(
     lef: LuminousEfficiencySource | None = None,
     *,
     shape: SpectralShape | None = None,
-    integration_policy: SpectralIntegrationPolicy | None = None,
 ) -> float | np.ndarray:
     """Return luminous efficiency using the given luminous efficiency function.
 
@@ -227,13 +191,11 @@ def luminous_efficiency(
         spectrum,
         lef_sd,
         shape=shape,
-        integration_policy=integration_policy,
     )
     denominator = _integrate_spectrum(
         spectrum,
         reference=lef_sd,
         shape=shape,
-        integration_policy=integration_policy,
     )
     if np.any(np.isclose(denominator, 0.0)):
         raise ZeroDivisionError("spectral integral is zero")
@@ -247,7 +209,6 @@ def luminous_efficacy(
     *,
     K_m: float = DEFAULT_PHOTOPIC_K_M,
     shape: SpectralShape | None = None,
-    integration_policy: SpectralIntegrationPolicy | None = None,
 ) -> float | np.ndarray:
     """Return luminous efficacy in lm/W using the given LEF.
 
@@ -261,7 +222,6 @@ def luminous_efficacy(
             spectrum,
             lef,
             shape=shape,
-            integration_policy=integration_policy,
         )
     )
     return _as_scalar_or_array(np.atleast_1d(efficacy), spectrum)
@@ -273,7 +233,6 @@ def photopic_luminous_flux(
     lef: LuminousEfficiencySource = DEFAULT_PHOTOPIC_LEF,
     K_m: float = DEFAULT_PHOTOPIC_K_M,
     shape: SpectralShape | None = None,
-    integration_policy: SpectralIntegrationPolicy | None = None,
 ) -> float | np.ndarray:
     """Return photopic luminous flux with matched default LEF and ``K_m``.
 
@@ -286,7 +245,6 @@ def photopic_luminous_flux(
         lef,
         K_m=K_m,
         shape=shape,
-        integration_policy=integration_policy,
     )
 
 
@@ -296,7 +254,6 @@ def scotopic_luminous_flux(
     lef: LuminousEfficiencySource = DEFAULT_SCOTOPIC_LEF,
     K_m: float = DEFAULT_SCOTOPIC_K_M,
     shape: SpectralShape | None = None,
-    integration_policy: SpectralIntegrationPolicy | None = None,
 ) -> float | np.ndarray:
     """Return scotopic luminous flux with matched default LEF and ``K_m``.
 
@@ -310,7 +267,6 @@ def scotopic_luminous_flux(
         lef,
         K_m=K_m,
         shape=shape,
-        integration_policy=integration_policy,
     )
 
 
@@ -319,14 +275,12 @@ def photopic_luminous_efficiency(
     *,
     lef: LuminousEfficiencySource = DEFAULT_PHOTOPIC_LEF,
     shape: SpectralShape | None = None,
-    integration_policy: SpectralIntegrationPolicy | None = None,
 ) -> float | np.ndarray:
     """Return photopic luminous efficiency with a matched default LEF."""
     return luminous_efficiency(
         spectrum,
         lef,
         shape=shape,
-        integration_policy=integration_policy,
     )
 
 
@@ -335,14 +289,12 @@ def scotopic_luminous_efficiency(
     *,
     lef: LuminousEfficiencySource = DEFAULT_SCOTOPIC_LEF,
     shape: SpectralShape | None = None,
-    integration_policy: SpectralIntegrationPolicy | None = None,
 ) -> float | np.ndarray:
     """Return scotopic luminous efficiency with a matched default LEF."""
     return luminous_efficiency(
         spectrum,
         lef,
         shape=shape,
-        integration_policy=integration_policy,
     )
 
 
@@ -352,7 +304,6 @@ def photopic_luminous_efficacy(
     lef: LuminousEfficiencySource = DEFAULT_PHOTOPIC_LEF,
     K_m: float = DEFAULT_PHOTOPIC_K_M,
     shape: SpectralShape | None = None,
-    integration_policy: SpectralIntegrationPolicy | None = None,
 ) -> float | np.ndarray:
     """Return photopic luminous efficacy with matched default LEF and ``K_m``."""
     return luminous_efficacy(
@@ -360,7 +311,6 @@ def photopic_luminous_efficacy(
         lef,
         K_m=K_m,
         shape=shape,
-        integration_policy=integration_policy,
     )
 
 
@@ -370,7 +320,6 @@ def scotopic_luminous_efficacy(
     lef: LuminousEfficiencySource = DEFAULT_SCOTOPIC_LEF,
     K_m: float = DEFAULT_SCOTOPIC_K_M,
     shape: SpectralShape | None = None,
-    integration_policy: SpectralIntegrationPolicy | None = None,
 ) -> float | np.ndarray:
     """Return scotopic luminous efficacy with matched default LEF and ``K_m``."""
     return luminous_efficacy(
@@ -378,7 +327,6 @@ def scotopic_luminous_efficacy(
         lef,
         K_m=K_m,
         shape=shape,
-        integration_policy=integration_policy,
     )
 
 

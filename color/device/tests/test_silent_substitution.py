@@ -7,7 +7,6 @@ import pytest
 
 import color.device as device
 import color.device.silent_substitution as silent_substitution_module
-from color.colorimetry import STANDARD_INTEGRATION_POLICY
 from color.colorimetry.integration import integrate_response_products
 from color.device import PrimaryResponseDisplay, melanopic_silent_range
 from color.device.silent_substitution import (
@@ -347,7 +346,7 @@ def test_from_primary_spds_builds_full_response_matrix():
     assert np.all(np.isfinite(display.primary_responses))
 
 
-def test_from_primary_spds_standard_policy_matches_response_product_helper():
+def test_from_primary_spds_matches_response_product_helper():
     wavelengths = np.array([400.0, 500.0, 600.0])
     fundamentals = MultiSpectralDistribution(
         wavelengths,
@@ -371,13 +370,8 @@ def test_from_primary_spds_standard_policy_matches_response_product_helper():
         fundamentals=fundamentals,
         cmfs=cmfs,
         melanopic=melanopic,
-        integration_policy=STANDARD_INTEGRATION_POLICY,
     )
-    expected = integrate_response_products(
-        _primary_spds(),
-        responses,
-        policy=STANDARD_INTEGRATION_POLICY,
-    )
+    expected = integrate_response_products(_primary_spds(), responses)
 
     np.testing.assert_allclose(display.primary_responses, expected)
 

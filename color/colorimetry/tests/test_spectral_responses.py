@@ -7,9 +7,6 @@ import pytest
 
 from color.colorimetry.cone_responses import emission_to_lms, reflectance_to_lms
 from color.colorimetry.integration import (
-    LEGACY_PHOTOMETRY_POLICY,
-    STANDARD_INTEGRATION_POLICY,
-    SpectralIntegrationPolicy,
     integrate_response_products,
     integrate_responses,
 )
@@ -51,7 +48,7 @@ def test_emission_to_xyz_single_channel():
 
     xyz = emission_to_xyz(spd, _identity_xyz_responses())
 
-    np.testing.assert_allclose(xyz, [100.0, 200.0, 300.0])
+    np.testing.assert_allclose(xyz, [50.0, 200.0, 150.0])
 
 
 def test_emission_to_xyz_multi_channel():
@@ -70,8 +67,8 @@ def test_emission_to_xyz_multi_channel():
     np.testing.assert_allclose(
         xyz,
         [
-            [100.0, 300.0, 500.0],
-            [200.0, 400.0, 600.0],
+            [50.0, 300.0, 250.0],
+            [100.0, 400.0, 300.0],
         ],
     )
 
@@ -82,7 +79,7 @@ def test_reflectance_to_xyz_perfect_reflector_normalises_y_to_100():
 
     xyz = reflectance_to_xyz(reflectance, illuminant, _identity_xyz_responses())
 
-    np.testing.assert_allclose(xyz, [100.0, 100.0, 100.0])
+    np.testing.assert_allclose(xyz, [50.0, 100.0, 50.0])
 
 
 def test_reflectance_to_xyz_multi_channel():
@@ -102,8 +99,8 @@ def test_reflectance_to_xyz_multi_channel():
     np.testing.assert_allclose(
         xyz,
         [
-            [100.0, 100.0, 100.0],
-            [50.0, 50.0, 50.0],
+            [50.0, 100.0, 50.0],
+            [25.0, 50.0, 25.0],
         ],
     )
 
@@ -113,36 +110,16 @@ def test_lms_uses_same_response_integration_with_lms_labels():
 
     lms = emission_to_lms(spd, _identity_lms_responses())
 
-    np.testing.assert_allclose(lms, [100.0, 200.0, 300.0])
+    np.testing.assert_allclose(lms, [50.0, 200.0, 150.0])
 
 
-def test_integrate_response_products_rectangle_and_trapezoid():
+def test_integrate_response_products_defaults_to_trapezoid_on_intersection_grid():
     spd = SpectralDistribution([400.0, 500.0, 600.0], [1.0, 2.0, 3.0])
     response = SpectralDistribution([400.0, 500.0, 600.0], [1.0, 1.0, 1.0])
 
-    rectangle = integrate_response_products(
-        spd,
-        response,
-        policy=SpectralIntegrationPolicy(
-            domain="response",
-            quadrature="rectangle",
-            extrapolator="fill",
-            fill_value=0.0,
-        ),
-    )
-    trapezoid = integrate_response_products(
-        spd,
-        response,
-        policy=SpectralIntegrationPolicy(
-            domain="response",
-            quadrature="trapezoid",
-            extrapolator="fill",
-            fill_value=0.0,
-        ),
-    )
+    value = integrate_response_products(spd, response)
 
-    assert rectangle == pytest.approx(600.0)
-    assert trapezoid == pytest.approx(400.0)
+    assert value == pytest.approx(400.0)
 
 
 def test_integrate_response_products_intersection_uses_response_grid():
@@ -152,13 +129,9 @@ def test_integrate_response_products_intersection_uses_response_grid():
         [1.0, 1.0, 1.0, 1.0, 1.0],
     )
 
-    value = integrate_response_products(
-        spd,
-        response,
-        policy=STANDARD_INTEGRATION_POLICY,
-    )
+    value = integrate_response_products(spd, response)
 
-    assert value == pytest.approx(300.0)
+    assert value == pytest.approx(200.0)
 
 
 def test_integrate_response_products_intersection_requires_overlap():
@@ -166,24 +139,7 @@ def test_integrate_response_products_intersection_requires_overlap():
     response = SpectralDistribution([400.0, 500.0], [1.0, 1.0])
 
     with pytest.raises(ValueError, match="overlap"):
-        integrate_response_products(
-            spd,
-            response,
-            policy=STANDARD_INTEGRATION_POLICY,
-        )
-
-
-def test_source_domain_reproduces_legacy_photometry_grid():
-    spd = SpectralDistribution([400.0, 500.0, 600.0], [1.0, 2.0, 3.0])
-    response = SpectralDistribution([400.0, 500.0, 600.0], [0.0, 0.5, 1.0])
-
-    value = integrate_response_products(
-        spd,
-        response,
-        policy=LEGACY_PHOTOMETRY_POLICY,
-    )
-
-    assert value == pytest.approx(250.0)
+        integrate_response_products(spd, response)
 
 
 def test_reflectance_to_lms_defaults_to_middle_channel_normalisation():
@@ -192,7 +148,7 @@ def test_reflectance_to_lms_defaults_to_middle_channel_normalisation():
 
     lms = reflectance_to_lms(reflectance, illuminant, _identity_lms_responses())
 
-    np.testing.assert_allclose(lms, [100.0, 100.0, 100.0])
+    np.testing.assert_allclose(lms, [50.0, 100.0, 50.0])
 
 
 def test_emission_rejects_illuminant():

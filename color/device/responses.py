@@ -7,7 +7,7 @@ from typing import Sequence
 
 import numpy as np
 
-from color.colorimetry.integration import SpectralIntegrationPolicy, integrate_response_products
+from color.colorimetry.integration import integrate_response_products
 from color.spectra import (
     MultiSpectralDistribution,
     SpectralDistribution,
@@ -104,21 +104,17 @@ def _default_shape(
     return melanopic.shape if shape is None else shape
 
 
-def _as_primary_spds(
+def _primary_response_products(
     primary_spds: MultiSpectralDistribution | Sequence[SpectralDistribution],
+    responses: MultiSpectralDistribution,
     *,
-    shape: SpectralShape,
+    shape: SpectralShape | None,
     primary_names: Sequence[str] | None,
 ) -> tuple[np.ndarray, tuple[str, ...]]:
-    """Return aligned primary SPD values and names."""
+    """Return integrated response products and primary names."""
     if isinstance(primary_spds, MultiSpectralDistribution):
-        aligned = primary_spds.align(
-            shape,
-            extrapolator="fill",
-            fill_value=0.0,
-        )
-        names = _primary_names(primary_names or aligned.labels, aligned.values.shape[1])
-        return aligned.values, names
+        names = _primary_names(primary_names or primary_spds.labels, primary_spds.values.shape[1])
+        return integrate_response_products(primary_spds, responses, shape=shape), names
 
     spectra = tuple(primary_spds)
     if not spectra:
@@ -128,17 +124,18 @@ def _as_primary_spds(
             "primary_spds must be a MultiSpectralDistribution or a sequence "
             "of SpectralDistribution"
         )
-
-    aligned_values = [
-        spectrum.align(shape, extrapolator="fill", fill_value=0.0).values
-        for spectrum in spectra
-    ]
     generated_names = tuple(
         spectrum.name if spectrum.name else f"P{index}"
         for index, spectrum in enumerate(spectra)
     )
     names = _primary_names(primary_names or generated_names, len(spectra))
-    return np.column_stack(aligned_values), names
+    responses_array = np.vstack(
+        [
+            integrate_response_products(spectrum, responses, shape=shape)
+            for spectrum in spectra
+        ]
+    )
+    return responses_array, names
 
 
 def _aligned_lms_values(
@@ -318,76 +315,25 @@ class PrimaryResponseDisplay:
         melanopic: SpectralDistribution | None,
         shape: SpectralShape | None,
         primary_names: Sequence[str] | None,
-        integration_policy: SpectralIntegrationPolicy | None,
     ) -> "PrimaryResponseDisplay":
         """Build a display response matrix from primary spectra and responses."""
         fundamentals = fundamentals or from_cie2006_lms_10degree_fundamentals()
         cmfs = cmfs or from_cie2012_xyz_10degree_cmfs()
         melanopic = melanopic or from_iprgc_melanopic()
         common_shape = _default_shape(shape, melanopic)
-        if integration_policy is not None:
-            response_distribution = _response_distribution_for_names(
-                response_names,
-                fundamentals=fundamentals,
-                cmfs=cmfs,
-                melanopic=melanopic,
-                shape=common_shape,
-            )
-            if isinstance(primary_spds, MultiSpectralDistribution):
-                names = _primary_names(
-                    primary_names or primary_spds.labels,
-                    primary_spds.values.shape[1],
-                )
-                primary_responses = integrate_response_products(
-                    primary_spds,
-                    response_distribution,
-                    shape=shape,
-                    policy=integration_policy,
-                )
-            else:
-                spectra = tuple(primary_spds)
-                if not spectra:
-                    raise ValueError("primary_spds must contain at least one primary")
-                if not all(isinstance(spectrum, SpectralDistribution) for spectrum in spectra):
-                    raise ValueError(
-                        "primary_spds must be a MultiSpectralDistribution or a sequence "
-                        "of SpectralDistribution"
-                    )
-                generated_names = tuple(
-                    spectrum.name if spectrum.name else f"P{index}"
-                    for index, spectrum in enumerate(spectra)
-                )
-                names = _primary_names(primary_names or generated_names, len(spectra))
-                primary_responses = np.vstack(
-                    [
-                        integrate_response_products(
-                            spectrum,
-                            response_distribution,
-                            shape=shape,
-                            policy=integration_policy,
-                        )
-                        for spectrum in spectra
-                    ]
-                )
-            return cls(
-                primary_responses,
-                response_names=response_names,
-                primary_names=names,
-            )
-
-        primary_values, names = _as_primary_spds(
-            primary_spds,
-            shape=common_shape,
-            primary_names=primary_names,
-        )
-        response_values = _response_values_for_names(
+        response_distribution = _response_distribution_for_names(
             response_names,
             fundamentals=fundamentals,
             cmfs=cmfs,
             melanopic=melanopic,
             shape=common_shape,
         )
-        primary_responses = primary_values.T @ response_values * common_shape.interval
+        primary_responses, names = _primary_response_products(
+            primary_spds,
+            response_distribution,
+            shape=shape,
+            primary_names=primary_names,
+        )
         return cls(
             primary_responses,
             response_names=response_names,
@@ -404,7 +350,6 @@ class PrimaryResponseDisplay:
         melanopic: SpectralDistribution | None = None,
         shape: SpectralShape | None = None,
         primary_names: Sequence[str] | None = None,
-        integration_policy: SpectralIntegrationPolicy | None = None,
     ) -> "PrimaryResponseDisplay":
         """Build full LMS, XYZ and melanopic responses from primary spectra."""
         return cls._from_primary_spds_with_responses(
@@ -415,7 +360,6 @@ class PrimaryResponseDisplay:
             melanopic=melanopic,
             shape=shape,
             primary_names=primary_names,
-            integration_policy=integration_policy,
         )
 
     @classmethod
@@ -427,7 +371,6 @@ class PrimaryResponseDisplay:
         melanopic: SpectralDistribution | None = None,
         shape: SpectralShape | None = None,
         primary_names: Sequence[str] | None = None,
-        integration_policy: SpectralIntegrationPolicy | None = None,
     ) -> "PrimaryResponseDisplay":
         """Build LMS and melanopic responses from primary spectra."""
         return cls._from_primary_spds_with_responses(
@@ -438,7 +381,6 @@ class PrimaryResponseDisplay:
             melanopic=melanopic,
             shape=shape,
             primary_names=primary_names,
-            integration_policy=integration_policy,
         )
 
     @classmethod
@@ -450,7 +392,6 @@ class PrimaryResponseDisplay:
         melanopic: SpectralDistribution | None = None,
         shape: SpectralShape | None = None,
         primary_names: Sequence[str] | None = None,
-        integration_policy: SpectralIntegrationPolicy | None = None,
     ) -> "PrimaryResponseDisplay":
         """Build XYZ and melanopic responses from primary spectra."""
         return cls._from_primary_spds_with_responses(
@@ -461,7 +402,6 @@ class PrimaryResponseDisplay:
             melanopic=melanopic,
             shape=shape,
             primary_names=primary_names,
-            integration_policy=integration_policy,
         )
 
     def responses_from_weights(self, weights: Sequence[float] | np.ndarray) -> np.ndarray:

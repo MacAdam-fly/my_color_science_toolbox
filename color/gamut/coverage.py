@@ -10,6 +10,7 @@ from scipy.interpolate import RegularGridInterpolator
 from scipy.spatial import ConvexHull
 
 from color.colorimetry import XYZ_to_xy
+from color.math import integrate_samples
 
 from .boundary import GamutBoundary
 from .primaries import DisplayPrimaries, as_display_primaries
@@ -309,10 +310,15 @@ def _lch_volume_from_C(
     """
     C_closed, hue_closed = _closed_hue_grid(C, hue_values)
     hue_radians = np.radians(hue_closed)
-    areas = 0.5 * np.trapz(C_closed**2, hue_radians, axis=1)
+    areas = 0.5 * integrate_samples(
+        C_closed**2,
+        hue_radians,
+        quadrature="trapezoid",
+        axis=1,
+    )
     if L_values.size == 1:
         return 0.0
-    return float(np.trapz(areas, L_values))
+    return float(integrate_samples(areas, L_values, quadrature="trapezoid"))
 
 
 def lab_gamut_volume(boundary: GamutBoundary) -> float:

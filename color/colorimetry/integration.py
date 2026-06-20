@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import Literal, Union
 
 import numpy as np
 
+from color.math import integrate_samples
 from color.spectra import (
     MultiSpectralDistribution,
     SpectralDistribution,
@@ -16,44 +16,10 @@ from color.spectra import (
 
 SpectralInput = Union[SpectralDistribution, MultiSpectralDistribution]
 Mode = Literal["emission", "reflectance"]
-IntegrationDomain = Literal["response", "source", "intersection"]
-Quadrature = Literal["rectangle", "trapezoid"]
-Extrapolator = Literal["constant", "fill"]
 
-
-@dataclass(frozen=True)
-class SpectralIntegrationPolicy:
-    """Integration grid, quadrature and extrapolation policy."""
-
-    domain: IntegrationDomain
-    quadrature: Quadrature
-    extrapolator: Extrapolator
-    fill_value: float = 0.0
-
-
-LEGACY_COLORIMETRY_POLICY = SpectralIntegrationPolicy(
-    domain="response",
-    quadrature="rectangle",
-    extrapolator="constant",
-    fill_value=np.nan,
-)
-"""Legacy colour-response policy used by existing XYZ/LMS integrations."""
-
-LEGACY_PHOTOMETRY_POLICY = SpectralIntegrationPolicy(
-    domain="source",
-    quadrature="trapezoid",
-    extrapolator="fill",
-    fill_value=0.0,
-)
-"""Legacy photometry policy used by existing luminous quantity helpers."""
-
-STANDARD_INTEGRATION_POLICY = SpectralIntegrationPolicy(
-    domain="intersection",
-    quadrature="rectangle",
-    extrapolator="fill",
-    fill_value=0.0,
-)
-"""Recommended policy for new code that needs consistent spectral products."""
+_EXTRAPOLATOR = "fill"
+_FILL_VALUE = 0.0
+_QUADRATURE = "trapezoid"
 
 
 def _shape_from_wavelengths(wavelengths: np.ndarray) -> SpectralShape:
@@ -61,11 +27,6 @@ def _shape_from_wavelengths(wavelengths: np.ndarray) -> SpectralShape:
     intervals = np.diff(wavelengths)
     interval = float(intervals.min()) if intervals.size else 1.0
     return SpectralShape(float(wavelengths[0]), float(wavelengths[-1]), interval)
-
-
-def _shape_from_source(spectrum: SpectralInput) -> SpectralShape:
-    """Return a regular shape covering the input spectrum wavelengths."""
-    return _shape_from_wavelengths(spectrum.wavelengths)
 
 
 def _intersection_shape(
@@ -98,42 +59,35 @@ def _integration_shape(
     responses: SpectralDistribution | MultiSpectralDistribution,
     *,
     shape: SpectralShape | None,
-    policy: SpectralIntegrationPolicy,
     extra_spectra: tuple[SpectralDistribution, ...] = (),
 ) -> SpectralShape:
-    """Return the effective integration shape for the policy."""
+    """Return the effective integration shape."""
     if shape is not None:
         return shape
-    if policy.domain == "source":
-        return _shape_from_source(spectrum)
-    if policy.domain == "intersection":
-        return _intersection_shape(responses, (spectrum, *extra_spectra))
-    return _shape_from_wavelengths(responses.wavelengths)
+    return _intersection_shape(responses, (spectrum, *extra_spectra))
 
 
 def _align_single(
     sd: SpectralDistribution,
     shape: SpectralShape,
-    policy: SpectralIntegrationPolicy = LEGACY_COLORIMETRY_POLICY,
 ) -> SpectralDistribution:
     """Align a single-channel spectrum to *shape*."""
     return sd.align(
         shape,
-        extrapolator=policy.extrapolator,
-        fill_value=policy.fill_value,
+        extrapolator=_EXTRAPOLATOR,
+        fill_value=_FILL_VALUE,
     )
 
 
 def _align_multi(
     msd: MultiSpectralDistribution,
     shape: SpectralShape,
-    policy: SpectralIntegrationPolicy = LEGACY_COLORIMETRY_POLICY,
 ) -> MultiSpectralDistribution:
     """Align a multi-channel spectrum to *shape*."""
     return msd.align(
         shape,
-        extrapolator=policy.extrapolator,
-        fill_value=policy.fill_value,
+        extrapolator=_EXTRAPOLATOR,
+        fill_value=_FILL_VALUE,
     )
 
 
@@ -158,38 +112,16 @@ def _integrate_values(
     wavelengths: np.ndarray,
     *,
     interval: float,
-    quadrature: Quadrature,
 ) -> np.ndarray:
     """Integrate product rows over wavelength."""
     axis = 0 if products.ndim == 1 else 1
-    if quadrature == "trapezoid":
-        return _trapezoid(products, wavelengths, axis=axis)
-    return np.sum(products, axis=axis) * interval
-
-
-def _trapezoid(values: np.ndarray, wavelengths: np.ndarray, *, axis: int) -> np.ndarray:
-    """Return trapezoidal integration across NumPy versions."""
-    trapezoid = getattr(np, "trapezoid", np.trapz)
-    return trapezoid(values, wavelengths, axis=axis)
-
-
-def _quadrature_weights(
-    wavelengths: np.ndarray,
-    *,
-    interval: float,
-    quadrature: Quadrature,
-) -> np.ndarray:
-    """Return per-wavelength weights matching the quadrature rule."""
-    if quadrature == "rectangle":
-        return np.full(wavelengths.shape, interval, dtype=np.float64)
-    weights = np.zeros(wavelengths.shape, dtype=np.float64)
-    if wavelengths.size > 1:
-        deltas = np.diff(wavelengths)
-        weights[0] = deltas[0] / 2.0
-        weights[-1] = deltas[-1] / 2.0
-        if wavelengths.size > 2:
-            weights[1:-1] = (deltas[:-1] + deltas[1:]) / 2.0
-    return weights
+    return integrate_samples(
+        products,
+        wavelengths,
+        interval=interval,
+        quadrature=_QUADRATURE,
+        axis=axis,
+    )
 
 
 def _validate_responses(
@@ -233,24 +165,22 @@ def integrate_response_products(
     responses: SpectralDistribution | MultiSpectralDistribution,
     *,
     shape: SpectralShape | None = None,
-    policy: SpectralIntegrationPolicy = STANDARD_INTEGRATION_POLICY,
 ) -> np.ndarray:
     """Integrate one or more spectra against one or more response functions."""
     common_shape = _integration_shape(
         spectrum,
         responses,
         shape=shape,
-        policy=policy,
     )
     aligned_spectrum = (
-        _align_single(spectrum, common_shape, policy)
+        _align_single(spectrum, common_shape)
         if isinstance(spectrum, SpectralDistribution)
-        else _align_multi(spectrum, common_shape, policy)
+        else _align_multi(spectrum, common_shape)
     )
     aligned_responses = (
-        _align_single(responses, common_shape, policy)
+        _align_single(responses, common_shape)
         if isinstance(responses, SpectralDistribution)
-        else _align_multi(responses, common_shape, policy)
+        else _align_multi(responses, common_shape)
     )
 
     source_values, source_labels = _as_source_matrix(aligned_spectrum)
@@ -260,7 +190,6 @@ def integrate_response_products(
         products,
         common_shape.wavelengths,
         interval=common_shape.interval,
-        quadrature=policy.quadrature,
     )
     if isinstance(responses, SpectralDistribution):
         result = result[:, 0]
@@ -279,10 +208,8 @@ def integrate_responses(
     k: float | None = None,
     normalisation_channel: str | int | None = None,
     output_scale: float = 100.0,
-    integration_policy: SpectralIntegrationPolicy | None = None,
 ) -> np.ndarray:
     """Integrate spectra against three-channel response functions."""
-    policy = integration_policy or LEGACY_COLORIMETRY_POLICY
     _validate_responses(responses)
     if mode == "reflectance" and illuminant is None:
         raise ValueError("illuminant is required for reflectance mode")
@@ -293,15 +220,14 @@ def integrate_responses(
         spectrum,
         responses,
         shape=shape,
-        policy=policy,
         extra_spectra=(illuminant,) if illuminant is not None else (),
     )
     aligned_spectrum = (
-        _align_single(spectrum, common_shape, policy)
+        _align_single(spectrum, common_shape)
         if isinstance(spectrum, SpectralDistribution)
-        else _align_multi(spectrum, common_shape, policy)
+        else _align_multi(spectrum, common_shape)
     )
-    aligned_responses = _align_multi(responses, common_shape, policy)
+    aligned_responses = _align_multi(responses, common_shape)
 
     source_values, source_labels = _as_source_matrix(aligned_spectrum)
     response_values = aligned_responses.values
@@ -309,7 +235,7 @@ def integrate_responses(
     if mode == "reflectance":
         if illuminant is None:
             raise ValueError("illuminant is required for reflectance mode")
-        aligned_illuminant = _align_single(illuminant, common_shape, policy)
+        aligned_illuminant = _align_single(illuminant, common_shape)
         source_values = source_values * aligned_illuminant.values.reshape(1, -1)
         if k is None:
             norm_index = _normalisation_channel_index(
@@ -323,7 +249,6 @@ def integrate_responses(
                 ),
                 common_shape.wavelengths,
                 interval=common_shape.interval,
-                quadrature=policy.quadrature,
             )
             denominator = float(denominator[0])
             if denominator == 0:
@@ -339,7 +264,6 @@ def integrate_responses(
         products,
         common_shape.wavelengths,
         interval=common_shape.interval,
-        quadrature=policy.quadrature,
     )
     if source_labels is None:
         return result[0]
@@ -349,10 +273,6 @@ def integrate_responses(
 __all__ = [
     "SpectralInput",
     "Mode",
-    "SpectralIntegrationPolicy",
-    "STANDARD_INTEGRATION_POLICY",
-    "LEGACY_COLORIMETRY_POLICY",
-    "LEGACY_PHOTOMETRY_POLICY",
     "integrate_response_products",
     "integrate_responses",
 ]

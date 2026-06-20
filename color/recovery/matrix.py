@@ -6,12 +6,8 @@ from typing import Union
 
 import numpy as np
 
-from color.colorimetry.integration import (
-    LEGACY_COLORIMETRY_POLICY,
-    SpectralIntegrationPolicy,
-    _intersection_shape,
-    _quadrature_weights,
-)
+from color.colorimetry.integration import _intersection_shape
+from color.math import quadrature_weights
 from color.spectra import (
     MultiSpectralDistribution,
     SpectralDistribution,
@@ -50,7 +46,6 @@ def response_recovery_matrix(
     *,
     shape: SpectralShape | None = None,
     k: float = 1.0,
-    integration_policy: SpectralIntegrationPolicy | None = None,
 ) -> tuple[np.ndarray, np.ndarray, SpectralShape]:
     """Return ``(A, wavelengths, shape)`` for ``target = A @ spectrum``."""
     if len(responses.labels) != 3:
@@ -58,19 +53,16 @@ def response_recovery_matrix(
             "responses must contain exactly three channels, "
             f"got {len(responses.labels)}"
         )
-    policy = integration_policy or LEGACY_COLORIMETRY_POLICY
-    if shape is None and policy.domain == "source":
-        raise ValueError("shape is required when using a source-domain recovery matrix")
     common_shape = shape or _shape_from_wavelengths(responses.wavelengths)
     aligned_responses = responses.align(
         common_shape,
-        extrapolator=policy.extrapolator,
-        fill_value=policy.fill_value,
+        extrapolator="fill",
+        fill_value=0.0,
     )
-    weights = _quadrature_weights(
+    weights = quadrature_weights(
         common_shape.wavelengths,
         interval=common_shape.interval,
-        quadrature=policy.quadrature,
+        quadrature="trapezoid",
     )
     matrix = float(k) * (weights[:, np.newaxis] * aligned_responses.values).T
     wavelengths = np.array(common_shape.wavelengths, copy=True)
@@ -82,11 +74,10 @@ def reflectance_recovery_matrix(
     cmfs: ResponseSource = "cie1931_xyz_1nm",
     illuminant: IlluminantSource = "D65",
     shape: SpectralShape | None = None,
-    integration_policy: SpectralIntegrationPolicy | None = None,
 ) -> tuple[np.ndarray, np.ndarray, SpectralShape]:
     """Return ``(A, wavelengths, shape)`` for ``XYZ = A @ reflectance``.
 
-    The matrix follows the same rectangular integration and reflectance
+    The matrix follows the same trapezoid integration and reflectance
     normalisation used by ``color.colorimetry.reflectance_to_XYZ``.
     """
     cmfs_obj = _load_cmfs(cmfs)
@@ -94,34 +85,24 @@ def reflectance_recovery_matrix(
         raise ValueError("cmfs labels must be ('X', 'Y', 'Z')")
 
     illuminant_obj = _load_illuminant(illuminant)
-    policy = integration_policy or LEGACY_COLORIMETRY_POLICY
-    if shape is None and policy.domain == "source":
-        raise ValueError("shape is required when using a source-domain recovery matrix")
-    common_shape = (
-        shape
-        or (
-            _intersection_shape(cmfs_obj, (illuminant_obj,))
-            if policy.domain == "intersection"
-            else _shape_from_wavelengths(cmfs_obj.wavelengths)
-        )
-    )
+    common_shape = shape or _intersection_shape(cmfs_obj, (illuminant_obj,))
     aligned_cmfs = cmfs_obj.align(
         common_shape,
-        extrapolator=policy.extrapolator,
-        fill_value=policy.fill_value,
+        extrapolator="fill",
+        fill_value=0.0,
     )
     aligned_illuminant = illuminant_obj.align(
         common_shape,
-        extrapolator=policy.extrapolator,
-        fill_value=policy.fill_value,
+        extrapolator="fill",
+        fill_value=0.0,
     )
 
     response_values = aligned_cmfs.values
     illuminant_values = aligned_illuminant.values
-    weights = _quadrature_weights(
+    weights = quadrature_weights(
         common_shape.wavelengths,
         interval=common_shape.interval,
-        quadrature=policy.quadrature,
+        quadrature="trapezoid",
     )
     denominator = np.sum(weights * illuminant_values * response_values[:, 1])
     if denominator == 0:

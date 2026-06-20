@@ -13,7 +13,6 @@
 | --- | --- |
 | `emission_to_XYZ`, `reflectance_to_XYZ` | 光谱到 XYZ |
 | `emission_to_LMS`, `reflectance_to_LMS` | 光谱到 LMS |
-| `SpectralIntegrationPolicy`, `STANDARD_INTEGRATION_POLICY` | 光谱内积策略 |
 | `XYZ_to_xyY`, `xyY_to_XYZ`, `XYZ_to_xy` | XYZ / xyY / xy |
 | `xy_to_uv1960`, `XYZ_to_uv1960`, `uv1960_to_xy` | CIE 1960 UCS uv |
 | `xy_to_upvp1976`, `XYZ_to_upvp1976`, `upvp1976_to_xy` | CIE 1976 UCS u'v' |
@@ -31,7 +30,7 @@ CMFs、illuminant 或 fundamentals。
 
 ## 光谱到 XYZ / LMS
 
-### `emission_to_XYZ(emission, *, cmfs=..., shape=None, k=None, integration_policy=None)`
+### `emission_to_XYZ(emission, *, cmfs=..., shape=None, k=None)`
 
 用途：自发光光谱积分到 XYZ。
 
@@ -64,7 +63,7 @@ XYZ = emission_to_XYZ(led, cmfs="cie1931_xyz_1nm")
 
 注意：自发光积分默认不归一化；`k=None` 时按 `k=1` 处理。
 
-### `reflectance_to_XYZ(reflectance, *, illuminant=..., cmfs=..., shape=None, k=None, integration_policy=None)`
+### `reflectance_to_XYZ(reflectance, *, illuminant=..., cmfs=..., shape=None, k=None)`
 
 用途：反射率在照明体下积分到 XYZ。
 
@@ -94,29 +93,18 @@ XYZ = reflectance_to_XYZ(patch, illuminant="D65", cmfs="cie1931_xyz_1nm")
 
 注意：反射率积分默认归一化，使理想完全反射体在所选照明体下得到 `Y=100`。
 
-### 光谱积分策略
+### 光谱积分规则
 
-默认 `integration_policy=None` 会保留历史数值行为：
+XYZ、LMS、photometry、device response 和 reflectance recovery 使用同一套默认
+光谱内积语义：
 
-- XYZ / LMS 光谱积分使用响应函数完整网格、常数外推和矩形积分。
-- photometry 使用输入光谱自身波长、范围外 LEF 填 0 和梯形积分。
+- 显式传入 `shape` 时，`shape` 是唯一积分网格。
+- 未传入 `shape` 时，使用响应函数网格，并裁剪到所有输入光谱的重叠波长域。
+- 对齐时范围外填 `0`。
+- 光谱乘积使用梯形积分。
 
-需要跨 XYZ、LMS 和 photometry 保持同一内积语义时，显式传入
-`STANDARD_INTEGRATION_POLICY`：
-
-```python
-from color.colorimetry import STANDARD_INTEGRATION_POLICY, reflectance_to_XYZ
-
-XYZ = reflectance_to_XYZ(
-    patch,
-    illuminant=d65,
-    cmfs=cmfs,
-    integration_policy=STANDARD_INTEGRATION_POLICY,
-)
-```
-
-标准策略在未显式传入 `shape` 时使用响应函数网格，并裁剪到所有输入的重叠波长域；
-范围外填 0，积分规则为矩形求和。显式 `shape` 总是优先于 policy 的默认网格选择。
+SSI 是例外：它是标准化指标，继续使用 Academy SSI 专用的 `375-675 nm`、
+`10 nm` 计算流程，而不是通用光谱内积规则。
 
 ### `emission_to_LMS(...)` / `reflectance_to_LMS(...)`
 

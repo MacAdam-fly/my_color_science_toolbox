@@ -13,12 +13,7 @@ from color.spectra import (
     from_dataset,
 )
 
-from .integration import (
-    SpectralInput,
-    SpectralIntegrationPolicy,
-    _validate_responses,
-    integrate_responses,
-)
+from .integration import SpectralInput, _validate_responses, integrate_responses
 
 
 ResponseSource = Union[str, MultiSpectralDistribution]
@@ -48,7 +43,6 @@ def emission_to_xyz(
     *,
     shape: SpectralShape | None = None,
     k: float | None = None,
-    integration_policy: SpectralIntegrationPolicy | None = None,
 ) -> np.ndarray:
     """Convert self-luminous spectral data to XYZ tristimulus values."""
     _validate_responses(cmfs, expected_labels=("X", "Y", "Z"))
@@ -58,7 +52,6 @@ def emission_to_xyz(
         mode="emission",
         shape=shape,
         k=k,
-        integration_policy=integration_policy,
     )
 
 
@@ -69,7 +62,6 @@ def reflectance_to_xyz(
     *,
     shape: SpectralShape | None = None,
     k: float | None = None,
-    integration_policy: SpectralIntegrationPolicy | None = None,
 ) -> np.ndarray:
     """Convert reflectance data under an illuminant to XYZ tristimulus values."""
     _validate_responses(cmfs, expected_labels=("X", "Y", "Z"))
@@ -81,7 +73,6 @@ def reflectance_to_xyz(
         shape=shape,
         k=k,
         normalisation_channel="Y",
-        integration_policy=integration_policy,
     )
 
 
@@ -91,7 +82,6 @@ def emission_to_XYZ(
     cmfs: ResponseSource = DEFAULT_CMFS,
     shape: SpectralShape | None = None,
     k: float | None = None,
-    integration_policy: SpectralIntegrationPolicy | None = None,
 ) -> np.ndarray:
     """Integrate a self-luminous spectrum to CIE XYZ tristimulus values.
 
@@ -135,7 +125,6 @@ def emission_to_XYZ(
         _load_cmfs(cmfs),
         shape=shape,
         k=k,
-        integration_policy=integration_policy,
     )
 
 
@@ -146,7 +135,6 @@ def reflectance_to_XYZ(
     cmfs: ResponseSource = DEFAULT_CMFS,
     shape: SpectralShape | None = None,
     k: float | None = None,
-    integration_policy: SpectralIntegrationPolicy | None = None,
 ) -> np.ndarray:
     """Integrate a reflectance spectrum under an illuminant to CIE XYZ.
 
@@ -197,7 +185,6 @@ def reflectance_to_XYZ(
         _load_cmfs(cmfs),
         shape=shape,
         k=k,
-        integration_policy=integration_policy,
     )
 
 

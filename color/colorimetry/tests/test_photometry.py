@@ -6,7 +6,6 @@ import numpy as np
 import pytest
 
 from color.colorimetry import (
-    STANDARD_INTEGRATION_POLICY,
     luminous_efficacy,
     luminous_efficiency,
     luminous_flux,
@@ -75,7 +74,7 @@ def test_luminous_efficiency_uses_zero_outside_lef_domain():
 
     efficiency = luminous_efficiency(spectrum, lef)
 
-    assert efficiency == pytest.approx(0.5)
+    assert efficiency == pytest.approx(1.0)
 
 
 def test_luminous_flux_multi_channel():
@@ -95,24 +94,15 @@ def test_luminous_flux_multi_channel():
     np.testing.assert_allclose(flux, [250.0, 200.0])
 
 
-def test_luminous_flux_standard_policy_matches_response_product_helper():
+def test_luminous_flux_matches_response_product_helper():
     spectrum = SpectralDistribution([450.0, 500.0, 550.0], [1.0, 2.0, 3.0])
     lef = SpectralDistribution(
         [400.0, 450.0, 500.0, 550.0, 600.0],
         [0.0, 1.0, 1.0, 1.0, 0.0],
     )
 
-    flux = luminous_flux(
-        spectrum,
-        lef,
-        K_m=1.0,
-        integration_policy=STANDARD_INTEGRATION_POLICY,
-    )
-    expected = integrate_response_products(
-        spectrum,
-        lef,
-        policy=STANDARD_INTEGRATION_POLICY,
-    )
+    flux = luminous_flux(spectrum, lef, K_m=1.0)
+    expected = integrate_response_products(spectrum, lef)
 
     assert flux == pytest.approx(expected)
 

@@ -5,6 +5,7 @@ from __future__ import annotations
 from .extrapolation import Extrapolator, extrapolate_1d
 from .gaussian import gaussian_values, gaussian_values_from_fwhm, sigma_from_fwhm
 from .interpolation import Interpolator, interpolate_1d, is_uniform, resolve_interpolator
+from .quadrature import Quadrature, integrate_samples, quadrature_weights
 
 __all__ = [
     "Interpolator",  # supported interpolation method name
@@ -22,4 +23,10 @@ __all__ += [
     "gaussian_values",  # evaluate a Gaussian curve
     "gaussian_values_from_fwhm",  # evaluate a Gaussian curve from FWHM width
     "sigma_from_fwhm",  # convert Gaussian FWHM to standard deviation
+]
+
+__all__ += [
+    "Quadrature",  # supported sampled-data quadrature rule
+    "integrate_samples",  # integrate sampled data using a named quadrature rule
+    "quadrature_weights",  # return per-sample quadrature weights
 ]
