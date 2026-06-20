@@ -29,6 +29,12 @@ from .dominant import (
     xy_from_dominant_wavelength_pe,
 )
 from .lightness import Lstar_to_Y, Y_to_Lstar
+from .integration import (
+    LEGACY_COLORIMETRY_POLICY,
+    LEGACY_PHOTOMETRY_POLICY,
+    STANDARD_INTEGRATION_POLICY,
+    SpectralIntegrationPolicy,
+)
 from .photometry import (
     luminous_efficacy,
     luminous_efficiency,
@@ -116,6 +122,10 @@ __all__ += [
 
 # Spectral to colorimetric-response conversions.
 __all__ += [
+    "SpectralIntegrationPolicy",  # spectral product integration policy
+    "STANDARD_INTEGRATION_POLICY",  # recommended consistent spectral integration policy
+    "LEGACY_COLORIMETRY_POLICY",  # compatibility policy for XYZ/LMS integrations
+    "LEGACY_PHOTOMETRY_POLICY",  # compatibility policy for photometric helpers
     "emission_to_XYZ",  # integrate self-luminous spectra to XYZ
     "reflectance_to_XYZ",  # integrate reflectance spectra under an illuminant to XYZ
     "emission_to_LMS",  # integrate self-luminous spectra to LMS

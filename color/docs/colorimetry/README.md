@@ -101,8 +101,8 @@ should be visible.
 ### Spectral To Responses
 
 ```python
-emission_to_XYZ(emission, *, cmfs="cie1931_xyz_1nm", shape=None, k=None)
-reflectance_to_XYZ(reflectance, *, illuminant="D65", cmfs="cie1931_xyz_1nm", shape=None, k=None)
+emission_to_XYZ(emission, *, cmfs="cie1931_xyz_1nm", shape=None, k=None, integration_policy=None)
+reflectance_to_XYZ(reflectance, *, illuminant="D65", cmfs="cie1931_xyz_1nm", shape=None, k=None, integration_policy=None)
 
 emission_to_LMS(
     emission,
@@ -111,6 +111,7 @@ emission_to_LMS(
     shape=None,
     k=None,
     fill_nan=0.0,
+    integration_policy=None,
 )
 reflectance_to_LMS(
     reflectance,
@@ -121,6 +122,7 @@ reflectance_to_LMS(
     k=None,
     fill_nan=0.0,
     normalisation_channel=None,
+    integration_policy=None,
 )
 ```
 
@@ -219,7 +221,32 @@ Lstar_to_Y(Lstar, Y_n=100.0)
 
 Use the `photopic_*` and `scotopic_*` wrappers for common workflows so the LEF
 and `K_m` constants stay matched. Generic `luminous_*` helpers remain available
-for custom LEFs.
+for custom LEFs. Photometry helpers also accept `shape=None` and
+`integration_policy=None`.
+
+## Spectral Integration Policies
+
+Existing public functions keep their legacy numerical behaviour by default.
+New code that needs consistent spectral products across XYZ, LMS and
+photometry can pass `STANDARD_INTEGRATION_POLICY`:
+
+```python
+from color.colorimetry import STANDARD_INTEGRATION_POLICY, reflectance_to_XYZ
+
+XYZ = reflectance_to_XYZ(
+    patch,
+    illuminant=d65,
+    cmfs=cmfs,
+    integration_policy=STANDARD_INTEGRATION_POLICY,
+)
+```
+
+`shape` always takes precedence when supplied. Without an explicit `shape`, the
+standard policy uses the response-function grid clipped to the wavelength
+overlap of all inputs, fills out-of-range values with zero and uses rectangular
+integration. Legacy colourimetry uses the full response grid with constant
+extrapolation; legacy photometry uses source wavelengths with trapezoid
+integration.
 
 ## Important Notes
 

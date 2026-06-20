@@ -6,7 +6,13 @@ import numpy as np
 import pytest
 
 from color.colorimetry.cone_responses import emission_to_lms, reflectance_to_lms
-from color.colorimetry.integration import integrate_responses
+from color.colorimetry.integration import (
+    LEGACY_PHOTOMETRY_POLICY,
+    STANDARD_INTEGRATION_POLICY,
+    SpectralIntegrationPolicy,
+    integrate_response_products,
+    integrate_responses,
+)
 from color.colorimetry.tristimulus import emission_to_xyz, reflectance_to_xyz
 from color.spectra import (
     MultiSpectralDistribution,
@@ -108,6 +114,76 @@ def test_lms_uses_same_response_integration_with_lms_labels():
     lms = emission_to_lms(spd, _identity_lms_responses())
 
     np.testing.assert_allclose(lms, [100.0, 200.0, 300.0])
+
+
+def test_integrate_response_products_rectangle_and_trapezoid():
+    spd = SpectralDistribution([400.0, 500.0, 600.0], [1.0, 2.0, 3.0])
+    response = SpectralDistribution([400.0, 500.0, 600.0], [1.0, 1.0, 1.0])
+
+    rectangle = integrate_response_products(
+        spd,
+        response,
+        policy=SpectralIntegrationPolicy(
+            domain="response",
+            quadrature="rectangle",
+            extrapolator="fill",
+            fill_value=0.0,
+        ),
+    )
+    trapezoid = integrate_response_products(
+        spd,
+        response,
+        policy=SpectralIntegrationPolicy(
+            domain="response",
+            quadrature="trapezoid",
+            extrapolator="fill",
+            fill_value=0.0,
+        ),
+    )
+
+    assert rectangle == pytest.approx(600.0)
+    assert trapezoid == pytest.approx(400.0)
+
+
+def test_integrate_response_products_intersection_uses_response_grid():
+    spd = SpectralDistribution([450.0, 500.0, 550.0], [1.0, 2.0, 3.0])
+    response = SpectralDistribution(
+        [400.0, 450.0, 500.0, 550.0, 600.0],
+        [1.0, 1.0, 1.0, 1.0, 1.0],
+    )
+
+    value = integrate_response_products(
+        spd,
+        response,
+        policy=STANDARD_INTEGRATION_POLICY,
+    )
+
+    assert value == pytest.approx(300.0)
+
+
+def test_integrate_response_products_intersection_requires_overlap():
+    spd = SpectralDistribution([700.0, 800.0], [1.0, 1.0])
+    response = SpectralDistribution([400.0, 500.0], [1.0, 1.0])
+
+    with pytest.raises(ValueError, match="overlap"):
+        integrate_response_products(
+            spd,
+            response,
+            policy=STANDARD_INTEGRATION_POLICY,
+        )
+
+
+def test_source_domain_reproduces_legacy_photometry_grid():
+    spd = SpectralDistribution([400.0, 500.0, 600.0], [1.0, 2.0, 3.0])
+    response = SpectralDistribution([400.0, 500.0, 600.0], [0.0, 0.5, 1.0])
+
+    value = integrate_response_products(
+        spd,
+        response,
+        policy=LEGACY_PHOTOMETRY_POLICY,
+    )
+
+    assert value == pytest.approx(250.0)
 
 
 def test_reflectance_to_lms_defaults_to_middle_channel_normalisation():

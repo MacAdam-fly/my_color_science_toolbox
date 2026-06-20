@@ -13,7 +13,12 @@ from color.spectra import (
     from_dataset,
 )
 
-from .integration import SpectralInput, _validate_responses, integrate_responses
+from .integration import (
+    SpectralInput,
+    SpectralIntegrationPolicy,
+    _validate_responses,
+    integrate_responses,
+)
 
 
 ResponseSource = Union[str, MultiSpectralDistribution]
@@ -51,10 +56,18 @@ def emission_to_lms(
     *,
     shape: SpectralShape | None = None,
     k: float | None = None,
+    integration_policy: SpectralIntegrationPolicy | None = None,
 ) -> np.ndarray:
     """Convert self-luminous spectral data to LMS cone responses."""
     _validate_responses(fundamentals)
-    return integrate_responses(spd, fundamentals, mode="emission", shape=shape, k=k)
+    return integrate_responses(
+        spd,
+        fundamentals,
+        mode="emission",
+        shape=shape,
+        k=k,
+        integration_policy=integration_policy,
+    )
 
 
 def reflectance_to_lms(
@@ -65,6 +78,7 @@ def reflectance_to_lms(
     shape: SpectralShape | None = None,
     k: float | None = None,
     normalisation_channel: str | int | None = None,
+    integration_policy: SpectralIntegrationPolicy | None = None,
 ) -> np.ndarray:
     """Convert reflectance data under an illuminant to LMS cone responses."""
     _validate_responses(fundamentals)
@@ -76,6 +90,7 @@ def reflectance_to_lms(
         shape=shape,
         k=k,
         normalisation_channel=normalisation_channel,
+        integration_policy=integration_policy,
     )
 
 
@@ -86,6 +101,7 @@ def emission_to_LMS(
     shape: SpectralShape | None = None,
     k: float | None = None,
     fill_nan: float | None = 0.0,
+    integration_policy: SpectralIntegrationPolicy | None = None,
 ) -> np.ndarray:
     """Integrate a self-luminous spectrum to LMS cone responses.
 
@@ -131,6 +147,7 @@ def emission_to_LMS(
         _load_fundamentals(fundamentals, fill_nan=fill_nan),
         shape=shape,
         k=k,
+        integration_policy=integration_policy,
     )
 
 
@@ -143,6 +160,7 @@ def reflectance_to_LMS(
     k: float | None = None,
     fill_nan: float | None = 0.0,
     normalisation_channel: str | int | None = None,
+    integration_policy: SpectralIntegrationPolicy | None = None,
 ) -> np.ndarray:
     """Integrate a reflectance spectrum under an illuminant to LMS responses.
 
@@ -199,6 +217,7 @@ def reflectance_to_LMS(
         shape=shape,
         k=k,
         normalisation_channel=normalisation_channel,
+        integration_policy=integration_policy,
     )
 
 

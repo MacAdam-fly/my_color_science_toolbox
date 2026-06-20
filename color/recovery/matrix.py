@@ -6,6 +6,12 @@ from typing import Union
 
 import numpy as np
 
+from color.colorimetry.integration import (
+    LEGACY_COLORIMETRY_POLICY,
+    SpectralIntegrationPolicy,
+    _intersection_shape,
+    _quadrature_weights,
+)
 from color.spectra import (
     MultiSpectralDistribution,
     SpectralDistribution,
@@ -44,6 +50,7 @@ def response_recovery_matrix(
     *,
     shape: SpectralShape | None = None,
     k: float = 1.0,
+    integration_policy: SpectralIntegrationPolicy | None = None,
 ) -> tuple[np.ndarray, np.ndarray, SpectralShape]:
     """Return ``(A, wavelengths, shape)`` for ``target = A @ spectrum``."""
     if len(responses.labels) != 3:
@@ -51,9 +58,21 @@ def response_recovery_matrix(
             "responses must contain exactly three channels, "
             f"got {len(responses.labels)}"
         )
+    policy = integration_policy or LEGACY_COLORIMETRY_POLICY
+    if shape is None and policy.domain == "source":
+        raise ValueError("shape is required when using a source-domain recovery matrix")
     common_shape = shape or _shape_from_wavelengths(responses.wavelengths)
-    aligned_responses = responses.align(common_shape)
-    matrix = float(k) * common_shape.interval * aligned_responses.values.T
+    aligned_responses = responses.align(
+        common_shape,
+        extrapolator=policy.extrapolator,
+        fill_value=policy.fill_value,
+    )
+    weights = _quadrature_weights(
+        common_shape.wavelengths,
+        interval=common_shape.interval,
+        quadrature=policy.quadrature,
+    )
+    matrix = float(k) * (weights[:, np.newaxis] * aligned_responses.values).T
     wavelengths = np.array(common_shape.wavelengths, copy=True)
     return matrix, wavelengths, common_shape
 
@@ -63,6 +82,7 @@ def reflectance_recovery_matrix(
     cmfs: ResponseSource = "cie1931_xyz_1nm",
     illuminant: IlluminantSource = "D65",
     shape: SpectralShape | None = None,
+    integration_policy: SpectralIntegrationPolicy | None = None,
 ) -> tuple[np.ndarray, np.ndarray, SpectralShape]:
     """Return ``(A, wavelengths, shape)`` for ``XYZ = A @ reflectance``.
 
@@ -74,19 +94,41 @@ def reflectance_recovery_matrix(
         raise ValueError("cmfs labels must be ('X', 'Y', 'Z')")
 
     illuminant_obj = _load_illuminant(illuminant)
-    common_shape = shape or _shape_from_wavelengths(cmfs_obj.wavelengths)
-    aligned_cmfs = cmfs_obj.align(common_shape)
-    aligned_illuminant = illuminant_obj.align(common_shape)
+    policy = integration_policy or LEGACY_COLORIMETRY_POLICY
+    if shape is None and policy.domain == "source":
+        raise ValueError("shape is required when using a source-domain recovery matrix")
+    common_shape = (
+        shape
+        or (
+            _intersection_shape(cmfs_obj, (illuminant_obj,))
+            if policy.domain == "intersection"
+            else _shape_from_wavelengths(cmfs_obj.wavelengths)
+        )
+    )
+    aligned_cmfs = cmfs_obj.align(
+        common_shape,
+        extrapolator=policy.extrapolator,
+        fill_value=policy.fill_value,
+    )
+    aligned_illuminant = illuminant_obj.align(
+        common_shape,
+        extrapolator=policy.extrapolator,
+        fill_value=policy.fill_value,
+    )
 
     response_values = aligned_cmfs.values
     illuminant_values = aligned_illuminant.values
-    interval = common_shape.interval
-    denominator = np.sum(illuminant_values * response_values[:, 1]) * interval
+    weights = _quadrature_weights(
+        common_shape.wavelengths,
+        interval=common_shape.interval,
+        quadrature=policy.quadrature,
+    )
+    denominator = np.sum(weights * illuminant_values * response_values[:, 1])
     if denominator == 0:
         raise ZeroDivisionError("reflectance normalisation denominator is zero")
 
     k = 100.0 / denominator
-    matrix = k * interval * (illuminant_values[:, np.newaxis] * response_values).T
+    matrix = k * (weights[:, np.newaxis] * illuminant_values[:, np.newaxis] * response_values).T
     wavelengths = np.array(common_shape.wavelengths, copy=True)
     return matrix, wavelengths, common_shape
 

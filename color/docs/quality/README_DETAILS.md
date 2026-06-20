@@ -85,6 +85,10 @@ SSI = 100 - 32 * sqrt(sum(smoothed_difference^2))
 
 `round_result=True` 时返回取整分数；`round_result=False` 时返回未取整浮点值。
 
+SSI 不使用 `color.colorimetry` 的通用光谱积分策略。它的采样域、范围外填充、
+10 nm 积分矩阵和归一化流程都是 Academy SSI 指标定义的一部分，因此应作为
+质量指标的专用流程保留。
+
 ## 使用示例
 
 ```python

@@ -7,12 +7,14 @@ import pytest
 
 import color.device as device
 import color.device.silent_substitution as silent_substitution_module
+from color.colorimetry import STANDARD_INTEGRATION_POLICY
+from color.colorimetry.integration import integrate_response_products
 from color.device import PrimaryResponseDisplay, melanopic_silent_range
 from color.device.silent_substitution import (
     SilentSubstitutionResult,
     _solve_silent_substitution_endpoint,
 )
-from color.spectra import MultiSpectralDistribution
+from color.spectra import MultiSpectralDistribution, SpectralDistribution
 
 
 def _lms_display() -> PrimaryResponseDisplay:
@@ -343,6 +345,41 @@ def test_from_primary_spds_builds_full_response_matrix():
     assert display.primary_names == ("R", "G", "B", "C")
     assert "rh" not in display.response_names
     assert np.all(np.isfinite(display.primary_responses))
+
+
+def test_from_primary_spds_standard_policy_matches_response_product_helper():
+    wavelengths = np.array([400.0, 500.0, 600.0])
+    fundamentals = MultiSpectralDistribution(
+        wavelengths,
+        np.identity(3),
+        labels=("l", "m", "s"),
+    )
+    cmfs = MultiSpectralDistribution(
+        wavelengths,
+        np.identity(3),
+        labels=("X", "Y", "Z"),
+    )
+    melanopic = SpectralDistribution(wavelengths, np.ones(3), name="mel")
+    responses = MultiSpectralDistribution(
+        wavelengths,
+        np.column_stack([np.identity(3), np.identity(3), np.ones(3)]),
+        labels=("l", "m", "s", "x", "y", "z", "mel"),
+    )
+
+    display = PrimaryResponseDisplay.from_primary_spds(
+        _primary_spds(),
+        fundamentals=fundamentals,
+        cmfs=cmfs,
+        melanopic=melanopic,
+        integration_policy=STANDARD_INTEGRATION_POLICY,
+    )
+    expected = integrate_response_products(
+        _primary_spds(),
+        responses,
+        policy=STANDARD_INTEGRATION_POLICY,
+    )
+
+    np.testing.assert_allclose(display.primary_responses, expected)
 
 
 def test_from_primary_spds_lms_mel_builds_lms_mel_matrix():
