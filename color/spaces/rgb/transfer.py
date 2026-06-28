@@ -102,6 +102,25 @@ def _bt2020_encode(value: np.ndarray) -> np.ndarray:
 
 
 _ADOBE_RGB_GAMMA = 563.0 / 256.0
+_PROPHOTO_RGB_EXPONENT = 1.8
+_PROPHOTO_RGB_LINEAR_THRESHOLD = 1.0 / 512.0
+_PROPHOTO_RGB_ENCODED_THRESHOLD = 16.0 / 512.0
+
+
+def _prophoto_rgb_decode(value: np.ndarray) -> np.ndarray:
+    decoded = np.empty_like(value, dtype=np.float64)
+    low = value < _PROPHOTO_RGB_ENCODED_THRESHOLD
+    decoded[low] = value[low] / 16.0
+    decoded[~low] = value[~low] ** _PROPHOTO_RGB_EXPONENT
+    return decoded
+
+
+def _prophoto_rgb_encode(value: np.ndarray) -> np.ndarray:
+    encoded = np.empty_like(value, dtype=np.float64)
+    low = value < _PROPHOTO_RGB_LINEAR_THRESHOLD
+    encoded[low] = 16.0 * value[low]
+    encoded[~low] = value[~low] ** (1.0 / _PROPHOTO_RGB_EXPONENT)
+    return encoded
 
 _TRANSFER_FUNCTIONS: dict[str, tuple[Callable[[np.ndarray], np.ndarray], Callable[[np.ndarray], np.ndarray]]] = {
     "linear": (_linear, _linear),
@@ -114,11 +133,18 @@ _TRANSFER_FUNCTIONS: dict[str, tuple[Callable[[np.ndarray], np.ndarray], Callabl
     ),
     "bt709": (_bt709_decode, _bt709_encode),
     "bt2020": (_bt2020_decode, _bt2020_encode),
+    "prophoto_rgb": (_prophoto_rgb_decode, _prophoto_rgb_encode),
 }
 
 _TRANSFER_NAME_INDEX = {
     canonical_method_name(name): name for name in _TRANSFER_FUNCTIONS
 }
+_TRANSFER_NAME_INDEX.update(
+    {
+        canonical_method_name("ProPhoto RGB"): "prophoto_rgb",
+        canonical_method_name("ROMM RGB"): "prophoto_rgb",
+    }
+)
 
 
 def _gamma_exponents(exponent: float | tuple[float, ...] | list[float] | np.ndarray) -> float | tuple[float, float, float]:

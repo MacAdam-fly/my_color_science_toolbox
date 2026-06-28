@@ -82,6 +82,7 @@ Registered RGB standards:
 - `DCI-P3`
 - `Rec.2020`
 - `Adobe RGB (1998)`
+- `ProPhoto RGB`
 - `NTSC (1953)`
 
 RGB conversion defaults to encoded RGB, which is the usual representation for

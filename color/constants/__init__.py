@@ -17,6 +17,7 @@ from .display_standards import (
     DCIP3_TO_XYZ,
     DISPLAY_P3_TO_XYZ,
     NTSC_1953_TO_XYZ,
+    PROPHOTO_RGB_TO_XYZ,
     REC2020_TO_XYZ,
     REC709_TO_XYZ,
     RGB_COLOURSPACE_DEFINITIONS,
@@ -26,6 +27,7 @@ from .display_standards import (
     XYZ_TO_DCIP3,
     XYZ_TO_DISPLAY_P3,
     XYZ_TO_NTSC_1953,
+    XYZ_TO_PROPHOTO_RGB,
     XYZ_TO_REC2020,
     XYZ_TO_REC709,
     XYZ_TO_SRGB,
@@ -55,6 +57,8 @@ __all__ += [
     "XYZ_TO_REC2020",  # Y=100 XYZ to linear Rec.2020 conversion matrix
     "ADOBE_RGB_TO_XYZ",  # linear Adobe RGB (1998) to Y=100 XYZ conversion matrix
     "XYZ_TO_ADOBE_RGB",  # Y=100 XYZ to linear Adobe RGB (1998) conversion matrix
+    "PROPHOTO_RGB_TO_XYZ",  # linear ProPhoto RGB to Y=100 XYZ conversion matrix
+    "XYZ_TO_PROPHOTO_RGB",  # Y=100 XYZ to linear ProPhoto RGB conversion matrix
     "DISPLAY_P3_TO_XYZ",  # linear Display P3 to Y=100 XYZ conversion matrix
     "XYZ_TO_DISPLAY_P3",  # Y=100 XYZ to linear Display P3 conversion matrix
     "DCIP3_TO_XYZ",  # linear DCI-P3 to Y=100 XYZ conversion matrix

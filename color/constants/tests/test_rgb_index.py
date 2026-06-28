@@ -15,6 +15,8 @@ def test_rgb_matrices_are_available_from_constants_top_level() -> None:
     assert constants.XYZ_TO_REC2020 is constants_display_standards.XYZ_TO_REC2020
     assert constants.ADOBE_RGB_TO_XYZ is constants_display_standards.ADOBE_RGB_TO_XYZ
     assert constants.XYZ_TO_ADOBE_RGB is constants_display_standards.XYZ_TO_ADOBE_RGB
+    assert constants.PROPHOTO_RGB_TO_XYZ is constants_display_standards.PROPHOTO_RGB_TO_XYZ
+    assert constants.XYZ_TO_PROPHOTO_RGB is constants_display_standards.XYZ_TO_PROPHOTO_RGB
     assert constants.DISPLAY_P3_TO_XYZ is constants_display_standards.DISPLAY_P3_TO_XYZ
     assert constants.XYZ_TO_DISPLAY_P3 is constants_display_standards.XYZ_TO_DISPLAY_P3
     assert constants.DCIP3_TO_XYZ is constants_display_standards.DCIP3_TO_XYZ
@@ -33,6 +35,8 @@ def test_rgb_registry_uses_constants_display_standards() -> None:
 def test_rgb_module_display_standards_reexports_constants_objects() -> None:
     assert rgb_display_standards.SRGB_TO_XYZ is constants_display_standards.SRGB_TO_XYZ
     assert rgb_display_standards.XYZ_TO_SRGB is constants_display_standards.XYZ_TO_SRGB
+    assert rgb_display_standards.PROPHOTO_RGB_TO_XYZ is constants_display_standards.PROPHOTO_RGB_TO_XYZ
+    assert rgb_display_standards.XYZ_TO_PROPHOTO_RGB is constants_display_standards.XYZ_TO_PROPHOTO_RGB
     assert (
         rgb_display_standards.RGB_COLOURSPACE_DEFINITIONS
         is constants_display_standards.RGB_COLOURSPACE_DEFINITIONS

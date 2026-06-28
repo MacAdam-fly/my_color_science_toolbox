@@ -93,6 +93,16 @@ ADOBE_RGB_TO_XYZ = _readonly_matrix(
 )
 XYZ_TO_ADOBE_RGB = _readonly_inverse(ADOBE_RGB_TO_XYZ)
 
+# ProPhoto RGB / ROMM RGB, D50.
+PROPHOTO_RGB_TO_XYZ = _readonly_matrix(
+    [
+        [79.77, 13.52, 3.13],
+        [28.80, 71.19, 0.01],
+        [0.0, 0.0, 82.49],
+    ]
+)
+XYZ_TO_PROPHOTO_RGB = _readonly_inverse(PROPHOTO_RGB_TO_XYZ)
+
 # Display P3 / P3-D65.
 DISPLAY_P3_TO_XYZ = _readonly_matrix(
     [
@@ -186,6 +196,16 @@ RGB_COLOURSPACE_DEFINITIONS = MappingProxyType(
             matrix_RGB_to_XYZ=ADOBE_RGB_TO_XYZ,
             reference="Adobe RGB (1998)",
         ),
+        "ProPhoto RGB": _rgb_definition(
+            name="ProPhoto RGB",
+            aliases=("prophoto-rgb", "ProPhotoRGB", "ROMM RGB", "ROMMRGB"),
+            primaries=((0.7347, 0.2653), (0.1596, 0.8404), (0.0366, 0.0001)),
+            white_xy=(0.3457, 0.3585),
+            white_name="D50",
+            transfer="prophoto_rgb",
+            matrix_RGB_to_XYZ=PROPHOTO_RGB_TO_XYZ,
+            reference="ProPhoto RGB / ROMM RGB",
+        ),
         "NTSC (1953)": _rgb_definition(
             name="NTSC (1953)",
             aliases=("ntsc-1953", "NTSC_1953"),
@@ -208,6 +228,7 @@ COMMON_GAMUTS = MappingProxyType(
         "Rec709": {"to_xyz": REC709_TO_XYZ, "from_xyz": XYZ_TO_REC709},
         "Rec2020": {"to_xyz": REC2020_TO_XYZ, "from_xyz": XYZ_TO_REC2020},
         "AdobeRGB1998": {"to_xyz": ADOBE_RGB_TO_XYZ, "from_xyz": XYZ_TO_ADOBE_RGB},
+        "ProPhotoRGB": {"to_xyz": PROPHOTO_RGB_TO_XYZ, "from_xyz": XYZ_TO_PROPHOTO_RGB},
         "DisplayP3": {"to_xyz": DISPLAY_P3_TO_XYZ, "from_xyz": XYZ_TO_DISPLAY_P3},
         "DCI-P3": {"to_xyz": DCIP3_TO_XYZ, "from_xyz": XYZ_TO_DCIP3},
         "NTSC_1953": {"to_xyz": NTSC_1953_TO_XYZ, "from_xyz": XYZ_TO_NTSC_1953},
@@ -224,6 +245,8 @@ __all__ = [
     "XYZ_TO_REC2020",
     "ADOBE_RGB_TO_XYZ",
     "XYZ_TO_ADOBE_RGB",
+    "PROPHOTO_RGB_TO_XYZ",
+    "XYZ_TO_PROPHOTO_RGB",
     "DISPLAY_P3_TO_XYZ",
     "XYZ_TO_DISPLAY_P3",
     "DCIP3_TO_XYZ",

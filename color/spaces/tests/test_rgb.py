@@ -37,11 +37,13 @@ def test_registry_resolves_names_and_aliases():
     assert get_RGB_colourspace("DisplayP3").name == "Display P3"
     assert get_RGB_colourspace("ITU-R BT.2020").name == "Rec.2020"
     assert get_RGB_colourspace("AdobeRGB1998").name == "Adobe RGB (1998)"
+    assert get_RGB_colourspace("ROMM RGB").name == "ProPhoto RGB"
 
     names = list_RGB_colourspaces()
     assert "sRGB" in names
     assert "Display P3" in names
     assert "Rec.2020" in names
+    assert "ProPhoto RGB" in names
 
 
 def test_registry_objects_are_read_only():
@@ -90,7 +92,7 @@ def test_linear_paths_match_matrix_multiplication():
 
 @pytest.mark.parametrize(
     "name",
-    ["Display P3", "Rec.2020", "Adobe RGB (1998)", "DCI-P3"],
+    ["Display P3", "Rec.2020", "Adobe RGB (1998)", "ProPhoto RGB", "DCI-P3"],
 )
 def test_rgb_spaces_white_round_trip(name):
     RGB = np.ones(3)
@@ -130,6 +132,24 @@ def test_RGB_to_RGB_preserves_batch_shape():
     result = RGB_to_RGB(RGB, "sRGB", "Rec.2020")
 
     assert result.shape == RGB.shape
+
+
+def test_prophoto_rgb_conversion_matches_reference_values():
+    RGB = np.array([0.25, 0.5, 0.75])
+
+    XYZ = RGB_to_XYZ(RGB, colourspace="ProPhoto RGB")
+
+    np.testing.assert_allclose(
+        XYZ,
+        [12.326068042683653, 22.825031346556838, 49.14864823956554],
+        atol=1e-12,
+    )
+    np.testing.assert_allclose(
+        RGB_to_XYZ([1.0, 1.0, 1.0], colourspace="ROMM RGB"),
+        [96.42, 100.0, 82.49],
+        atol=1e-12,
+    )
+    np.testing.assert_allclose(XYZ_to_RGB(XYZ, colourspace="ProPhoto RGB"), RGB, atol=1e-12)
 
 
 def test_RGB_to_RGB_rejects_unknown_adaptation_transform():
@@ -244,6 +264,30 @@ def test_dynamic_gamma_transfer_matches_channel_power():
 
     np.testing.assert_allclose(decoded, expected)
     np.testing.assert_allclose(encode_transfer(decoded, ("gamma", tuple(gamma))), RGB)
+
+
+def test_prophoto_rgb_transfer_matches_reference_values():
+    values = np.array([-0.01, 0.0, 0.001, 0.001953125, 0.01, 0.18, 0.5, 1.0])
+
+    np.testing.assert_allclose(
+        encode_transfer(values, "ProPhoto RGB"),
+        [
+            -0.16,
+            0.0,
+            0.016,
+            0.03125,
+            0.0774263682681127,
+            0.3857114247511376,
+            0.6803950000871885,
+            1.0,
+        ],
+        atol=1e-15,
+    )
+    np.testing.assert_allclose(
+        decode_transfer(encode_transfer(values, "ROMM RGB"), "prophoto_rgb"),
+        values,
+        atol=1e-15,
+    )
 
 
 def test_custom_rgb_rejects_invalid_definitions_and_transfer():

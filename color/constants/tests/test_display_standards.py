@@ -13,6 +13,7 @@ from color.constants.display_standards import (
     DISPLAY_P3_TO_XYZ,
     REC2020_TO_XYZ,
     REC709_TO_XYZ,
+    PROPHOTO_RGB_TO_XYZ,
     RGB_COLOURSPACE_DEFINITIONS,
     RGB_GAMUT_METADATA,
     SRGB_TO_XYZ,
@@ -26,6 +27,7 @@ _REFERENCE_PRIMARIES_AND_WHITEPOINTS = {
     "DCI-P3": (((0.6800, 0.3200), (0.2650, 0.6900), (0.1500, 0.0600)), (0.3140, 0.3510)),
     "Rec.2020": (((0.7080, 0.2920), (0.1700, 0.7970), (0.1310, 0.0460)), (0.3127, 0.3290)),
     "Adobe RGB (1998)": (((0.6400, 0.3300), (0.2100, 0.7100), (0.1500, 0.0600)), (0.3127, 0.3290)),
+    "ProPhoto RGB": (((0.7347, 0.2653), (0.1596, 0.8404), (0.0366, 0.0001)), (0.3457, 0.3585)),
     "NTSC (1953)": (((0.6700, 0.3300), (0.2100, 0.7100), (0.1400, 0.0800)), (0.31006, 0.31616)),
 }
 
@@ -84,6 +86,7 @@ def test_rgb_to_xyz_matrices_match_reference_values():
         "DCI-P3": DCIP3_TO_XYZ,
         "Rec.2020": REC2020_TO_XYZ,
         "Adobe RGB (1998)": ADOBE_RGB_TO_XYZ,
+        "ProPhoto RGB": PROPHOTO_RGB_TO_XYZ,
         "Rec.709": REC709_TO_XYZ,
     }
 
@@ -111,6 +114,11 @@ def test_rgb_to_xyz_matrices_match_reference_values():
         [57.667, 18.556, 18.823],
         [29.734, 62.736, 7.529],
         [2.703, 7.069, 99.134],
+    ])
+    np.testing.assert_allclose(reference_matrices["ProPhoto RGB"], [
+        [79.77, 13.52, 3.13],
+        [28.80, 71.19, 0.01],
+        [0.0, 0.0, 82.49],
     ])
     np.testing.assert_allclose(reference_matrices["Rec.709"], [
         [41.239079926595934, 35.7584339383878, 18.04807884018343],
@@ -142,3 +150,4 @@ def test_common_gamuts_compatibility_registry_uses_new_matrices():
     assert COMMON_GAMUTS["Rec2020"]["to_xyz"] is REC2020_TO_XYZ
     assert COMMON_GAMUTS["DisplayP3"]["to_xyz"] is DISPLAY_P3_TO_XYZ
     assert COMMON_GAMUTS["DCI-P3"]["to_xyz"] is DCIP3_TO_XYZ
+    assert COMMON_GAMUTS["ProPhotoRGB"]["to_xyz"] is PROPHOTO_RGB_TO_XYZ
