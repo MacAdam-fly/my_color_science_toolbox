@@ -13,6 +13,7 @@ Run from the project root:
 .\.venv\Scripts\python.exe examples\spaces\example_05_conversion_paths.py
 .\.venv\Scripts\python.exe examples\spaces\example_06_image_lchab_edit.py
 .\.venv\Scripts\python.exe examples\spaces\example_07_custom_rgb_colourspace.py
+.\.venv\Scripts\python.exe examples\spaces\example_08_video_signal_encodings.py
 ```
 
 ## Example 01 - RGB Colour-Space Conversion
@@ -123,3 +124,15 @@ Outputs:
 
 - `07_custom_rgb_conversion_swatches.png`
 - `07_custom_rgb_dynamic_gamma.png`
+
+## Example 08 - Video Signal Encodings
+
+Uses explicit video signal APIs that are not registered in `convert_color(...)`.
+
+Demonstrates:
+
+- BT.2020 linear RGB <-> ICtCp
+- non-linear R'G'B' code values <-> YCbCr
+- SMPTE ST 2084 / PQ EOTF and inverse EOTF
+- ARIB STD-B67 / HLG OETF and inverse OETF
+- checking that `ICtCp` and `YCbCr` are not generic colour-space nodes

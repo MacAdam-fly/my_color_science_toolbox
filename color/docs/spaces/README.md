@@ -21,6 +21,7 @@ Internally, implementation is grouped by responsibility:
 color.spaces.rgb          RGB standards, transfer functions and RGB <-> XYZ
 color.spaces.basic        XYZ-connected spaces independent of appearance models
 color.spaces.appearance   uniform spaces built from appearance-model correlates
+color.spaces.video        explicit video signal encodings and HDR transfer curves
 ```
 
 Appearance models themselves live in `color.appearance`; this package exposes
@@ -171,6 +172,39 @@ transfer=("gamma", (2.2, 2.3, 2.1))  # independent R/G/B exponents
 
 Callable transfer functions, LUTs, ICC profiles and multi-primary spaces are
 not part of this RGB v1 layer.
+
+## Video Signal Encodings
+
+`ICtCp`, `YCbCr`, PQ and HLG are exposed from `color.spaces.video`, not from
+the `color.spaces` top-level namespace, and not as generic colour-space route
+nodes. They are intentionally not registered in `convert_color(...)`, because
+their meaning depends on video signal conventions such as BT.2020 primaries,
+non-linear R'G'B' code values, legal/full range, bit-depth, PQ luminance scale,
+and HLG scene-signal encoding.
+
+```python
+from color.spaces.video import (
+    ICtCp_to_RGB_BT2020,
+    RGB_BT2020_to_ICtCp,
+    RGB_to_YCbCr,
+    YCbCr_to_RGB,
+    eotf_inverse_ST2084,
+    oetf_ARIBSTDB67,
+)
+
+ICtCp = RGB_BT2020_to_ICtCp([0.45620519, 0.03081071, 0.04091952])
+RGB = ICtCp_to_RGB_BT2020(ICtCp)
+
+YCbCr = RGB_to_YCbCr([0.25, 0.50, 0.75], standard="BT.709")
+RGB_code = YCbCr_to_RGB(YCbCr, standard="BT.709")
+
+pq_signal = eotf_inverse_ST2084([0.0, 100.0, 1000.0])
+hlg_signal = oetf_ARIBSTDB67([0.0, 0.25, 1.0, 12.0])
+```
+
+`RGB_BT2020_to_ICtCp(...)` expects BT.2020 linear RGB values and uses the PQ
+path from BT.2100. `RGB_to_YCbCr(...)` expects non-linear R'G'B' code values,
+not scene-linear RGB or CIE XYZ.
 
 ## Basic Spaces
 

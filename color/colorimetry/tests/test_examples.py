@@ -32,6 +32,7 @@ _EXAMPLE_PATHS = (
     _SPACES_EXAMPLES / "example_05_conversion_paths.py",
     _SPACES_EXAMPLES / "example_06_image_lchab_edit.py",
     _SPACES_EXAMPLES / "example_07_custom_rgb_colourspace.py",
+    _SPACES_EXAMPLES / "example_08_video_signal_encodings.py",
     _DIFFERENCE_EXAMPLES / "example_01_lab_delta_e.py",
     _DIFFERENCE_EXAMPLES / "example_02_appearance_delta_e.py",
     _DIFFERENCE_EXAMPLES / "example_03_modern_space_delta_e.py",

@@ -332,6 +332,77 @@ XYZ = sRGB_to_XYZ([0.4, 0.5, 0.6])
 rgb = XYZ_to_sRGB(XYZ)
 ```
 
+## Video 子包（非顶层 API）
+
+这组 API 从 `color.spaces.video` 显式导入，不放入 `color.spaces` 顶层
+`__all__`，也不进入 `convert_color(...)` 通用路由。它们的输入含义依赖
+BT.2100 / BT.709 / BT.2020 等视频约定，因此不适合伪装成自由的颜色空间节点。
+
+### `RGB_BT2020_to_ICtCp(...)` / `ICtCp_to_RGB_BT2020(...)`
+
+用途：在线性 BT.2020 RGB 与 ICtCp 之间转换，内部使用 BT.2100 PQ 路径。
+
+```python
+from color.spaces.video import ICtCp_to_RGB_BT2020, RGB_BT2020_to_ICtCp
+
+ICtCp = RGB_BT2020_to_ICtCp([0.45620519, 0.03081071, 0.04091952])
+RGB = ICtCp_to_RGB_BT2020(ICtCp)
+```
+
+注意：这里的 RGB 是 BT.2020 linear RGB，不是 sRGB，也不是普通 `convert_color`
+路由里的任意 RGB 空间。
+
+### `RGB_to_YCbCr(...)` / `YCbCr_to_RGB(...)`
+
+用途：在非线性 R'G'B' 码值与 YCbCr 码值之间转换。
+
+```python
+from color.spaces.video import RGB_to_YCbCr, YCbCr_to_RGB
+
+YCbCr = RGB_to_YCbCr([0.25, 0.50, 0.75], standard="BT.709")
+RGB = YCbCr_to_RGB(YCbCr, standard="BT.709")
+```
+
+整数码值和 legal range：
+
+```python
+from color.spaces.video import RGB_to_YCbCr
+
+YCbCr_10bit = RGB_to_YCbCr(
+    [1023, 1023, 1023],
+    in_bits=10,
+    in_int=True,
+    out_bits=10,
+    out_legal=True,
+    out_int=True,
+)
+```
+
+### `eotf_ST2084(...)` / `eotf_inverse_ST2084(...)`
+
+用途：SMPTE ST 2084 / PQ 信号值与绝对亮度之间转换。
+
+```python
+from color.spaces.video import eotf_ST2084, eotf_inverse_ST2084
+
+luminance = eotf_ST2084([0.5])
+pq_signal = eotf_inverse_ST2084([0.0, 100.0, 1000.0])
+```
+
+### `oetf_ARIBSTDB67(...)` / `oetf_inverse_ARIBSTDB67(...)`
+
+用途：ARIB STD-B67 / HLG OETF 与 inverse OETF。
+
+```python
+from color.spaces.video import oetf_ARIBSTDB67, oetf_inverse_ARIBSTDB67
+
+hlg_signal = oetf_ARIBSTDB67([0.0, 0.25, 1.0, 12.0])
+scene_value = oetf_inverse_ARIBSTDB67(hlg_signal)
+```
+
+注意：`color.spaces.rgb.transfer` 里的 transfer 是 RGB 标准空间的编码机制；
+这里的 PQ / HLG 是视频/HDR 信号曲线，语义不同。
+
 ## xyY、xy、uv1960 和 u'v'1976
 
 ### `XYZ_to_xyY(...)` / `xyY_to_XYZ(...)`

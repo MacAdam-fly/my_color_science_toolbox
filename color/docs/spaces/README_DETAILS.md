@@ -43,6 +43,7 @@ color.spaces.plotting.plot_conversion_graph 展示当前注册的完整转换图
 color.spaces.rgb          RGB 标准、传递函数和 RGB <-> XYZ
 color.spaces.basic        不依赖色貌模型的基础/经典空间
 color.spaces.appearance   基于色貌模型输出构造的均匀空间
+color.spaces.video        显式 video signal 编码和 HDR transfer 曲线
 ```
 
 推荐使用者仍然从顶层 `color.spaces` 导入公开 API；子包主要用于保持内部实现和注册边界清楚。
@@ -239,6 +240,52 @@ transfer=("gamma", (2.2, 2.3, 2.1))  # R/G/B 三通道独立 gamma
 ```
 
 标准空间名称和别名不能被自定义空间覆盖。`overwrite=True` 只允许替换同名的已注册自定义空间。
+
+## Video Signal Encodings
+
+`color.spaces.video` 放置视频信号编码 helper，例如 ICtCp、YCbCr、PQ 和 HLG。
+这层不挂到 `color.spaces` 顶层 API，不进入 generic registry，也不参与
+`convert_color(...)` 路由。
+
+这个边界是有意保留的：
+
+```text
+ICtCp   依赖 BT.2020 linear RGB 和 BT.2100 PQ 路径
+YCbCr   处理非线性 R'G'B' 码值、bit depth、legal/full range
+PQ      是绝对亮度语义的 SMPTE ST 2084 EOTF/inverse EOTF
+HLG     是 ARIB STD-B67 的场景信号 OETF/inverse OETF
+```
+
+它们不是像 Lab、Oklab 那样可以自由接入 XYZ 中枢的普通颜色空间。使用时应显式
+声明所需标准和码值范围：
+
+```python
+from color.spaces.video import (
+    ICtCp_to_RGB_BT2020,
+    RGB_BT2020_to_ICtCp,
+    RGB_to_YCbCr,
+    YCbCr_to_RGB,
+    eotf_ST2084,
+    eotf_inverse_ST2084,
+    oetf_ARIBSTDB67,
+    oetf_inverse_ARIBSTDB67,
+)
+
+ICtCp = RGB_BT2020_to_ICtCp([0.45620519, 0.03081071, 0.04091952])
+RGB = ICtCp_to_RGB_BT2020(ICtCp)
+
+YCbCr = RGB_to_YCbCr([0.25, 0.50, 0.75], standard="BT.709")
+RGB_code = YCbCr_to_RGB(YCbCr, standard="BT.709")
+
+pq_signal = eotf_inverse_ST2084([0.0, 100.0, 1000.0])
+luminance = eotf_ST2084(pq_signal)
+
+hlg_signal = oetf_ARIBSTDB67([0.0, 0.25, 1.0, 12.0])
+scene_value = oetf_inverse_ARIBSTDB67(hlg_signal)
+```
+
+`color.spaces.rgb.transfer` 仍然只服务 RGB colourspace 的编码/解码；不要把 PQ/HLG
+当作普通 RGB 标准空间 transfer 塞入 RGB 注册表。
 
 ## Basic Spaces
 
