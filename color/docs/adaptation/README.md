@@ -13,6 +13,11 @@ The first version implements Von Kries style adaptation using four transforms:
 - `CAT02`
 - `CAT16`
 
+It also provides `chromatic_adaptation_Zhai2018(...)`, a higher-level two-step
+chromatic adaptation model for workflows that need explicit source and target
+degrees of adaptation. Zhai 2018 uses `CAT02` or `CAT16` internally; it is not a
+new peer value for `transform`.
+
 ## Usage
 
 ```python
@@ -60,6 +65,23 @@ same_XYZ = chromatic_adaptation_XYZ(
     source_white_XYZ=D65_XYZ,
     target_white_XYZ=D50_XYZ,
     transform=None,
+)
+```
+
+For incomplete-adaptation workflows, use the Zhai and Luo 2018 two-step model
+explicitly:
+
+```python
+from color.adaptation import chromatic_adaptation_Zhai2018
+
+XYZ_target = chromatic_adaptation_Zhai2018(
+    XYZ_source,
+    source_white_XYZ=[109.85, 100.0, 35.585],
+    target_white_XYZ=[95.047, 100.0, 108.883],
+    D_source=0.9407,
+    D_target=0.9800,
+    baseline_white_XYZ=[100.0, 100.0, 100.0],
+    transform="CAT02",
 )
 ```
 

@@ -17,6 +17,7 @@ XYZ(source white) -> XYZ(target white)
 | --- | --- |
 | `matrix_chromatic_adaptation_von_kries` | 计算 Von Kries 类色适应矩阵 |
 | `chromatic_adaptation_XYZ` | 将 XYZ 从源白点适应到目标白点 |
+| `chromatic_adaptation_Zhai2018` | Zhai 与 Luo 2018 两步色适应模型 |
 | `adapt_to_D65` | 从任意源白点适应到项目 D65 |
 | `adapt_from_D65` | 从项目 D65 适应到目标白点 |
 
@@ -112,6 +113,32 @@ XYZ_same = chromatic_adaptation_XYZ(
 
 注意：输入 `XYZ`、`source_white_XYZ` 和 `target_white_XYZ` 应使用一致的数值标度。
 项目常用 `Y=100`。
+
+## Zhai 2018 两步色适应
+
+### `chromatic_adaptation_Zhai2018(XYZ, source_white_XYZ, target_white_XYZ, D_source=1.0, D_target=1.0, baseline_white_XYZ=None, transform="CAT02")`
+
+用途：使用 Zhai 与 Luo 2018 two-step CAT 模型，把 `XYZ` 从源照明体适应到目标照明体。
+
+这个函数不是 `transform="Bradford"` 的平级替代。`transform` 在这里仍表示内部响应空间矩阵，只支持 `"CAT02"` 和 `"CAT16"`；Zhai2018 本身是更高一层的两步适应模型。
+
+```python
+from color.adaptation import chromatic_adaptation_Zhai2018
+
+XYZ_D65 = chromatic_adaptation_Zhai2018(
+    [48.900, 43.620, 6.250],
+    source_white_XYZ=[109.850, 100.0, 35.585],
+    target_white_XYZ=[95.047, 100.0, 108.883],
+    D_source=0.9407,
+    D_target=0.9800,
+    baseline_white_XYZ=[100.0, 100.0, 100.0],
+    transform="CAT02",
+)
+```
+
+`baseline_white_XYZ` 省略时，会使用与源白点 `Y` 标度一致的等能白点，例如常见 `Y=100` 工作流下为 `[100, 100, 100]`。
+
+常见用途是给需要两步适应语义的色貌模型使用，例如 ZCAM；普通跨白点适应仍优先使用 `chromatic_adaptation_XYZ(...)`。
 
 ## D65 便捷入口
 

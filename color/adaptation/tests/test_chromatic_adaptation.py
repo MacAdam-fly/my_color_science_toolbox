@@ -11,6 +11,7 @@ from color.adaptation import (
     adapt_from_D65,
     adapt_to_D65,
     chromatic_adaptation_XYZ,
+    chromatic_adaptation_Zhai2018,
     matrix_chromatic_adaptation_von_kries,
 )
 from color.adaptation.matrices import CAT_BRADFORD, CHROMATIC_ADAPTATION_TRANSFORMS
@@ -206,4 +207,137 @@ def test_unknown_transform_raises():
             D65_XYZ,
             D50_XYZ,
             transform="unknown",
+        )
+
+
+def test_zhai2018_matches_colour_reference_example():
+    XYZ = np.array([48.900, 43.620, 6.250])
+    source_white = np.array([109.850, 100.0, 35.585])
+    target_white = np.array([95.047, 100.0, 108.883])
+    baseline_white = np.array([100.0, 100.0, 100.0])
+
+    actual = chromatic_adaptation_Zhai2018(
+        XYZ,
+        source_white,
+        target_white,
+        D_source=0.9407,
+        D_target=0.9800,
+        baseline_white_XYZ=baseline_white,
+        transform="CAT02",
+    )
+
+    np.testing.assert_allclose(
+        actual,
+        [39.18561644, 42.15461798, 19.23672036],
+        atol=1e-8,
+    )
+
+
+def test_zhai2018_round_trips_reference_example():
+    XYZ = np.array([48.900, 43.620, 6.250])
+    source_white = np.array([109.850, 100.0, 35.585])
+    target_white = np.array([95.047, 100.0, 108.883])
+    baseline_white = np.array([100.0, 100.0, 100.0])
+
+    adapted = chromatic_adaptation_Zhai2018(
+        XYZ,
+        source_white,
+        target_white,
+        D_source=0.9407,
+        D_target=0.9800,
+        baseline_white_XYZ=baseline_white,
+    )
+    recovered = chromatic_adaptation_Zhai2018(
+        adapted,
+        target_white,
+        source_white,
+        D_source=0.9800,
+        D_target=0.9407,
+        baseline_white_XYZ=baseline_white,
+    )
+
+    np.testing.assert_allclose(recovered, XYZ, atol=1e-10)
+
+
+def test_zhai2018_supports_cat16_and_batch_shape():
+    XYZ = np.array(
+        [
+            [48.900, 43.620, 6.250],
+            [19.010, 20.000, 21.780],
+        ]
+    )
+    source_white = np.array([109.850, 100.0, 35.585])
+    target_white = np.array([95.047, 100.0, 108.883])
+
+    adapted = chromatic_adaptation_Zhai2018(
+        XYZ,
+        source_white,
+        target_white,
+        D_source=np.array([0.9407, 1.0]),
+        D_target=0.9800,
+        transform="CAT16",
+    )
+
+    assert adapted.shape == XYZ.shape
+    assert np.all(np.isfinite(adapted))
+
+
+def test_zhai2018_default_baseline_uses_source_scale():
+    XYZ = np.array([48.900, 43.620, 6.250])
+    source_white = np.array([109.850, 100.0, 35.585])
+    target_white = np.array([95.047, 100.0, 108.883])
+
+    default = chromatic_adaptation_Zhai2018(
+        XYZ,
+        source_white,
+        target_white,
+        D_source=0.9407,
+        D_target=0.9800,
+    )
+    explicit = chromatic_adaptation_Zhai2018(
+        XYZ,
+        source_white,
+        target_white,
+        D_source=0.9407,
+        D_target=0.9800,
+        baseline_white_XYZ=[100.0, 100.0, 100.0],
+    )
+
+    np.testing.assert_allclose(default, explicit, atol=1e-12)
+
+
+def test_zhai2018_rejects_invalid_inputs():
+    with pytest.raises(ValueError, match="XYZ"):
+        chromatic_adaptation_Zhai2018([1.0, 2.0], D65_XYZ, D50_XYZ)
+
+    with pytest.raises(ValueError, match="baseline_white_XYZ"):
+        chromatic_adaptation_Zhai2018(
+            [1.0, 2.0, 3.0],
+            D65_XYZ,
+            D50_XYZ,
+            baseline_white_XYZ=[1.0, 0.0, 1.0],
+        )
+
+    with pytest.raises(ValueError, match="D_source"):
+        chromatic_adaptation_Zhai2018(
+            [1.0, 2.0, 3.0],
+            D65_XYZ,
+            D50_XYZ,
+            D_source=1.2,
+        )
+
+    with pytest.raises(ValueError, match="D_target"):
+        chromatic_adaptation_Zhai2018(
+            [1.0, 2.0, 3.0],
+            D65_XYZ,
+            D50_XYZ,
+            D_target=np.nan,
+        )
+
+    with pytest.raises(ValueError, match="Zhai 2018"):
+        chromatic_adaptation_Zhai2018(
+            [1.0, 2.0, 3.0],
+            D65_XYZ,
+            D50_XYZ,
+            transform="Bradford",
         )

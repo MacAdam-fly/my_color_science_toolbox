@@ -60,6 +60,34 @@ from color.adaptation.matrices import (
 这些矩阵不再放在 `color.adaptation` 顶层；普通工作流应使用
 `chromatic_adaptation_XYZ(...)` 或 D65 便捷函数。
 
+## Zhai 2018 两步色适应
+
+`chromatic_adaptation_Zhai2018(...)` 是 Zhai 与 Luo 2018 two-step CAT 模型。
+它不是 `Bradford`、`CAT02`、`CAT16` 这类 `transform` 的平级 method；它是更高一层的
+显式模型，内部再使用 `CAT02` 或 `CAT16` 响应空间。
+
+一步 Von Kries 类适应可以概括为：
+
+```text
+source white -> target white
+```
+
+Zhai2018 引入 baseline illuminant 和两侧适应程度：
+
+```text
+source illuminant -> baseline illuminant -> target illuminant
+```
+
+因此它需要额外参数：
+
+- `D_source`：源照明体适应程度。
+- `D_target`：目标照明体适应程度。
+- `baseline_white_XYZ`：基线照明体，省略时使用与源白点 `Y` 标度一致的等能白点。
+- `transform`：内部响应空间，仅支持 `"CAT02"` 或 `"CAT16"`。
+
+普通白点变换仍应优先使用 `chromatic_adaptation_XYZ(...)`。Zhai2018 主要用于需要
+不完全适应语义的高级模型，例如 ZCAM。
+
 ## Von Kries 类矩阵计算
 
 `matrix_chromatic_adaptation_von_kries(...)` 的计算结构为：
@@ -185,7 +213,6 @@ from color.constants import D50_XYZ, D65_XYZ
 
 - CMCCAT2000。
 - Fairchild 1990。
-- Zhai 2018。
 - 完整色貌模型观察条件。
 - RGB LUT / ICC 级别的适应与色彩管理。
 
