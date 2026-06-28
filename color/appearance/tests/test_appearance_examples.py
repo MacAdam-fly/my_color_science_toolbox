@@ -11,6 +11,8 @@ _EXAMPLES = ROOT / "examples" / "appearance"
 _EXAMPLE_PATHS = (
     _EXAMPLES / "example_01_ciecam02.py",
     _EXAMPLES / "example_02_ciecam16.py",
+    _EXAMPLES / "example_03_hellwig2022.py",
+    _EXAMPLES / "example_04_zcam.py",
 )
 
 

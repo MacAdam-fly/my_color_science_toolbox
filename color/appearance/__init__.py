@@ -18,6 +18,22 @@ from .ciecam02 import (
     VIEWING_CONDITIONS_CIECAM02,
     XYZ_to_CIECAM02,
 )
+from .hellwig2022 import (
+    Hellwig2022Specification,
+    Hellwig2022ViewingConditions,
+    Hellwig2022_to_XYZ,
+    InductionFactors_Hellwig2022,
+    VIEWING_CONDITIONS_HELLWIG2022,
+    XYZ_to_Hellwig2022,
+)
+from .zcam import (
+    InductionFactors_ZCAM,
+    VIEWING_CONDITIONS_ZCAM,
+    XYZ_to_ZCAM,
+    ZCAMSpecification,
+    ZCAMViewingConditions,
+    ZCAM_to_XYZ,
+)
 
 __all__ = [
     "InductionFactors_CIECAM02",  # CIECAM02 surround induction factors
@@ -35,4 +51,22 @@ __all__ += [
     "CIECAM16Specification",  # CIECAM16 appearance correlates J, C, h, s, Q, M, H, HC
     "XYZ_to_CIECAM16",  # forward CIECAM16 appearance model
     "CIECAM16_to_XYZ",  # inverse CIECAM16 appearance model
+]
+
+__all__ += [
+    "InductionFactors_Hellwig2022",  # Hellwig2022 surround induction factors
+    "VIEWING_CONDITIONS_HELLWIG2022",  # named Average / Dim / Dark Hellwig2022 surround presets
+    "Hellwig2022ViewingConditions",  # complete Hellwig2022 viewing-condition container
+    "Hellwig2022Specification",  # Hellwig2022 appearance correlates including J_HK and Q_HK
+    "XYZ_to_Hellwig2022",  # forward Hellwig2022 appearance model
+    "Hellwig2022_to_XYZ",  # inverse Hellwig2022 appearance model
+]
+
+__all__ += [
+    "InductionFactors_ZCAM",  # ZCAM surround induction factors
+    "VIEWING_CONDITIONS_ZCAM",  # named Average / Dim / Dark ZCAM surround presets
+    "ZCAMViewingConditions",  # complete ZCAM viewing-condition container
+    "ZCAMSpecification",  # ZCAM appearance correlates J, C, h, s, Q, M, H, HC, V, K, W
+    "XYZ_to_ZCAM",  # forward ZCAM appearance model
+    "ZCAM_to_XYZ",  # inverse ZCAM appearance model
 ]

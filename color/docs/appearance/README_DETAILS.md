@@ -1,30 +1,32 @@
-# color.appearance 详细说明：CIECAM02 与 CIECAM16 计算公式
+# color.appearance 详细说明：CIECAM02、CIECAM16、Hellwig2022 与 ZCAM 计算公式
 
 ## AI Usage Notes
 
-- Use this module when computing CIECAM02 or CIECAM16 appearance correlates under explicit viewing conditions.
+- Use this module when computing CIECAM02, CIECAM16, Hellwig2022 or ZCAM appearance correlates under explicit viewing conditions.
 - Do not use this module for ordinary coordinate conversion, simple Delta E, or chromatic adaptation alone; route those to `spaces`, `difference`, or `adaptation`.
 - Key assumptions: appearance results depend on viewing-condition parameters; input `XYZ` must already be defined in the intended reference scale and illuminant context.
 - Common mistakes: treating appearance correlates as simple color-space coordinates; omitting viewing-condition assumptions; comparing outputs from different model/settings as if they were interchangeable.
 - Related modules: use `spaces` for CAM02-UCS/CAM16-UCS conversions, `adaptation` for explicit whitepoint changes, and `colorimetry` for `XYZ` inputs.
 
-本文档用于记录当前 `color.appearance` 中 CIECAM02 与 CIECAM16 色貌模型的主要计算公式。  
-这两个模型都属于颜色外貌模型，用来描述同一个 `XYZ` 刺激在指定观察条件下产生的明度、彩度、色相、鲜艳度等外貌相关量。
+本文档用于记录当前 `color.appearance` 中 CIECAM02、CIECAM16、Hellwig2022 与 ZCAM 色貌模型的主要计算公式。  
+这些模型都属于颜色外貌模型，用来描述同一个 `XYZ` 刺激在指定观察条件下产生的明度、彩度、色相、鲜艳度等外貌相关量。
 
 逐项顶层 API 的最小用法见 [`API_GUIDE.md`](API_GUIDE.md)。本文件保留模型公式、
-参考域约定、CIECAM02/CIECAM16 差异和实现范围说明。
+参考域约定、模型差异和实现范围说明。
 
 当前工程实现的参考域约定为：
 
-- `XYZ` 与 `XYZ_w` 默认使用 `Y=100` 标度。
-- `XYZ`、`XYZ_w`、`Y_b` 必须处于同一个亮度参考域。
+- CIECAM02、CIECAM16 与 Hellwig2022 中，`XYZ` 与 `XYZ_w` 默认使用 `Y=100` 标度。
+- ZCAM 的 PQ/HDR 语义更强，`XYZ`、`XYZ_w`、`Y_b` 与 `L_A` 不应随意归一化或混用标度。
+- `XYZ`、`XYZ_w`、`Y_b` 必须处于一致的亮度参考域。
 - 观察条件使用单个白点、背景亮度和适应亮度，颜色数据本身可以是单点 `(3,)` 或批量 `(..., 3)`。
-- 正向模型输出 `J, C, h, s, Q, M, H, HC`，其中 `HC` 第一版保留为 `None`。
+- 基础正向模型输出 `J, C, h, s, Q, M, H, HC`，其中 `HC` 第一版保留为 `None`。
+- Hellwig2022 额外输出 `J_HK, Q_HK`；ZCAM 额外输出 `V, K, W`。
 - 反向模型支持由 `J, C, h` 或 `J, M, h` 回到 `XYZ`。
 
 ## 公共观察条件
 
-两个模型都需要以下观察条件：
+这些模型都需要以下观察条件：
 
 | 符号 | 含义 |
 | --- | --- |
@@ -70,7 +72,23 @@ CIECAM16:
 | Dim | 0.9 | 0.59 | 0.9 |
 | Dark | 0.8 | 0.525 | 0.8 |
 
-CIECAM02 与 CIECAM16 在 `Dim` surround 下的 `N_c` 不同，这是当前实现需要保留的标准差异。
+Hellwig2022:
+
+| surround | F | c | N_c |
+| --- | ---: | ---: | ---: |
+| Average | 1.0 | 0.69 | 1.0 |
+| Dim | 0.9 | 0.59 | 0.9 |
+| Dark | 0.8 | 0.525 | 0.8 |
+
+ZCAM:
+
+| surround | F_s | F | c | N_c |
+| --- | ---: | ---: | ---: | ---: |
+| Average | 0.69 | 1.0 | 0.69 | 1.0 |
+| Dim | 0.59 | 0.9 | 0.59 | 0.9 |
+| Dark | 0.525 | 0.8 | 0.525 | 0.8 |
+
+CIECAM02 与 CIECAM16 / Hellwig2022 在 `Dim` surround 下的 `N_c` 不同，这是当前实现需要保留的标准差异。
 
 ## 公共中间量
 
@@ -460,6 +478,29 @@ XYZ = inv(CAT_CAT16) RGB
 - CIECAM02 是较早的经典色貌模型，后续 CAM02-UCS / CAM02-LCD / CAM02-SCD 等均匀空间建立在它的 `J, M, h` 结果上。
 - CIECAM16 是更新的色貌模型，前段响应空间和部分 surround 参数做了调整，但外貌相关量的组织方式与 CIECAM02 高度相似。
 
+## Hellwig2022 与 ZCAM 补充说明
+
+Hellwig2022 使用 CAT16 前段响应空间，但不是 CIECAM16 的简单别名。它的亮度、彩度、鲜艳度和饱和度相关量使用独立公式：
+
+- `Q = (2 / c) (J / 100) A_w`
+- `M = 43 N_c e_t sqrt(a^2 + b^2)`
+- `C = 35 M / A_w`
+- `s = 100 M / Q`
+
+正向模型还计算 Helmholtz-Kohlrausch 扩展相关量：
+
+```text
+J_HK = J + f(h) C^0.587
+Q_HK = (2 / c) (J_HK / 100) A_w
+```
+
+反向模型当前仍只使用 `J + C + h` 或 `J + M + h`，不把 `J_HK` 当作反向输入。
+
+ZCAM 内部先使用 Zhai 2018 两步色适应把刺激从参考白点适应到 D65，再进入 Safdar 2021 / ZCAM 版本的
+`Izazbz` 中间空间。ZCAM 的公式包含 PQ / ST2084 风格的非线性压缩，因此它比 CIECAM02、CIECAM16、
+Hellwig2022 更依赖输入数值的绝对亮度语义。实际使用时应保持 `XYZ`、`XYZ_w`、`Y_b`、`L_A` 的标度一致；
+不要把 `XYZ` 归一化到 `[0, 1]` 后仍使用原来的 `L_A` 和 `Y_b`。
+
 ## 当前工程实现范围
 
 当前 `color.appearance` 已实现：
@@ -474,6 +515,14 @@ from color.appearance import (
     CIECAM16_to_XYZ,
     CIECAM16Specification,
     CIECAM16ViewingConditions,
+    XYZ_to_Hellwig2022,
+    Hellwig2022_to_XYZ,
+    Hellwig2022Specification,
+    Hellwig2022ViewingConditions,
+    XYZ_to_ZCAM,
+    ZCAM_to_XYZ,
+    ZCAMSpecification,
+    ZCAMViewingConditions,
 )
 ```
 
@@ -481,6 +530,8 @@ from color.appearance import (
 
 - CIECAM02 正向与反向转换。
 - CIECAM16 正向与反向转换。
+- Hellwig2022 正向与反向转换。
+- ZCAM 正向与反向转换。
 - `Average`、`Dim`、`Dark` surround。
 - `J, C, h` 与 `J, M, h` 两种反向输入方式。
 - 单点和批量输入。
@@ -490,7 +541,8 @@ from color.appearance import (
 - `HC` hue composition 的完整计算。
 - 每个样本使用不同观察条件。
 - CIECAM16-UCS / CAM16-UCS 空间。
-- Hellwig、ZCAM 等其他色貌模型。
+- ZCAM-UCS、ZCAM 色差公式。
+- RLAB、LLAB 等当前未纳入 V1 闭环范围的模型。
 
 ## 简单使用示例
 
@@ -502,6 +554,8 @@ from color.appearance import (
     CIECAM02_to_XYZ,
     XYZ_to_CIECAM02,
     XYZ_to_CIECAM16,
+    XYZ_to_Hellwig2022,
+    XYZ_to_ZCAM,
 )
 from color.constants import D65_XYZ
 
@@ -528,6 +582,22 @@ cam16 = XYZ_to_CIECAM16(
     XYZ_w=D65_XYZ,
     L_A=318.31,
     Y_b=20.0,
+    surround="Average",
+)
+
+hellwig = XYZ_to_Hellwig2022(
+    XYZ,
+    XYZ_w=D65_XYZ,
+    L_A=318.31,
+    Y_b=20.0,
+    surround="Average",
+)
+
+zcam = XYZ_to_ZCAM(
+    [185.0, 206.0, 163.0],
+    XYZ_w=[256.0, 264.0, 202.0],
+    L_A=264.0,
+    Y_b=100.0,
     surround="Average",
 )
 ```
