@@ -61,7 +61,7 @@ def _fresh_color_module():
 def test_root_package_metadata_and_public_names():
     import color
 
-    assert color.__version__ == "1.0.0"
+    assert color.__version__ == "1.0.1"
     assert color.__project_name__ == "color_science_toolbox"
     assert color.__distribution_name__ == "color-science-toolbox"
     assert set(color.__all__) == {

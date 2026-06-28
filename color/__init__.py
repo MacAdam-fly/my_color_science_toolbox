@@ -10,7 +10,7 @@ from importlib import import_module
 from typing import Any
 
 
-__version__ = "1.0.0"
+__version__ = "1.0.1"
 __project_name__ = "color_science_toolbox"
 __distribution_name__ = "color-science-toolbox"
 

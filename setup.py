@@ -8,7 +8,7 @@ from setuptools import find_packages, setup
 ROOT = Path(__file__).resolve().parent
 COLOR_PACKAGE = ROOT / "color"
 
-VERSION = "1.0.0"
+VERSION = "1.0.1"
 
 RUNTIME_DATA_PATTERNS = (
     "data/color_cards/*.csv",

@@ -13,7 +13,7 @@ English documentation: [`readme.md`](readme.md)
 
 ```powershell
 py -3.9 -m venv .venv
-.\.venv\Scripts\python.exe -m pip install "https://github.com/MacAdam-fly/my_color_science_toolbox/releases/download/v1.0.0/color_science_toolbox-1.0.0-py3-none-any.whl"
+.\.venv\Scripts\python.exe -m pip install "https://github.com/MacAdam-fly/my_color_science_toolbox/releases/download/v1.0.1/color_science_toolbox-1.0.1-py3-none-any.whl"
 .\.venv\Scripts\python.exe -c "import color; print(color.__version__)"
 ```
 
