@@ -101,7 +101,7 @@ def test_computed_macadam_limits_returns_regular_LCH_boundary():
         L_values=[0.0, 50.0, 100.0],
         hue_values=[0.0, 90.0, 180.0, 270.0, 360.0],
         C_upper=200.0,
-        iterations=5,
+        iterations=10,
     )
 
     assert isinstance(boundary, ComputedMacAdamLimitsBoundary)
@@ -112,6 +112,30 @@ def test_computed_macadam_limits_returns_regular_LCH_boundary():
     assert xy.ndim == 2
     assert xy.shape[1] == 2
     np.testing.assert_allclose(xy[0], xy[-1])
+
+
+def test_regular_computed_boundary_stays_inside_its_XYZ_mesh():
+    shape = SpectralShape(400, 700, 100)
+    L_values = np.array([0.0, 25.0, 50.0, 75.0, 100.0])
+    boundary = computed_macadam_limits(
+        shape=shape,
+        L_values=L_values,
+        hue_values=np.arange(0.0, 361.0, 45.0),
+        C_upper=200.0,
+        iterations=14,
+    )
+    XYZ = boundary.to_XYZ().reshape(-1, 3)
+    nonzero = boundary.C_max.reshape(-1) > 0.0
+
+    assert np.any(nonzero)
+    assert np.all(
+        is_within_computed_macadam_limits(
+            XYZ[nonzero],
+            shape=shape,
+            L_values=L_values,
+            tolerance=1e-7,
+        )
+    )
 
 
 def test_computed_macadam_limits_invalid_options_raise():

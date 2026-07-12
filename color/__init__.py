@@ -10,7 +10,11 @@ from importlib import import_module
 from typing import Any
 
 
-__version__ = "1.0.1"
+__version__ = "1.0.2"
+__release_revision__ = "macadam-static-l1-h3"
+__capabilities__ = {
+    "macadam_static_boundary": "l1-h3-v1",
+}
 __project_name__ = "color_science_toolbox"
 __distribution_name__ = "color-science-toolbox"
 
@@ -67,6 +71,8 @@ _LAZY_EXPORTS: dict[str, str] = {
 
 __all__ = [
     "__version__",
+    "__release_revision__",
+    "__capabilities__",
     "__project_name__",
     "__distribution_name__",
     *_LAZY_EXPORTS,

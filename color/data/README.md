@@ -34,9 +34,9 @@ color/data/
 |   `-- uef_sources_data/
 |-- gamut_data/
 |   |-- PointerData.xls
-|   |-- MacAdamLimits_A.csv
-|   |-- MacAdamLimits_C.csv
-|   |-- MacAdamLimits_D65.csv
+|   |-- MacAdamBoundary_A_L1_H3.csv
+|   |-- MacAdamBoundary_C_L1_H3.csv
+|   |-- MacAdamBoundary_D65_L1_H3.csv
 |   `-- readme.md
 |-- color_systems/
 |   |-- real_sRGB.xls
@@ -114,9 +114,9 @@ AOTF data are raw/normalized digital counts without dark/white reference data.
 | File | Dataset name | Description |
 | --- | --- | --- |
 | `PointerData.xls` | `pointer`, `pointer_raw` | Pointer real-surface color gamut data |
-| `MacAdamLimits_A.csv` | `macadam_limits_A` | Cached MacAdam optimal colour stimuli for Illuminant A |
-| `MacAdamLimits_C.csv` | `macadam_limits_C` | Cached MacAdam optimal colour stimuli for Illuminant C |
-| `MacAdamLimits_D65.csv` | `macadam_limits_D65` | Cached MacAdam optimal colour stimuli for Illuminant D65 |
+| `MacAdamBoundary_A_L1_H3.csv` | `macadam_limits_A` | Static MacAdam L1/h3 boundary for Illuminant A |
+| `MacAdamBoundary_C_L1_H3.csv` | `macadam_limits_C` | Static MacAdam L1/h3 boundary for Illuminant C |
+| `MacAdamBoundary_D65_L1_H3.csv` | `macadam_limits_D65` | Static MacAdam L1/h3 boundary for Illuminant D65 |
 
 ### Color Systems
 

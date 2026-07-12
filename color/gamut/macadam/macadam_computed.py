@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import Sequence
 
 import numpy as np
-from scipy.spatial import Delaunay
+from scipy.spatial import ConvexHull, Delaunay
 
 from color.colorimetry import XYZ_to_xyY
 from color.colorimetry.lightness import Lstar_to_Y, Y_to_Lstar
@@ -21,6 +21,7 @@ from color.utils.arrays import as_last_axis_triplets
 from color.utils.names import canonical_method_name
 
 from ..boundary import GamutBoundary, _as_1d_values, _convex_hull_polygon
+from .geometry import lch_chroma_limits_in_slice
 
 
 SPECTRAL_SHAPE_COMPUTED_MACADAM = SpectralShape(400.0, 700.0, 2.0)
@@ -271,33 +272,6 @@ def _computed_data_from_XYZ(
     }
 
 
-def _resample_chroma_by_hue(
-    h: np.ndarray,
-    C: np.ndarray,
-    hue_values: np.ndarray,
-) -> np.ndarray:
-    """Return a nearest-envelope chroma sampled at target hues."""
-    if h.size == 0:
-        return np.zeros_like(hue_values, dtype=np.float64)
-    h = np.mod(h, 360.0)
-    C = np.asarray(C, dtype=np.float64)
-    result = np.empty_like(hue_values, dtype=np.float64)
-    if hue_values.size > 1:
-        diffs = np.diff(np.sort(np.unique(np.mod(hue_values, 360.0))))
-        half_width = max(float(np.min(diffs)) / 2.0 if diffs.size else 1.0, 0.5)
-    else:
-        half_width = 1.0
-
-    for index, hue in enumerate(np.mod(hue_values, 360.0)):
-        distance = np.abs(((h - hue + 180.0) % 360.0) - 180.0)
-        mask = distance <= half_width
-        if np.any(mask):
-            result[index] = float(np.max(C[mask]))
-        else:
-            result[index] = float(C[np.argmin(distance)])
-    return result
-
-
 def computed_macadam_limits_XYZ(
     *,
     cmfs: str | MultiSpectralDistribution = DEFAULT_COMPUTED_MACADAM_CMFS,
@@ -443,9 +417,27 @@ def computed_macadam_limits(
     for L_index, L in enumerate(L_array):
         XYZ = _optimal_colour_XYZ_for_L(basis, float(L))
         vertices.append(XYZ)
-        data = _computed_data_from_XYZ(XYZ, whitepoint_XYZ=basis.whitepoint_XYZ)
-        C_max[L_index, :] = _resample_chroma_by_hue(data["h"], data["C"], hue_array)
-    C_max = np.minimum(C_max, C_upper)
+        if XYZ.shape[0] < 3 or L <= 0.0 or L >= 100.0:
+            C_max[L_index, :] = 0.0
+            continue
+        slice_equations = ConvexHull(XYZ[:, [0, 2]]).equations
+
+        def is_inside_slice(candidate_XYZ: np.ndarray) -> np.ndarray:
+            return np.all(
+                candidate_XYZ[:, [0, 2]] @ slice_equations[:, :2].T
+                + slice_equations[:, 2]
+                <= tolerance,
+                axis=1,
+            )
+
+        C_max[L_index, :] = lch_chroma_limits_in_slice(
+            float(L),
+            hue_array,
+            whitepoint_XYZ=basis.whitepoint_XYZ,
+            C_upper=C_upper,
+            iterations=int(iterations),
+            is_inside=is_inside_slice,
+        )
     vertices_XYZ = np.vstack(vertices)
 
     return ComputedMacAdamLimitsBoundary(

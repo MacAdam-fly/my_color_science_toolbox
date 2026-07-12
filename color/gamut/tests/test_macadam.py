@@ -28,12 +28,12 @@ def test_macadam_limits_data_and_xyz(illuminant):
     data = macadam_limits_data(illuminant)
     XYZ = macadam_limits_XYZ(illuminant)
 
-    assert XYZ.shape == (len(data["Y"]), 3)
+    assert set(data) == {"L", "h", "C_max"}
+    assert XYZ.shape == (len(data["L"]), 3)
     assert XYZ.shape[0] > 0
     assert np.all(np.isfinite(XYZ))
-    np.testing.assert_allclose(XYZ[:, 0], data["X"])
-    np.testing.assert_allclose(XYZ[:, 1], data["Y"])
-    np.testing.assert_allclose(XYZ[:, 2], data["Z"])
+    assert np.all(np.isfinite(data["C_max"]))
+    assert np.all(data["C_max"] >= 0.0)
 
 
 def test_macadam_limits_published_xy_boundary_is_closed():
@@ -87,6 +87,62 @@ def test_macadam_limits_and_pointer_coverage():
         coverage = lab_gamut_coverage(pointer_gamut(), boundary)
     assert np.isfinite(coverage)
     assert coverage >= 0
+
+
+def test_default_macadam_grid_loads_packaged_L1_H3_boundary():
+    boundary = published_macadam_limits("D65")
+
+    assert boundary.C_max.shape == (101, 121)
+    np.testing.assert_allclose(boundary.L_values, np.arange(0.0, 101.0, 1.0))
+    np.testing.assert_allclose(boundary.hue_values, np.arange(0.0, 361.0, 3.0))
+    assert np.max(boundary.C_max) > 0.0
+
+
+@pytest.mark.parametrize("illuminant", ["A", "C", "D65"])
+def test_packaged_L1_H3_boundary_stays_inside_its_raw_mesh(illuminant):
+    boundary = published_macadam_limits(illuminant)
+    XYZ = boundary.to_XYZ().reshape(-1, 3)
+    nonzero = boundary.C_max.reshape(-1) > 0.0
+
+    assert np.all(
+        published_is_within_macadam_limits(
+            XYZ[nonzero],
+            illuminant,
+            tolerance=1e-7,
+        )
+    )
+
+
+@pytest.mark.parametrize("illuminant", ["A", "C", "D65"])
+def test_regular_macadam_boundary_stays_inside_static_mesh(illuminant):
+    boundary = macadam_limits(
+        illuminant,
+        L_values=np.arange(0.0, 101.0, 10.0),
+        hue_values=np.arange(0.0, 361.0, 30.0),
+        C_upper=400.0,
+        iterations=14,
+    )
+    XYZ = boundary.to_XYZ().reshape(-1, 3)
+    nonzero = boundary.C_max.reshape(-1) > 0.0
+
+    assert np.any(nonzero)
+    assert np.all(
+        is_within_macadam_limits(XYZ[nonzero], illuminant, tolerance=1e-7)
+    )
+
+
+def test_static_macadam_boundary_supports_C_upper_and_exact_subsets():
+    kwargs = {
+        "L_values": [50.0],
+        "hue_values": np.arange(0.0, 361.0, 30.0),
+    }
+    capped = macadam_limits("D65", C_upper=20.0, iterations=14, **kwargs)
+    full = macadam_limits("D65", C_upper=300.0, **kwargs)
+
+    assert np.max(capped.C_max) <= 20.0
+    assert np.max(full.C_max) > np.max(capped.C_max)
+    with pytest.raises(ValueError, match="integer L_values"):
+        published_macadam_limits("D65", L_values=[50.5], hue_values=[0.0])
 
 
 def test_macadam_limits_auto_uses_published_for_standard_illuminants():

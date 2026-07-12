@@ -163,19 +163,21 @@ for _illuminant in ("A", "C", "D65"):
         category="gamut_data",
         name=f"macadam_limits_{_illuminant}",
         description=(
-            f"MacAdam optimal colour stimuli limits for Illuminant {_illuminant}"
+            f"Static MacAdam L1/h3 boundary for Illuminant {_illuminant}"
         ),
-        source="color.gamut.macadam computed optimal-colour stimuli",
-        file_path=f"{_GAMUT_DIR}/MacAdamLimits_{_illuminant}.csv",
+        source="color.gamut.macadam packaged static boundary",
+        file_path=f"{_GAMUT_DIR}/MacAdamBoundary_{_illuminant}_L1_H3.csv",
         parser_fn=_read_macadam_limits,
         metadata={
-            "quantity": "macadam_optimal_colour_stimuli",
-            "color_space": "CIE xyY, CIE XYZ, CIE Lab, CIE LCHab",
+            "quantity": "macadam_lchab_boundary",
+            "color_space": "CIE LCHab",
             "illuminant": _illuminant,
             "observer_angle_deg": 2,
             "reference_white": f"Illuminant {_illuminant}, 2 degree observer",
-            "data_origin": "computed_optimal_colour_stimuli_cache",
-            "fields": ("x", "y", "Y", "X", "Z", "L", "a", "b", "C", "h"),
+            "data_origin": "packaged_static_boundary",
+            "fields": ("L", "h", "C_max"),
+            "lightness_step": 1,
+            "hue_step_deg": 3,
         },
     ))
 

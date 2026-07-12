@@ -3,13 +3,15 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Sequence
 
 import numpy as np
 from scipy.spatial import ConvexHull
 
+from color.colorimetry import XYZ_to_xy
 from color.constants import A_XYZ, C_XYZ, D65_XYZ
-from color.datasets.gamut_data import get_gamut_data
+from color.spaces.basic.lab import LCHab_to_Lab, Lab_to_XYZ
 from color.utils.arrays import as_last_axis_triplets
 from color.utils.names import canonical_method_name
 
@@ -29,6 +31,10 @@ _WHITEPOINTS_XYZ = {
 }
 
 _HULL_EQUATIONS_CACHE: dict[str, np.ndarray] = {}
+_STATIC_BOUNDARY_CACHE: dict[str, np.ndarray] = {}
+STATIC_MACADAM_L_VALUES = np.arange(0.0, 101.0, 1.0)
+STATIC_MACADAM_HUE_VALUES = np.arange(0.0, 361.0, 3.0)
+_STATIC_BOUNDARY_DATA_DIR = Path(__file__).resolve().parents[2] / "data" / "gamut_data"
 
 
 def _resolve_illuminant(illuminant: str) -> str:
@@ -50,16 +56,63 @@ def _hull_equations(illuminant: str) -> np.ndarray:
     return equations
 
 
-def macadam_limits_data(illuminant: str = "D65") -> dict[str, np.ndarray]:
-    """Return cached MacAdam optimal colour stimuli data."""
+def _static_boundary_C_max(illuminant: str) -> np.ndarray:
+    """Return the packaged L1/h3 boundary cache for an illuminant."""
     illuminant = _resolve_illuminant(illuminant)
-    return get_gamut_data(f"macadam_limits_{illuminant}")
+    cached = _STATIC_BOUNDARY_CACHE.get(illuminant)
+    if cached is not None:
+        return cached
+
+    path = _STATIC_BOUNDARY_DATA_DIR / f"MacAdamBoundary_{illuminant}_L1_H3.csv"
+    values = np.loadtxt(path, delimiter=",", skiprows=1, dtype=np.float64)
+    expected_rows = STATIC_MACADAM_L_VALUES.size * STATIC_MACADAM_HUE_VALUES.size
+    if values.shape != (expected_rows, 3):
+        raise ValueError(f"Invalid packaged MacAdam boundary cache: {path.name}")
+    if not np.allclose(values[:, 0], np.repeat(STATIC_MACADAM_L_VALUES, STATIC_MACADAM_HUE_VALUES.size)):
+        raise ValueError(f"Invalid L* grid in packaged MacAdam boundary cache: {path.name}")
+    if not np.allclose(values[:, 1], np.tile(STATIC_MACADAM_HUE_VALUES, STATIC_MACADAM_L_VALUES.size)):
+        raise ValueError(f"Invalid hue grid in packaged MacAdam boundary cache: {path.name}")
+    C_max = values[:, 2].reshape(STATIC_MACADAM_L_VALUES.size, STATIC_MACADAM_HUE_VALUES.size)
+    if not np.all(np.isfinite(C_max)) or np.any(C_max < 0.0):
+        raise ValueError(f"Invalid chroma values in packaged MacAdam boundary cache: {path.name}")
+    C_max.setflags(write=False)
+    _STATIC_BOUNDARY_CACHE[illuminant] = C_max
+    return C_max
+
+
+def _static_grid_indices(values: np.ndarray, grid: np.ndarray, *, name: str) -> np.ndarray:
+    """Return exact static-grid indices for requested values."""
+    matches = [
+        np.flatnonzero(np.isclose(grid, value, atol=1e-9, rtol=0.0))
+        for value in values
+    ]
+    if any(index.size != 1 for index in matches):
+        if name == "L_values":
+            raise ValueError("published MacAdam data supports integer L_values in [0, 100]")
+        raise ValueError("published MacAdam data supports hue_values in 3-degree steps")
+    return np.array([int(index[0]) for index in matches], dtype=np.intp)
+
+
+def macadam_limits_data(illuminant: str = "D65") -> dict[str, np.ndarray]:
+    """Return the packaged MacAdam L1/h3 boundary samples."""
+    illuminant = _resolve_illuminant(illuminant)
+    L, h = np.meshgrid(STATIC_MACADAM_L_VALUES, STATIC_MACADAM_HUE_VALUES, indexing="ij")
+    return {
+        "L": L.reshape(-1),
+        "h": h.reshape(-1),
+        "C_max": _static_boundary_C_max(illuminant).reshape(-1).copy(),
+    }
 
 
 def macadam_limits_XYZ(illuminant: str = "D65") -> np.ndarray:
-    """Return cached MacAdam optimal colour stimuli vertices as XYZ rows."""
-    data = macadam_limits_data(illuminant)
-    return np.stack((data["X"], data["Y"], data["Z"]), axis=-1)
+    """Return packaged MacAdam boundary samples as XYZ rows."""
+    illuminant = _resolve_illuminant(illuminant)
+    L, h = np.meshgrid(STATIC_MACADAM_L_VALUES, STATIC_MACADAM_HUE_VALUES, indexing="ij")
+    LCHab = np.stack((L, _static_boundary_C_max(illuminant), h), axis=-1)
+    return Lab_to_XYZ(
+        LCHab_to_Lab(LCHab.reshape(-1, 3)),
+        whitepoint_XYZ=_WHITEPOINTS_XYZ[illuminant],
+    )
 
 
 def macadam_limits_published_xy_boundary(illuminant: str = "D65") -> np.ndarray:
@@ -77,45 +130,17 @@ def macadam_limits_published_xy_boundary(illuminant: str = "D65") -> np.ndarray:
 
     Notes
     -----
-    This boundary is computed directly from the cached MacAdam xyY table. It
-    is not derived by projecting a Lab boundary.
+    This boundary is the xy convex hull of the packaged L1/h3 boundary
+    samples.
 
     Examples
     --------
     >>> macadam_limits_published_xy_boundary("D65").shape[1]
     2
     """
-    data = macadam_limits_data(illuminant)
-    positive = data["Y"] > 1e-12
-    xy = np.stack((data["x"][positive], data["y"][positive]), axis=-1)
-    return _convex_hull_polygon(xy)
-
-
-def _resample_chroma_by_hue(
-    h: np.ndarray,
-    C: np.ndarray,
-    hue_values: np.ndarray,
-) -> np.ndarray:
-    """Return a nearest-envelope chroma sampled at target hues."""
-    if h.size == 0:
-        return np.zeros_like(hue_values, dtype=np.float64)
-    h = np.mod(h, 360.0)
-    C = np.asarray(C, dtype=np.float64)
-    result = np.empty_like(hue_values, dtype=np.float64)
-    if hue_values.size > 1:
-        diffs = np.diff(np.sort(np.unique(np.mod(hue_values, 360.0))))
-        half_width = max(float(np.min(diffs)) / 2.0 if diffs.size else 1.0, 0.5)
-    else:
-        half_width = 1.0
-
-    for index, hue in enumerate(np.mod(hue_values, 360.0)):
-        distance = np.abs(((h - hue + 180.0) % 360.0) - 180.0)
-        mask = distance <= half_width
-        if np.any(mask):
-            result[index] = float(np.max(C[mask]))
-        else:
-            result[index] = float(C[np.argmin(distance)])
-    return result
+    XYZ = macadam_limits_XYZ(illuminant)
+    positive = np.sum(XYZ, axis=1) > 1e-12
+    return _convex_hull_polygon(XYZ_to_xy(XYZ[positive]))
 
 
 @dataclass(frozen=True)
@@ -188,12 +213,17 @@ def macadam_limits(
     illuminant: str = "D65",
     *,
     L_values: Sequence[float] | np.ndarray = np.arange(0.0, 101.0, 1.0),
-    hue_values: Sequence[float] | np.ndarray = np.arange(0.0, 361.0, 1.0),
+    hue_values: Sequence[float] | np.ndarray = np.arange(0.0, 361.0, 3.0),
     C_upper: float = 300.0,
     iterations: int = 14,
     tolerance: float = 1e-9,
 ) -> MacAdamLimitsBoundary:
-    """Return cached MacAdam limits resampled as a regular LCHab boundary."""
+    """Return a regular LCHab boundary from packaged static MacAdam data.
+
+    The A/C/D65 static source is defined on integer ``L*`` values and
+    3-degree hue samples. Requests must use that grid or an exact subset;
+    custom spectral conditions belong to the computed route.
+    """
     illuminant = _resolve_illuminant(illuminant)
     whitepoint = _WHITEPOINTS_XYZ[illuminant]
     L_array = _as_1d_values(L_values, name="L_values")
@@ -207,24 +237,12 @@ def macadam_limits(
     if tolerance < 0:
         raise ValueError("tolerance must be non-negative")
 
-    data = macadam_limits_data(illuminant)
-    source_L = np.sort(np.unique(data["L"]))
-    source_C = np.vstack([
-        _resample_chroma_by_hue(
-            data["h"][np.isclose(data["L"], L)],
-            data["C"][np.isclose(data["L"], L)],
-            hue_array,
-        )
-        for L in source_L
-    ])
-    C_max = np.vstack([
-        np.array([
-            np.interp(L, source_L, source_C[:, hue_index])
-            for hue_index in range(hue_array.size)
-        ])
-        for L in L_array
-    ])
-    C_max = np.minimum(C_max, C_upper)
+    L_indices = _static_grid_indices(L_array, STATIC_MACADAM_L_VALUES, name="L_values")
+    hue_indices = _static_grid_indices(hue_array, STATIC_MACADAM_HUE_VALUES, name="hue_values")
+    C_max = np.minimum(
+        _static_boundary_C_max(illuminant)[np.ix_(L_indices, hue_indices)],
+        C_upper,
+    )
 
     return MacAdamLimitsBoundary(
         C_max=C_max,

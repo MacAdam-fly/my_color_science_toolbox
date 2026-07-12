@@ -61,11 +61,15 @@ def _fresh_color_module():
 def test_root_package_metadata_and_public_names():
     import color
 
-    assert color.__version__ == "1.0.1"
+    assert color.__version__ == "1.0.2"
+    assert color.__release_revision__ == "macadam-static-l1-h3"
+    assert color.__capabilities__ == {"macadam_static_boundary": "l1-h3-v1"}
     assert color.__project_name__ == "color_science_toolbox"
     assert color.__distribution_name__ == "color-science-toolbox"
     assert set(color.__all__) == {
         "__version__",
+        "__release_revision__",
+        "__capabilities__",
         "__project_name__",
         "__distribution_name__",
         *EXPECTED_LAZY_EXPORTS,

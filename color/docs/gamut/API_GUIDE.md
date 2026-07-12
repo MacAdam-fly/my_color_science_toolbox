@@ -450,7 +450,12 @@ computed = macadam_limits(
 )
 ```
 
-注意：`source="auto"` 下，普通 `A/C/D65` 走缓存；自定义 CMFs、照明体或 shape 走 computed。
+注意：`source="auto"` 下，`A/C/D65` 且输入整数 `L*`、3° 整数倍 hue 时直接读取
+静态边界数据；自定义 CMFs、照明体、shape 或网格走 computed。
+
+标准 `A / C / D65` 静态资源直接存储 `L*=1`、`h=3°` 的 `C_max[L, h]`，不会为了
+其他网格再插值。computed 路线在 optimal-colour mesh 内二分搜索最大 `C*`；
+`C_upper` 是搜索上界，`iterations` 控制二分精度。
 
 ### `macadam_limits_published_xy_boundary(illuminant="D65")`
 

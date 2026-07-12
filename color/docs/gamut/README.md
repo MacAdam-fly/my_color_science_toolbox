@@ -295,9 +295,9 @@ xy = macadam_limits_published_xy_boundary("D65")
 
 `macadam_limits(..., source="auto")` is the default:
 
-- plain `A`, `C`, and `D65` requests use cached tables in
-  `color/data/gamut_data`;
-- custom CMFs, custom illuminants, or a custom spectral shape switch to the
+- `A`, `C`, and `D65` requests on the packaged integer-L / 3-degree-hue grid
+  load the static boundary data in `color/data/gamut_data`;
+- custom CMFs, illuminants, spectral shapes, or boundary grids switch to the
   computed route.
 
 Force the computed route when needed:
@@ -321,6 +321,11 @@ L* -> R = Y / Yn -> Type 1 / Type 2 rectangular reflectance spectra
 ```
 
 `R` is derived from `L*`; it is not an independent input.
+
+The static A/C/D65 source stores a regular `C_max[L*, h]` boundary directly at
+`L*=1` and `h=3 degrees`; it is never interpolated for another grid. The
+computed route searches each Lab/LCHab ray against its optimal-colour mesh and
+uses `C_upper` and `iterations` to control that search.
 
 Advanced computed helpers such as `computed_macadam_limits_data(...)` and
 `computed_macadam_limits_XYZ(...)` remain available from `color.gamut.macadam`,

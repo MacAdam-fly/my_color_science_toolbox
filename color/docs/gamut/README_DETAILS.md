@@ -403,8 +403,9 @@ source="computed"   # 强制实时计算
 
 默认 `source="auto"`：
 
-- `illuminant="A" | "C" | "D65"` 且没有传入 `cmfs` 或 `shape` 时，使用缓存数据。
-- 传入自定义 CMFs、照明体对象或 spectral shape 时，使用 computed 路线。
+- `illuminant="A" | "C" | "D65"`、没有传入 `cmfs` 或 `shape`，且网格为整数 `L*`
+  与 3° 整数倍 hue 时，使用静态 boundary 数据。
+- 传入自定义 CMFs、照明体对象、spectral shape 或其他网格时，使用 computed 路线。
 
 `source="published"` 只接受 `A / C / D65`，不接受 `cmfs` 或 `shape`。
 
@@ -413,18 +414,19 @@ source="computed"   # 强制实时计算
 缓存数据位于：
 
 ```text
-color/data/gamut_data/MacAdamLimits_A.csv
-color/data/gamut_data/MacAdamLimits_C.csv
-color/data/gamut_data/MacAdamLimits_D65.csv
+color/data/gamut_data/MacAdamBoundary_A_L1_H3.csv
+color/data/gamut_data/MacAdamBoundary_C_L1_H3.csv
+color/data/gamut_data/MacAdamBoundary_D65_L1_H3.csv
 ```
 
 字段包括：
 
 ```text
-x, y, Y, X, Z, L, a, b, C, h
+L, h, C_max
 ```
 
-其中 `x/y/Y` 是 xyY 语义，`X/Z` 由 xyY 派生，`L/a/b/C/h` 用对应照明体白点派生。数据使用项目统一 `Y=100` 标度。
+三个资源都使用 `L*=0..100`、步长 1，以及 `h=0..360°`、步长 3°。`C_max` 是
+对应规则 LCHab 边界的 chroma；数据不为其他网格做插值。
 
 ### computed 路线
 
@@ -437,10 +439,14 @@ L* -> R = Y / Yn
    -> 求 Type 1 / Type 2 矩形反射谱
    -> 在 illuminant × CMFs 空间积分得到 XYZ
    -> 转换到 Lab/LCHab
-   -> 重采样为规则 C_max[L, h]
+   -> 在每个 L* 截面内搜索规则 C_max[L, h]
 ```
 
 这里 `R` 由 `L*` 唯一决定，不是额外自由参数。
+
+标准 A/C/D65 的 `L*=1`、`h=3°` 边界直接使用静态数据。为了避免对离散边界做
+不受约束的插值，其他网格会切换到 computed 路线；该路线通过 Lab/LCHab 射线与
+optimal-colour mesh 的交点获得 `C_max`，`C_upper` 和 `iterations` 控制搜索。
 
 示例：
 

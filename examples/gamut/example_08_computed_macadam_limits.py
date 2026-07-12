@@ -77,7 +77,8 @@ def _plot_computed_vs_published() -> None:
             title="xy Boundary",
         )
 
-        # The xy boundary for C/A/D65 can be directly obtained from the published data, while the boundary for D80 needs to be obtained from the computed data since it's not in the published data
+        # The xy boundary for C/A/D65 can be obtained from packaged static data,
+        # while D80 requires the computed route.
         published_xy = macadam_limits_published_xy_boundary("D65")
         computed_xy = computed.xy_boundary()
         for label, xy, color in (

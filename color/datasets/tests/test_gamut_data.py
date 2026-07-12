@@ -7,7 +7,6 @@ import pytest
 
 from color.datasets import describe
 from color.datasets.gamut_data import get_gamut_data, list_gamut_data
-from color.colorimetry import XYZ_to_xyY
 
 
 class TestListGamutData:
@@ -99,36 +98,33 @@ class TestPointerRaw:
 
 
 class TestMacAdamLimits:
-    """Tests for MacAdam optimal colour stimuli datasets."""
+    """Tests for static MacAdam LCHab boundary datasets."""
 
     @pytest.mark.parametrize("name", ["macadam_limits_A", "macadam_limits_C", "macadam_limits_D65"])
     def test_dataset_fields_and_shape(self, name):
         data = get_gamut_data(name)
 
-        expected = {"x", "y", "Y", "X", "Z", "L", "a", "b", "C", "h"}
+        expected = {"L", "h", "C_max"}
         assert set(data) == expected
-        row_count = len(data["Y"])
-        assert row_count > 0
+        row_count = len(data["L"])
+        assert row_count == 101 * 121
         for values in data.values():
             assert values.shape == (row_count,)
             assert np.all(np.isfinite(values))
 
     @pytest.mark.parametrize("name", ["macadam_limits_A", "macadam_limits_C", "macadam_limits_D65"])
-    def test_xyz_columns_restore_xyY(self, name):
+    def test_boundary_grid(self, name):
         data = get_gamut_data(name)
-        XYZ = np.stack((data["X"], data["Y"], data["Z"]), axis=-1)
-        nonzero = np.sum(XYZ, axis=-1) > 0
-        xyY = XYZ_to_xyY(XYZ[nonzero])
 
-        np.testing.assert_allclose(xyY[:, 0], data["x"][nonzero], atol=1e-10)
-        np.testing.assert_allclose(xyY[:, 1], data["y"][nonzero], atol=1e-10)
-        np.testing.assert_allclose(xyY[:, 2], data["Y"][nonzero], atol=1e-10)
-        assert np.all(np.isfinite(data["x"][~nonzero]))
-        assert np.all(np.isfinite(data["y"][~nonzero]))
+        np.testing.assert_allclose(np.unique(data["L"]), np.arange(0.0, 101.0, 1.0))
+        np.testing.assert_allclose(np.unique(data["h"]), np.arange(0.0, 361.0, 3.0))
+        assert np.all(data["C_max"] >= 0.0)
 
     def test_metadata(self):
         entry = describe("gamut_data", "macadam_limits_D65")
 
-        assert entry.metadata["quantity"] == "macadam_optimal_colour_stimuli"
+        assert entry.metadata["quantity"] == "macadam_lchab_boundary"
         assert entry.metadata["illuminant"] == "D65"
-        assert entry.metadata["data_origin"] == "computed_optimal_colour_stimuli_cache"
+        assert entry.metadata["data_origin"] == "packaged_static_boundary"
+        assert entry.metadata["lightness_step"] == 1
+        assert entry.metadata["hue_step_deg"] == 3

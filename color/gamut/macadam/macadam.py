@@ -56,9 +56,21 @@ def _uses_computed_options(
     *,
     cmfs: str | MultiSpectralDistribution | None,
     shape: SpectralShape | None,
+    L_values: Sequence[float] | np.ndarray,
+    hue_values: Sequence[float] | np.ndarray,
 ) -> bool:
     """Return whether any computed-only option was requested."""
-    return cmfs is not None or shape is not None
+    L_array = np.asarray(L_values, dtype=np.float64)
+    hue_array = np.asarray(hue_values, dtype=np.float64)
+    static_grid = (
+        L_array.ndim == 1
+        and hue_array.ndim == 1
+        and np.all(np.isfinite(L_array))
+        and np.all(np.isfinite(hue_array))
+        and np.all((L_array >= 0.0) & (L_array <= 100.0) & np.isclose(L_array, np.round(L_array)))
+        and np.all(np.isclose(hue_array / 3.0, np.round(hue_array / 3.0)))
+    )
+    return cmfs is not None or shape is not None or not static_grid
 
 
 def _select_source(
@@ -66,6 +78,8 @@ def _select_source(
     *,
     cmfs: str | MultiSpectralDistribution | None,
     shape: SpectralShape | None,
+    L_values: Sequence[float] | np.ndarray,
+    hue_values: Sequence[float] | np.ndarray,
     source: str,
 ) -> str:
     """Return the implementation source for a MacAdam request."""
@@ -73,13 +87,15 @@ def _select_source(
     computed_options = _uses_computed_options(
         cmfs=cmfs,
         shape=shape,
+        L_values=L_values,
+        hue_values=hue_values,
     )
     if resolved == "published":
         if not _is_published_illuminant(illuminant):
             raise ValueError("source='published' requires illuminant 'A', 'C' or 'D65'")
         if computed_options:
             raise ValueError(
-                "source='published' does not accept cmfs or shape"
+                "source='published' requires the packaged integer-L / 3-degree-hue grid and no cmfs or shape"
             )
         return "published"
     if resolved == "computed":
@@ -94,7 +110,7 @@ def macadam_limits(
     shape: SpectralShape | None = None,
     source: str = "auto",
     L_values: Sequence[float] | np.ndarray = np.arange(0.0, 101.0, 1.0),
-    hue_values: Sequence[float] | np.ndarray = np.arange(0.0, 361.0, 1.0),
+    hue_values: Sequence[float] | np.ndarray = np.arange(0.0, 361.0, 3.0),
     C_upper: float = 300.0,
     iterations: int = 14,
     tolerance: float = 1e-9,
@@ -111,8 +127,14 @@ def macadam_limits(
         MacAdam limits when ``source="auto"``.
     source
         ``"auto"``, ``"published"`` or ``"computed"``.
-    L_values, hue_values, C_upper, iterations
-        Resampling parameters for the returned ``GamutBoundary``.
+    L_values, hue_values
+        Regular LCHab grid used for the returned ``GamutBoundary``. Standard
+        A/C/D65 requests on the default L1/h3 grid load the packaged cache.
+    C_upper
+        Optional cap applied to the returned static chroma boundary.
+    iterations
+        Used by the computed route. The standard static source is already
+        generated at a fixed validated precision.
     tolerance
         Inside-test tolerance used by the resampling route.
 
@@ -123,10 +145,10 @@ def macadam_limits(
 
     Notes
     -----
-    ``source="auto"`` uses cached published A/C/D65 data when possible and
-    falls back to computed optimal colours for custom CMFs, illuminants or
-    spectral shapes. This is a theoretical object-colour limit, not a display
-    gamut and not the visible-spectrum volume.
+    ``source="auto"`` uses packaged A/C/D65 data when the requested grid is
+    an integer-L / 3-degree-hue subset, and falls back to computed optimal
+    colours otherwise. This is a theoretical object-colour limit, not a
+    display gamut and not the visible-spectrum volume.
 
     Examples
     --------
@@ -138,6 +160,8 @@ def macadam_limits(
         illuminant,
         cmfs=cmfs,
         shape=shape,
+        L_values=L_values,
+        hue_values=hue_values,
         source=source,
     )
     if selected == "published":
@@ -203,6 +227,8 @@ def is_within_macadam_limits(
         illuminant,
         cmfs=cmfs,
         shape=shape,
+        L_values=np.arange(0.0, 101.0, 1.0),
+        hue_values=np.arange(0.0, 361.0, 3.0),
         source=source,
     )
     if selected == "published":
@@ -228,8 +254,8 @@ __all__ = [
 ]
 
 __all__ += [
-    "macadam_limits_data",  # return cached MacAdam raw dataset columns
-    "macadam_limits_XYZ",  # return cached MacAdam XYZ mesh vertices
+    "macadam_limits_data",  # return packaged MacAdam boundary samples
+    "macadam_limits_XYZ",  # return packaged MacAdam boundary XYZ samples
 ]
 
 __all__ += [
