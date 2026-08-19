@@ -376,7 +376,7 @@ hue = IPT_hue_angle(IPT)
 Jzazbz = XYZ_to_Jzazbz(XYZ_D65_referred)
 ```
 
-`Jzazbz` 面向 HDR / 宽色域图像信号，公式内部包含 PQ / ST2084 风格的非线性压缩。本项目对外仍使用 `Y=100` XYZ 标度，内部会自动转换到公式需要的相对域。
+`Jzazbz` 面向 HDR / 宽色域图像信号，公式内部包含绝对的 PQ / ST2084 非线性压缩。输入 XYZ 会直接作为类似 `cd/m2` 的绝对值参与计算，不会先转换到相对域；按本项目的常用约定，`Y=100` 的漫反射白对应 `100 cd/m2`。因此 XYZ 的绝对尺度会影响 Jzazbz 结果。
 
 ### Cylindrical Derivatives
 

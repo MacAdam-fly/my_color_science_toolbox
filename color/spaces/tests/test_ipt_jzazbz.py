@@ -43,18 +43,26 @@ def test_IPT_to_XYZ_matches_reference_values():
 def test_Jzazbz_matches_reference_values():
     np.testing.assert_allclose(
         XYZ_to_Jzazbz(XYZ_D65_referred=REFERENCE_XYZ),
-        [0.005350476093659, 0.009243017319821, 0.005260072163359],
+        [0.074674697148426, 0.070740084088034, 0.047205254655350],
         atol=1e-10,
     )
 
 
 def test_Jzazbz_to_XYZ_matches_reference_values():
-    Jzazbz = np.array([0.00535048, 0.00924302, 0.00526007])
+    Jzazbz = np.array([0.074674697148426, 0.070740084088034, 0.047205254655350])
 
     np.testing.assert_allclose(
         Jzazbz_to_XYZ(Jzazbz),
-        [20.654027553952197, 12.19723883169166, 5.136967366499685],
-        atol=1e-5,
+        REFERENCE_XYZ,
+        atol=1e-8,
+    )
+
+
+def test_Jzazbz_interprets_Y100_as_100_cd_m2():
+    np.testing.assert_allclose(
+        XYZ_to_Jzazbz([95.047, 100.0, 108.883]),
+        [0.167173549041973, -0.000134044078193, -0.000082466634239],
+        atol=1e-10,
     )
 
 

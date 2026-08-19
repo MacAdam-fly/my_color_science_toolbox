@@ -7,8 +7,6 @@ from typing import Sequence
 import numpy as np
 
 from color.utils.arrays import as_last_axis_triplets
-from color.utils.scale import to_domain_1, to_domain_100
-
 from ..node import ColorSpaceNode
 
 JZAZBZ_B = 1.15
@@ -67,7 +65,7 @@ def _eotf_ST2084(value: np.ndarray) -> np.ndarray:
 
 
 def _XYZ_to_Izazbz(XYZ: np.ndarray) -> np.ndarray:
-    """Convert relative D65 XYZ values to the Izazbz intermediate space."""
+    """Convert absolute D65 XYZ values to the Izazbz intermediate space."""
     X = XYZ[..., 0]
     Y = XYZ[..., 1]
     Z = XYZ[..., 2]
@@ -82,7 +80,7 @@ def _XYZ_to_Izazbz(XYZ: np.ndarray) -> np.ndarray:
 
 
 def _Izazbz_to_XYZ(Izazbz: np.ndarray) -> np.ndarray:
-    """Convert the Izazbz intermediate space to relative D65 XYZ values."""
+    """Convert the Izazbz intermediate space to absolute D65 XYZ values."""
     LMS_p = Izazbz @ MATRIX_JZAZBZ_IZAZBZ_TO_LMS_P.T
     LMS = _eotf_ST2084(LMS_p)
     XYZ_p = LMS @ MATRIX_JZAZBZ_LMS_TO_XYZ.T
@@ -98,9 +96,11 @@ def _Izazbz_to_XYZ(Izazbz: np.ndarray) -> np.ndarray:
 def XYZ_to_Jzazbz(XYZ_D65_referred: Sequence[float] | np.ndarray) -> np.ndarray:
     """Convert D65-referred CIE XYZ values on the Y=100 scale to Jzazbz values.
 
-    The implementation follows the Safdar Jzazbz transform while preserving the
-    project convention that public XYZ input is Y=100. Non-D65 XYZ values must
-    be adapted before entering this function.
+    The implementation follows the Safdar Jzazbz transform. Its ST 2084 stage
+    is absolute, so XYZ values are interpreted directly as luminance-like
+    values in cd/m2. Under the project convention, a diffuse white with Y=100
+    therefore represents 100 cd/m2. Non-D65 XYZ values must be adapted before
+    entering this function.
 
     Parameters
     ----------
@@ -115,18 +115,14 @@ def XYZ_to_Jzazbz(XYZ_D65_referred: Sequence[float] | np.ndarray) -> np.ndarray:
 
     Notes
     -----
-    Jzazbz has HDR/PQ semantics internally, but this package exposes it through
-    the same public Y=100 XYZ convention as other spaces.
+    No relative-domain scaling is applied before the absolute ST 2084 stage.
 
     Examples
     --------
     >>> XYZ_to_Jzazbz([19.01, 20.0, 21.78]).shape
     (3,)
     """
-    xyz = to_domain_1(
-        as_last_axis_triplets(XYZ_D65_referred, name="XYZ_D65_referred"),
-        source_scale="100",
-    )
+    xyz = as_last_axis_triplets(XYZ_D65_referred, name="XYZ_D65_referred")
     Izazbz = _XYZ_to_Izazbz(xyz)
     I_z = Izazbz[..., 0]
     J_z = ((1.0 + JZAZBZ_D) * I_z) / (1.0 + JZAZBZ_D * I_z) - JZAZBZ_D0
@@ -166,7 +162,7 @@ def Jzazbz_to_XYZ(Jzazbz: Sequence[float] | np.ndarray) -> np.ndarray:
         1.0 + JZAZBZ_D - JZAZBZ_D * (J_z + JZAZBZ_D0)
     )
     Izazbz = np.stack((I_z, jzazbz[..., 1], jzazbz[..., 2]), axis=-1)
-    return to_domain_100(_Izazbz_to_XYZ(Izazbz), source_scale="1")
+    return _Izazbz_to_XYZ(Izazbz)
 
 
 def Jzazbz_to_JzCzhz(Jzazbz: Sequence[float] | np.ndarray) -> np.ndarray:

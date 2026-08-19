@@ -10,7 +10,7 @@ from importlib import import_module
 from typing import Any
 
 
-__version__ = "1.0.2"
+__version__ = "1.0.3"
 __release_revision__ = "macadam-static-l1-h3"
 __capabilities__ = {
     "macadam_static_boundary": "l1-h3-v1",

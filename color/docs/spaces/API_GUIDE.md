@@ -562,6 +562,8 @@ Jzazbz = XYZ_to_Jzazbz([19.01, 20.0, 21.78])
 XYZ_D65 = Jzazbz_to_XYZ(Jzazbz)
 ```
 
+Jzazbz 内部使用绝对的 ST 2084 非线性。这里的 XYZ 不会被归一化：按项目常用约定，`Y=100` 直接表示 `100 cd/m2`，绝对尺度变化会改变 Jzazbz 数值。
+
 ### `Jzazbz_to_JzCzhz(...)` / `JzCzhz_to_Jzazbz(...)`
 
 ```python
